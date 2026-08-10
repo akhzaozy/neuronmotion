@@ -8,7 +8,7 @@ Dokumen ini adalah panduan membangun **sistem produksi**-nya secara penuh.
 
 ## 1. Ringkasan Sistem
 
-Web app yang mendeteksi body keypoints dari kamera standar (webcam/HP), mengekstrak biomarker gerakan (tremor, finger tapping, gait, arm swing, range of motion, postural stability), mengubahnya menjadi skor risiko gangguan saraf (Parkinson, stroke recovery, dysarthria), tersimpan dalam riwayat pasien dan dapat diakses oleh tenaga kesehatan mitra.
+Web app yang mendeteksi body keypoints dari kamera standar (webcam/HP), mengekstrak biomarker gerakan (tremor, finger tapping, gait, arm swing, range of motion, postural stability), mengubahnya menjadi skor risiko neurologis berbasis rule/ML, dan menyimpan riwayat untuk trend monitoring & portal nakes.
 
 **Tujuan**: screening tool non-invasif, low-cost, accessible, yang mempercepat deteksi dini dan follow-up pemulihan pasien di daerah keterbatasan akses neurolog.
 
@@ -35,11 +35,11 @@ Web app yang mendeteksi body keypoints dari kamera standar (webcam/HP), mengekst
              │
      ┌───────┼────────────┐
      ▼       ▼            ▼
-  Auth DB  Sesi/Riwayat  Laporan Nakes
- (Postgres) (Postgres/S3) (PDF/Dashboard)
+   Auth DB  Sesi/Riwayat  Laporan Nakes
+  (Postgres) (Postgres/S3) (PDF/Dashboard)
 ```
 
-**Prinsip kunci:** deteksi keypoint & ekstraksi biomarker berjalan **di sisi klien** (browser, via WASM/WebGL) demi privasi (video tidak perlu diunggah) dan latensi rendah, terutama penting di daerah rural/low-bandwidth.
+**Prinsip kunci:** deteksi keypoint & ekstraksi biomarker berjalan **di sisi klien** (browser, via WASM/WebGL) demi privasi (video tidak perlu diunggah) dan latensi rendah, terutama penting di daerah dengan koneksi internet terbatas.
 
 ## 3. Modul & Requirement Mapping
 
@@ -57,14 +57,14 @@ Web app yang mendeteksi body keypoints dari kamera standar (webcam/HP), mengekst
 
 ### 3.2 Website Publik Tanpa Instalasi (req #2)
 - **Frontend**: React/Next.js (atau lanjutan dari mockup DC ini), PWA-ready (installable tapi tetap jalan langsung di browser, offline-capable untuk model inference).
-- **Kompatibilitas rendah-resource**: lazy-load model (~5-10MB), fallback resolusi kamera lebih rendah, mode "unduh dulu lalu proses offline" untuk koneksi lambat, UI multi-bahasa (mulai Bahasa Indonesia, English, target Mandarin/Vietnamese di V2).
+- **Kompatibilitas rendah-resource**: lazy-load model (~5-10MB), fallback resolusi kamera lebih rendah, mode "unduh dulu lalu proses offline" untuk koneksi lambat, UI multi-bahasa (mulai Bahasa Indonesia).
 - **Hosting**: static frontend (Vercel/Netlify/CDN) + backend API terpisah, agar beban server minimal.
 
 ### 3.3 Model Analitik Skor Risiko (req #3)
-- **Tahap awal (rule-based)**: threshold per biomarker berbasis literatur klinis (mis. tremor >4Hz "berisiko"), dikombinasikan jadi skor komposit (weighted sum atau skor tertimbang per kondisi target: Parkinson vs stroke recovery vs dysarthria).
-- **Tahap lanjut (ML)**: model klasifikasi (Random Forest/XGBoost) dilatih pada data biomarker berlabel (bekerja sama dengan RS/klinik untuk dataset), output kategori Rendah/Sedang/Tinggi + confidence interval.
+- **Tahap awal (rule-based)**: threshold per biomarker berbasis literatur klinis (mis. tremor >4Hz "berisiko"), dikombinasikan jadi skor komposit (weighted sum atau skor tertimbang per kondisi target: Parkinson, stroke, cerebellar disorder, etc.).
+- **Tahap lanjut (ML)**: model klasifikasi (Random Forest/XGBoost) dilatih pada data biomarker berlabel (bekerja sama dengan RS/klinik untuk dataset), output kategori Rendah/Sedang/Tinggi + confidence score.
 - **Rekomendasi tindak lanjut**: mapping rule dari kombinasi biomarker → teks rekomendasi (rujukan spesialis saraf, link ke panduan latihan rehabilitasi per biomarker bermasalah).
-- **Validasi klinis**: WAJIB sebelum diklaim sebagai alat skrining — lakukan uji sensitivitas/spesifisitas dengan tenaga medis mitra sebelum go-live publik. Sertakan disclaimer "bukan alat diagnosa pengganti dokter".
+- **Validasi klinis**: WAJIB sebelum diklaim sebagai alat skrining — lakukan uji sensitivitas/spesifisitas dengan tenaga medis mitra sebelum go-live publik. Sertakan disclaimer "bukan alat diagnosis, hanya screening awal".
 
 ### 3.4 Riwayat Pemeriksaan (req #4)
 - **Data model**: `User`, `Session` (timestamp, biomarker raw values, risk score, recommendation), `Note` (opsional dari nakes).
@@ -113,6 +113,14 @@ Lihat `NeuronMotion - Landing.dc.html` dan `NeuronMotion - Skrining.dc.html` di 
 
 ---
 
-**Created by Last Dance Team** — Terus berinovasi untuk kesehatan yang lebih baik! 🚀
+## 🚀 Last Dance Teams
 
 **Project Lead:** Muhammad Akhza Fachrozy (@akhzaozy)
+
+Proyek **NeuronMotion** adalah inisiatif dari **Last Dance Teams** yang berdedikasi untuk menghadirkan solusi inovatif di bidang kesehatan neurologis. Tim kami percaya bahwa teknologi computer vision dan machine learning dapat membuat skrining gangguan saraf lebih mudah diakses oleh masyarakat luas, terutama di daerah-daerah dengan keterbatasan akses ke tenaga medis spesialis.
+
+**Misi kami:** Terus berinovasi untuk kesehatan yang lebih baik! 🎯
+
+---
+
+**Created by Last Dance Team** — Terus berinovasi untuk kesehatan yang lebih baik! 🚀
