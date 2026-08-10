@@ -1,0 +1,201 @@
+/* ScreeningInstruction.module.css */
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 32px 24px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+}
+
+.badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--brand);
+  background: rgba(37, 99, 235, 0.1);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  padding: 4px 14px;
+  border-radius: 99px;
+}
+
+.title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+/* Animated figure area */
+.figureWrap {
+  position: relative;
+  width: 140px;
+  height: 160px;
+  flex-shrink: 0;
+}
+
+/* Steps list */
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+  width: 100%;
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  animation: slideIn 0.3s ease-out both;
+}
+
+.step:nth-child(1) { animation-delay: 0.05s; }
+.step:nth-child(2) { animation-delay: 0.15s; }
+.step:nth-child(3) { animation-delay: 0.25s; }
+.step:nth-child(4) { animation-delay: 0.35s; }
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.stepNum {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  background: rgba(37, 99, 235, 0.1);
+  border: 1px solid rgba(37, 99, 235, 0.3);
+  border-radius: 50%;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--brand);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Countdown button */
+.countdownWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.countdownBar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.countdownFill {
+  height: 100%;
+  background: var(--gradient-brand);
+  border-radius: 99px;
+  transition: width 1s linear;
+}
+
+.countdownLabel {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.startBtn {
+  margin-top: 4px;
+}
+
+/* ─── SVG Figure animations per test ─── */
+
+/* Tremor: hand oscillating */
+.figureTremor {
+  animation: tremble 0.12s ease-in-out infinite alternate;
+  transform-origin: center;
+}
+@keyframes tremble {
+  from { transform: translate(-2px, -1px) rotate(-3deg); }
+  to   { transform: translate(2px, 1px) rotate(3deg); }
+}
+
+/* Tapping: finger going up/down */
+.figureTapping {
+  animation: tap 0.5s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+@keyframes tap {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(14px); }
+}
+
+/* Gait: walking cycle — body rocks */
+.figureGait {
+  animation: walk 0.8s ease-in-out infinite alternate;
+  transform-origin: center bottom;
+}
+@keyframes walk {
+  from { transform: rotate(-4deg); }
+  to   { transform: rotate(4deg); }
+}
+
+/* Arm swing: arm swinging */
+.figureArm {
+  animation: swing 0.7s ease-in-out infinite alternate;
+  transform-origin: top center;
+}
+@keyframes swing {
+  from { transform: rotate(-25deg); }
+  to   { transform: rotate(25deg); }
+}
+
+/* Posture: subtle sway */
+.figurePosture {
+  animation: sway 2.5s ease-in-out infinite alternate;
+  transform-origin: bottom center;
+}
+@keyframes sway {
+  from { transform: rotate(-2deg); }
+  to   { transform: rotate(2deg); }
+}
+
+/* ROM: knee bending */
+.figureLeg {
+  animation: bend 1.2s ease-in-out infinite alternate;
+  transform-origin: top center;
+}
+@keyframes bend {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(55deg); }
+}

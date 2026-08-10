@@ -1,0 +1,32 @@
+{
+  "name": "neuronmotion",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "NeuronMotion — Sistem Skrining Gangguan Saraf Berbasis Computer Vision",
+  "scripts": {
+    "web:dev": "npm run dev --prefix webapp",
+    "web:build": "npm run build --prefix webapp",
+    "server": "node --env-file=.env server/index.js",
+    "server:dev": "nodemon --env-file=.env server/index.js",
+    "dev:all": "concurrently -n SERVER,WEB -c blue,green \"npm:server:dev\" \"npm:web:dev\"",
+    "seed": "node --env-file=.env prisma/seed.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^4.22.2",
+    "jsonwebtoken": "^9.0.3",
+    "prisma": "^6.19.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "concurrently": "^8.2.2",
+    "nodemon": "^3.1.14",
+    "vite": "^5.4.0"
+  }
+}

@@ -1,0 +1,14 @@
+#!/usr/bin/expect -f
+set timeout -1
+set host "192.168.18.233"
+set user "root"
+set pass "siitk"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host "cd /www/wwwroot/hosting/neuronmotion/webapp && npm install --no-fund --no-audit && npm run build && cd .. && pm2 delete neuronmotion-web 2>/dev/null || true && pm2 delete neuronmotion-api 2>/dev/null || true && pm2 start server/index.js --name \"neuronmotion-api\" && pm2 start npm --name \"neuronmotion-web\" -- run start --prefix webapp -- -p 38473 && pm2 save && nginx -t && systemctl restart nginx"
+expect {
+    "*assword:*" {
+        send "$pass\r"
+        exp_continue
+    }
+    eof
+}

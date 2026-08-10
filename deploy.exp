@@ -1,0 +1,26 @@
+#!/usr/bin/expect -f
+
+set timeout -1
+set host "192.168.18.233"
+set user "root"
+set pass "siitk"
+
+# Upload .env and script to /tmp first
+spawn scp -o StrictHostKeyChecking=no .env remote_script.sh $user@$host:/tmp/
+expect {
+    "*assword:*" {
+        send "$pass\r"
+        exp_continue
+    }
+    eof
+}
+
+# Run deployment script
+spawn ssh -o StrictHostKeyChecking=no $user@$host "mv /tmp/.env /tmp/neuronmotion_env && bash /tmp/remote_script.sh"
+expect {
+    "*assword:*" {
+        send "$pass\r"
+        exp_continue
+    }
+    eof
+}

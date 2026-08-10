@@ -1,0 +1,18 @@
+<svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="56" height="56" rx="16" fill="url(#nm-icon-gradient)" />
+  <path
+    d="M11 30h7l4-11 6 20 4-14 4 5h9"
+    stroke="#fff"
+    stroke-width="3"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    fill="none"
+  />
+  <circle cx="28" cy="39" r="2.4" fill="#fff" />
+  <defs>
+    <linearGradient id="nm-icon-gradient" x1="0" y1="0" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2563eb" />
+      <stop offset="1" stop-color="#0284c7" />
+    </linearGradient>
+  </defs>
+</svg>

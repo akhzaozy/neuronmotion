@@ -1,0 +1,14 @@
+#!/usr/bin/expect -f
+set timeout 10
+set host "192.168.18.233"
+set user "root"
+set pass "siitk"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host "for d in /www/wwwroot/hosting/*; do echo -n \"\$d: \"; find \"\$d\" -type f | wc -l; done"
+expect {
+    "*assword:*" {
+        send "$pass\r"
+        exp_continue
+    }
+    eof
+}

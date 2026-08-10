@@ -1,0 +1,78 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id          Int       @id @default(autoincrement())
+  email       String    @unique
+  password    String
+  name        String
+  role        String    @default("PATIENT") // PATIENT, DOCTOR, ADMIN
+  dateOfBirth DateTime?
+  gender      String?   // M or F
+  phone       String?
+  address     String?
+  // Doctor-specific
+  licenseNumber String?
+  specialization String?
+  // Relations
+  patientSessions   Session[]  @relation("PatientSessions")
+  doctorNotes       Session[]  @relation("DoctorNotes")
+  doctorPatients    DoctorPatient[] @relation("DoctorRelation")
+  patientDoctors    DoctorPatient[] @relation("PatientRelation")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model DoctorPatient {
+  id        Int      @id @default(autoincrement())
+  doctorId  Int
+  patientId Int
+  doctor    User     @relation("DoctorRelation", fields: [doctorId], references: [id])
+  patient   User     @relation("PatientRelation", fields: [patientId], references: [id])
+  linkedAt  DateTime @default(now())
+  status    String   @default("ACTIVE") // ACTIVE, INACTIVE
+
+  @@unique([doctorId, patientId])
+}
+
+model Session {
+  id              Int      @id @default(autoincrement())
+  patientId       Int
+  patient         User     @relation("PatientSessions", fields: [patientId], references: [id])
+  doctorId        Int?
+  doctor          User?    @relation("DoctorNotes", fields: [doctorId], references: [id])
+  // Raw biomarker results per test (JSON)
+  tremorResult        String? // JSON
+  fingerTappingResult String? // JSON
+  gaitResult          String? // JSON
+  armSwingResult      String? // JSON
+  romResult           String? // JSON
+  posturalResult      String? // JSON
+  // Composite result
+  compositeScore      Float?
+  riskCategory        String?  // LOW, MEDIUM, HIGH
+  mlPrediction        String?  // JSON - K-NN classification result
+  updrsEstimate       String?  // JSON - estimated UPDRS scores
+  recommendations     String?  // JSON array
+  // Doctor input
+  doctorNote          String?
+  followUpDate        DateTime?
+  // Metadata
+  timestamp   DateTime  @default(now())
+  createdAt   DateTime  @default(now())
+}
+
+model Condition {
+  id          Int    @id @default(autoincrement())
+  key         String @unique // e.g. PARKINSON_EARLY
+  label       String
+  description String
+  biomarkerThresholds String // JSON
+  createdAt   DateTime @default(now())
+}
