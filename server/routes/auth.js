@@ -10,7 +10,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'neuronmotion-secret-key';
 // Register User (PATIENT or DOCTOR)
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, name, role, gender } = req.body;
+    const { email, password, name, role, gender, dateOfBirth, specialization, institution, licenseNumber } = req.body;
 
     // Check if user exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -20,6 +20,7 @@ router.post('/register', async (req, res) => {
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
+    const resolvedRole = role || 'PATIENT';
 
     // Create user
     const user = await prisma.user.create({
@@ -27,8 +28,14 @@ router.post('/register', async (req, res) => {
         email,
         password: hashedPassword,
         name,
-        role: role || 'PATIENT',
+        role: resolvedRole,
         gender: gender === 'M' || gender === 'F' ? gender : null,
+        // Pasien: tanggal lahir dipakai untuk hitung usia & rentang normal per kelompok usia
+        dateOfBirth: resolvedRole === 'PATIENT' && dateOfBirth ? new Date(dateOfBirth) : null,
+        // Dokter/nakes: profesi & institusi dicatat sebagai info profesional yang tampil ke pasien
+        specialization: resolvedRole === 'DOCTOR' ? (specialization || null) : null,
+        institution: resolvedRole === 'DOCTOR' ? (institution || null) : null,
+        licenseNumber: resolvedRole === 'DOCTOR' ? (licenseNumber || null) : null,
       }
     });
 
@@ -66,7 +73,11 @@ router.post('/login', async (req, res) => {
         id: user.id,
         email: user.email,
         name: user.name,
-        role: user.role
+        role: user.role,
+        gender: user.gender,
+        dateOfBirth: user.dateOfBirth,
+        specialization: user.specialization,
+        institution: user.institution,
       }
     });
   } catch (error) {

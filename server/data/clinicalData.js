@@ -16,6 +16,27 @@ export const CLINICAL_REFERENCE = {
   posturalStability: { normalSwayLength: 0.08, mildSwayLength: 0.15, severeSwayLength: 0.25, normalSwayArea: 0.003, mildSwayArea: 0.008, severeSwayArea: 0.015 },
 };
 
+/**
+ * Rentang normal gait & ROM menurun secara alami seiring usia, bahkan pada orang sehat
+ * (konsisten dengan ageFactor yang sudah dipakai saat generate data training sintetis di bawah).
+ * Tanpa penyesuaian ini, pasien lansia sehat berisiko salah ditandai "tidak normal" hanya
+ * karena dibandingkan dengan ambang batas orang dewasa muda.
+ */
+export function getAgeAdjustedReference(age) {
+  const ref = JSON.parse(JSON.stringify(CLINICAL_REFERENCE));
+  if (!age) return ref;
+  const factor = age > 75 ? 0.90 : age > 65 ? 0.95 : 1.0;
+  if (factor < 1.0) {
+    ref.gait.normalCadenceMin = Math.round(ref.gait.normalCadenceMin * factor);
+    ref.gait.slowCadence = Math.round(ref.gait.slowCadence * factor);
+    for (const joint of Object.keys(ref.rom)) {
+      ref.rom[joint].normal = Math.round(ref.rom[joint].normal * factor);
+      ref.rom[joint].reduced = Math.round(ref.rom[joint].reduced * factor);
+    }
+  }
+  return ref;
+}
+
 export const CONDITION_PROFILES = {
   HEALTHY: {
     label: 'Sehat',

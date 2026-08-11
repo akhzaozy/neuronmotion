@@ -5,7 +5,7 @@
  * ============================================================
  */
 
-import { CLINICAL_REFERENCE, getClassifier } from '../data/clinicalData.js';
+import { CLINICAL_REFERENCE, getAgeAdjustedReference, getClassifier } from '../data/clinicalData.js';
 
 /**
  * Estimasi frekuensi dominan via periodogram (non-uniform DFT) pada sinyal bertanda.
@@ -190,7 +190,7 @@ export function analyzeFingerTapping({ taps }) {
  * - Mencari local maxima (peak) sebagai representasi langkah
  * - Menghitung simetri berdasarkan rata-rata panjang langkah ganjil vs genap
  */
-export function analyzeGait({ steps }) {
+export function analyzeGait({ steps, age }) {
   if (!steps || steps.length < 10)
     return { error: 'Minimal 10 frame langkah dibutuhkan' };
 
@@ -232,7 +232,7 @@ export function analyzeGait({ steps }) {
   const strideSymmetryIndex = (avgEven > 0 || avgOdd > 0)
     ? 1 - Math.abs(avgEven - avgOdd) / Math.max(avgEven, avgOdd) : 1;
 
-  const ref = CLINICAL_REFERENCE.gait;
+  const ref = getAgeAdjustedReference(age).gait;
   let category, interpretation, score, updrsEstimate;
 
   if (strideSymmetryIndex >= ref.normalSymmetryMin && cadencePerMin >= ref.normalCadenceMin) {
@@ -249,7 +249,7 @@ export function analyzeGait({ steps }) {
     interpretation = `Asimetri gait ringan (${(strideSymmetryIndex * 100).toFixed(0)}%).`;
   } else if (cadencePerMin < ref.slowCadence) {
     category = 'SLOW_GAIT'; score = 40; updrsEstimate = 2;
-    interpretation = `Gait lambat: ${cadencePerMin.toFixed(0)} langkah/menit (normal ≥100).`;
+    interpretation = `Gait lambat: ${cadencePerMin.toFixed(0)} langkah/menit (normal ≥${ref.normalCadenceMin}).`;
   } else {
     category = 'BORDERLINE'; score = 15; updrsEstimate = 1;
     interpretation = `Gait sedikit tidak optimal. Pantau.`;
@@ -260,6 +260,8 @@ export function analyzeGait({ steps }) {
     strideSymmetryIndex: parseFloat(strideSymmetryIndex.toFixed(3)),
     symmetryPercent: parseFloat((strideSymmetryIndex * 100).toFixed(1)),
     stepCount: peaks.length,
+    referenceCadenceMin: ref.normalCadenceMin,
+    ageAdjusted: !!age,
     category, interpretation, score, updrsEstimate,
   };
 }
@@ -324,14 +326,15 @@ export function analyzeArmSwing({ frames }) {
 /**
  * Analisis Range of Motion
  */
-export function analyzeROM({ joint, angles }) {
+export function analyzeROM({ joint, angles, age }) {
   if (!angles || angles.length < 3)
     return { error: 'Minimal 3 pengukuran sudut dibutuhkan' };
 
   const maxAngle = Math.max(...angles), minAngle = Math.min(...angles);
   const rom = maxAngle - minAngle;
   const jKey = (joint || 'KNEE').toUpperCase();
-  const ref = CLINICAL_REFERENCE.rom[jKey.toLowerCase()] || CLINICAL_REFERENCE.rom.knee;
+  const romRef = getAgeAdjustedReference(age).rom;
+  const ref = romRef[jKey.toLowerCase()] || romRef.knee;
   const jointNames = { KNEE: 'lutut', SHOULDER: 'bahu', ELBOW: 'siku', HIP: 'pinggul' };
   const jName = jointNames[jKey] || joint;
 
@@ -353,7 +356,7 @@ export function analyzeROM({ joint, angles }) {
   return {
     joint: jKey, maxAngleDeg: parseFloat(maxAngle.toFixed(1)),
     minAngleDeg: parseFloat(minAngle.toFixed(1)), romDeg: parseFloat(rom.toFixed(1)),
-    referenceNormal: ref.normal, category, interpretation, score,
+    referenceNormal: ref.normal, ageAdjusted: !!age, category, interpretation, score,
   };
 }
 

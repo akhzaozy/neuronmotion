@@ -17,8 +17,8 @@ async function request<T>(method: string, path: string, body?: object, token?: s
 
 export const api = {
   // Auth
-  register: (email: string, password: string, name: string, role: string, gender?: string) =>
-    request('POST', '/api/auth/register', { email, password, name, role, gender }),
+  register: (data: RegisterInput) =>
+    request('POST', '/api/auth/register', data),
 
   login: (email: string, password: string) =>
     request<{ token: string; user: UserProfile }>('POST', '/api/auth/login', { email, password }),
@@ -94,7 +94,21 @@ export interface UserProfile {
   email: string;
   role: string;
   gender?: string;
+  dateOfBirth?: string;
   specialization?: string;
+  institution?: string;
+}
+
+export interface RegisterInput {
+  email: string;
+  password: string;
+  name: string;
+  role: string;
+  gender?: string;
+  dateOfBirth?: string;
+  specialization?: string;
+  institution?: string;
+  licenseNumber?: string;
 }
 
 export interface Session {

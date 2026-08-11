@@ -143,7 +143,10 @@ export default function DoctorPortal() {
         <div className={styles.header}>
           <div>
             <h1>Portal Tenaga Kesehatan</h1>
-            <p>Selamat datang, {user?.name} — {user?.specialization || 'Dokter Spesialis'}</p>
+            <p>
+              Selamat datang, {user?.name}, {user?.specialization || 'Dokter Spesialis'}
+              {user?.institution ? ` • ${user.institution}` : ''}
+            </p>
             {lastUpdated && (
               <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 4 }}>
                 Diperbarui: {lastUpdated.toLocaleTimeString('id-ID')} · otomatis setiap 30 detik

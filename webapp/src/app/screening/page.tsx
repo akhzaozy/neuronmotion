@@ -22,7 +22,7 @@ export default function ScreeningPage() {
   
   const {
     videoRef, canvasRef, cameraReady, poseReady, error,
-    activeTest, isCapturing, liveMetrics, countdown, capturedData,
+    activeTest, isCapturing, liveMetrics, countdown, capturedData, detectionWarning,
     startCamera, startCapture, stopCapture,
   } = useBiomarkerCapture();
 
@@ -31,6 +31,7 @@ export default function ScreeningPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState<ScreeningResult | null>(null);
   const [showInstruction, setShowInstruction] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(true);
 
   // Auto-save captured data when a test finishes
   useEffect(() => {
@@ -100,6 +101,28 @@ export default function ScreeningPage() {
 
   return (
     <div className={styles.page}>
+      {showOnboarding && (
+        <div className={styles.resultPanel}>
+          <div className={styles.resultCard} style={{ textAlign: 'left', maxWidth: 520 }}>
+            <h2 style={{ marginBottom: 16 }}>📋 Sebelum Mulai Skrining</h2>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: 16, lineHeight: 1.6 }}>
+              Ini adalah self-test yang Anda lakukan sendiri di depan kamera, tanpa didampingi tenaga
+              medis secara langsung. Mohon perhatikan hal berikut sebelum mulai:
+            </p>
+            <ul style={{ color: 'var(--text-secondary)', lineHeight: 1.9, marginBottom: 24, paddingLeft: 20 }}>
+              <li>Ada <strong>6 tes gerakan</strong> singkat (± 3-5 menit total), masing-masing dengan instruksi & contoh gerakan sebelum mulai.</li>
+              <li>Gunakan ruangan dengan <strong>pencahayaan cukup</strong> dan ruang gerak yang cukup, terutama untuk tes berjalan.</li>
+              <li>Ikuti bagian tubuh yang diminta di setiap tes. Sistem akan menampilkan peringatan jika bagian tubuh tidak terdeteksi jelas di kamera.</li>
+              <li>Hasil skrining ini <strong>bukan diagnosis medis</strong>, hanya alat bantu deteksi dini. Jika hasil menunjukkan risiko sedang/tinggi, konsultasikan ke dokter.</li>
+              <li>Jika memungkinkan, lakukan didampingi keluarga atau tenaga kesehatan agar lebih mudah memahami instruksi dan hasilnya.</li>
+            </ul>
+            <button className="btn btn-primary btn-lg" style={{ width: '100%' }} onClick={() => setShowOnboarding(false)}>
+              Saya Mengerti, Mulai Skrining
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className={styles.container}>
         <div className={styles.header}>
           <h1>Skrining Klinis NeuronMotion</h1>
@@ -131,6 +154,7 @@ export default function ScreeningPage() {
             liveMetrics={liveMetrics}
             countdown={countdown}
             error={error}
+            detectionWarning={detectionWarning}
             onStart={startCamera}
             onStartCapture={handleInstructionDone}
             showInstruction={showInstruction}
@@ -147,7 +171,7 @@ export default function ScreeningPage() {
                   onClick={handleStartRequest}
                   disabled={showInstruction}
                 >
-                  Mulai Rekam — {currentTest.name}
+                  Mulai Rekam &bull; {currentTest.name}
                 </button>
               ) : (
                 <button 

@@ -4,7 +4,10 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import Logo from '@/components/Logo';
+import { EyeIcon, EyeOffIcon } from '@/components/icons';
 import styles from '../login/auth.module.css';
+
+const SPECIALIZATIONS = ['Neurolog', 'Dokter Umum', 'Fisioterapis', 'Perawat'];
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -13,11 +16,15 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('PATIENT');
   const [gender, setGender] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
+  const [specialization, setSpecialization] = useState('');
+  const [institution, setInstitution] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const passwordTooShort = password.length > 0 && password.length < 6;
+  const isDoctor = role === 'DOCTOR';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,7 +32,12 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      await api.register(email, password, name, role, gender);
+      await api.register({
+        email, password, name, role, gender,
+        dateOfBirth: !isDoctor && dateOfBirth ? dateOfBirth : undefined,
+        specialization: isDoctor ? specialization : undefined,
+        institution: isDoctor ? institution : undefined,
+      });
       // Auto-login after register
       const data = await api.login(email, password);
       // We don't have direct access to auth context here without wrapping or importing,
@@ -100,7 +112,7 @@ export default function RegisterPage() {
                 aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
                 tabIndex={-1}
               >
-                {showPassword ? '🙈' : '👁️'}
+                {showPassword ? <EyeOffIcon /> : <EyeIcon />}
               </button>
             </div>
             {passwordTooShort && (
@@ -122,6 +134,45 @@ export default function RegisterPage() {
               <option value="F">Perempuan</option>
             </select>
           </div>
+
+          {!isDoctor && (
+            <div className={styles.formGroup}>
+              <label className={styles.label}>Tanggal Lahir</label>
+              <input
+                type="date"
+                className="input"
+                value={dateOfBirth}
+                onChange={(e) => setDateOfBirth(e.target.value)}
+                max={new Date().toISOString().split('T')[0]}
+              />
+              <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
+                Dipakai untuk membandingkan hasil skrining dengan rentang normal sesuai kelompok usia Anda.
+              </span>
+            </div>
+          )}
+
+          {isDoctor && (
+            <>
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Profesi</label>
+                <select className="input" value={specialization} onChange={(e) => setSpecialization(e.target.value)} required>
+                  <option value="" disabled>Pilih profesi</option>
+                  {SPECIALIZATIONS.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Institusi / Tempat Praktik</label>
+                <input
+                  type="text"
+                  className="input"
+                  value={institution}
+                  onChange={(e) => setInstitution(e.target.value)}
+                  placeholder="Contoh: RS Siloam Jakarta"
+                  required
+                />
+              </div>
+            </>
+          )}
 
           <button type="submit" className="btn btn-primary btn-lg" disabled={loading || passwordTooShort} style={{ marginTop: 10 }}>
             {loading && <span className="btnSpinner" />}

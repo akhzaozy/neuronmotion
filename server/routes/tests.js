@@ -72,13 +72,23 @@ router.post('/full-screening', async (req, res) => {
 
     if (!patientId) return res.status(400).json({ error: 'patientId wajib diisi' });
 
+    // Ambil usia pasien agar rentang normal gait & ROM disesuaikan per kelompok usia
+    // (proposal: "dibandingkan dengan rentang normal untuk kelompok usia pengguna").
+    const patientRecord = await prisma.user.findUnique({
+      where: { id: parseInt(patientId) },
+      select: { dateOfBirth: true },
+    });
+    const age = patientRecord?.dateOfBirth
+      ? Math.floor((Date.now() - new Date(patientRecord.dateOfBirth)) / (365.25 * 24 * 3600 * 1000))
+      : undefined;
+
     const testResults = {};
 
     if (tremor)            testResults.tremor            = analyzeTremor(tremor);
     if (fingerTapping)     testResults.fingerTapping     = analyzeFingerTapping(fingerTapping);
-    if (gait)              testResults.gait              = analyzeGait(gait);
+    if (gait)              testResults.gait              = analyzeGait({ ...gait, age });
     if (armSwing)          testResults.armSwing          = analyzeArmSwing(armSwing);
-    if (rom)               testResults.rom               = analyzeROM(rom);
+    if (rom)               testResults.rom               = analyzeROM({ ...rom, age });
     if (posturalStability) testResults.posturalStability = analyzePosturalStability(posturalStability);
 
     if (Object.keys(testResults).length === 0) {

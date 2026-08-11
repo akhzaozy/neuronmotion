@@ -32,6 +32,20 @@ const TEST_DURATION: Record<string, number> = {
   rom: 10,
 };
 
+// Pesan peringatan spesifik per tes ketika bagian tubuh yang diminta tidak terdeteksi
+const BODY_PART_WARNING: Record<string, string> = {
+  tremor: 'Tangan tidak terdeteksi. Pastikan tangan Anda terlihat jelas di kamera.',
+  fingerTapping: 'Tangan tidak terdeteksi. Pastikan tangan Anda terlihat jelas di kamera.',
+  gait: 'Kaki tidak terdeteksi jelas. Mundur agar seluruh tubuh terlihat di kamera.',
+  armSwing: 'Lengan tidak terdeteksi. Pastikan tubuh bagian atas terlihat jelas di kamera.',
+  posture: 'Tubuh tidak terdeteksi. Pastikan Anda berdiri di depan kamera dengan pencahayaan cukup.',
+  rom: 'Lutut tidak terdeteksi jelas. Pastikan kaki terlihat dari samping.',
+};
+// Frame beruntun tanpa sampel valid sebelum peringatan live ditampilkan (~1.5 detik @30fps)
+const MISS_STREAK_WARNING_THRESHOLD = 45;
+// Minimal proporsi frame valid dari total durasi tes agar hasil bisa diterima
+const MIN_VALID_FRAME_RATIO = 0.35;
+
 const HAND_CONNECTIONS = [
   [0, 1], [1, 2], [2, 3], [3, 4], // thumb
   [0, 5], [5, 6], [6, 7], [7, 8], // index
@@ -67,6 +81,12 @@ export function useBiomarkerCapture() {
   // Deteksi langkah (peak) untuk live counter gait — bukan angka simetri yang di-hardcode
   const gaitStepCountRef = useRef(0);
   const gaitLastPeakTimeRef = useRef<number | null>(null);
+  // Validasi bagian tubuh yang benar sedang terekam (bukan cuma jumlah total sampel)
+  const missStreakRef = useRef(0);
+  const totalFramesRef = useRef(0);
+  const validFramesRef = useRef(0);
+  const detectionWarningRef = useRef(false);
+  const [detectionWarning, setDetectionWarning] = useState<string | null>(null);
 
   const [cameraReady, setCameraReady] = useState(false);
   const [activeTest, setActiveTest] = useState<TestType>(null);
@@ -185,14 +205,25 @@ export function useBiomarkerCapture() {
     isCapturing.current = false;
     setIsCapturingState(false);
     setCountdown(0);
+    setDetectionWarning(null);
+    detectionWarningRef.current = false;
 
     const test = activeTestRef.current;
     let samples = samplesRef.current;
-    
-    // QUALITY GATE: Validasi kelengkapan data (Minimal 20 frame terekam)
+
+    // QUALITY GATE 1: Validasi kelengkapan data (Minimal 20 frame terekam)
     if (samples.length < 20) {
       alert(`Data pergerakan tidak cukup (Hanya ${samples.length} sampel terdeteksi). Pastikan posisi Anda sesuai panduan di kamera. Silakan ulangi tes ini.`);
       return; // Memaksa user untuk mengulang (tanpa men-trigger setCapturedData)
+    }
+
+    // QUALITY GATE 2: Validasi proporsi frame valid — mencegah tes "lolos" hanya karena
+    // total sampel numerik cukup, padahal sebagian besar durasi bagian tubuh yang benar
+    // tidak terdeteksi sama sekali (mis. diminta gerakkan kaki tapi yang terekam tangan).
+    const validRatio = totalFramesRef.current > 0 ? validFramesRef.current / totalFramesRef.current : 1;
+    if (validRatio < MIN_VALID_FRAME_RATIO) {
+      alert(`${BODY_PART_WARNING[test || ''] || 'Bagian tubuh yang diminta tidak terdeteksi dengan baik.'} Silakan ulangi tes ini.`);
+      return;
     }
 
     let payload: Record<string, unknown> = {};
@@ -246,6 +277,7 @@ export function useBiomarkerCapture() {
       let landmarksToDraw: Landmark[] | null = null;
 
       // Jalankan model sesuai tipe tes
+      const sampleCountBefore = samplesRef.current.length;
       if (isHandMode) {
         const result = models.handLandmarker.detectForVideo(video, performance.now());
         if (result?.landmarks?.length > 0) {
@@ -257,6 +289,25 @@ export function useBiomarkerCapture() {
         if (result?.landmarks?.length > 0) {
           landmarksToDraw = result.landmarks[0]; // Ambil orang pertama
           if (isCapturing.current) processPoseSample(landmarksToDraw as Landmark[]);
+        }
+      }
+
+      // Validasi live: apakah bagian tubuh yang benar sedang benar-benar terekam,
+      // bukan cuma "ada orang di kamera" — mengatasi kasus tes tetap "lanjut" walau
+      // bagian tubuh yang diminta (mis. kaki) tidak terlihat sama sekali.
+      if (isCapturing.current) {
+        totalFramesRef.current += 1;
+        const gotValidSample = samplesRef.current.length > sampleCountBefore;
+        if (gotValidSample) {
+          validFramesRef.current += 1;
+          missStreakRef.current = 0;
+          if (detectionWarningRef.current) { detectionWarningRef.current = false; setDetectionWarning(null); }
+        } else {
+          missStreakRef.current += 1;
+          if (missStreakRef.current >= MISS_STREAK_WARNING_THRESHOLD && !detectionWarningRef.current) {
+            detectionWarningRef.current = true;
+            setDetectionWarning(BODY_PART_WARNING[test || ''] || 'Bagian tubuh tidak terdeteksi. Sesuaikan posisi Anda.');
+          }
         }
       }
 
@@ -461,6 +512,12 @@ export function useBiomarkerCapture() {
     // Reset live step counter gait
     gaitStepCountRef.current = 0;
     gaitLastPeakTimeRef.current = null;
+    // Reset validasi deteksi bagian tubuh
+    missStreakRef.current = 0;
+    totalFramesRef.current = 0;
+    validFramesRef.current = 0;
+    detectionWarningRef.current = false;
+    setDetectionWarning(null);
   }, []);
 
   const stopCapture = useCallback(() => {
@@ -481,7 +538,7 @@ export function useBiomarkerCapture() {
     videoRef, canvasRef,
     cameraReady, poseReady: modelsReady, error,
     activeTest, isCapturing: isCapturingState,
-    liveMetrics, countdown, capturedData,
+    liveMetrics, countdown, capturedData, detectionWarning,
     startCamera, stopCamera,
     startCapture, stopCapture,
   };

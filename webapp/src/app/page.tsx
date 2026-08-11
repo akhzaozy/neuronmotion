@@ -302,6 +302,9 @@ export default function LandingPage() {
               Sudah Punya Akun
             </Link>
           </div>
+          <Link href="/demo" style={{ display: 'inline-block', fontSize: '0.9rem', color: 'var(--brand-light)', fontWeight: 600, marginBottom: 24 }}>
+            Mau coba dulu tanpa akun?
+          </Link>
           <div className={styles.heroStats}>
             {[
               [modelInfo ? `${modelInfo.trainSize + modelInfo.testSize}+` : '...', 'Profil Sintetis Referensi'],

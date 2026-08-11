@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import Logo from '@/components/Logo';
+import { EyeIcon, EyeOffIcon } from '@/components/icons';
 import styles from './auth.module.css';
 
 export default function LoginPage() {
@@ -85,7 +86,7 @@ export default function LoginPage() {
                 aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
                 tabIndex={-1}
               >
-                {showPassword ? '🙈' : '👁️'}
+                {showPassword ? <EyeOffIcon /> : <EyeIcon />}
               </button>
             </div>
           </div>
