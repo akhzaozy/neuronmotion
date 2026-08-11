@@ -11,6 +11,7 @@ import styles from './auth.module.css';
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
+  const [role, setRole] = useState<'PATIENT' | 'DOCTOR'>('PATIENT');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -24,6 +25,16 @@ export default function LoginPage() {
 
     try {
       const data = await api.login(email, password);
+
+      // Validasi tab yang dipilih cocok dengan role akun sungguhan,
+      // supaya pasien & dokter tidak salah masuk ke portal yang salah.
+      if (data.user.role !== role) {
+        const actualLabel = data.user.role === 'DOCTOR' ? 'Dokter / Nakes' : 'Pasien';
+        setError(`Akun ini terdaftar sebagai ${actualLabel}. Silakan pilih tab "${actualLabel}" di atas.`);
+        setLoading(false);
+        return;
+      }
+
       login(data.user, data.token);
 
       if (data.user.role === 'DOCTOR') {
@@ -51,7 +62,26 @@ export default function LoginPage() {
             <Logo />
           </Link>
           <h1 className={styles.title}>Selamat Datang</h1>
-          <p className={styles.subtitle}>Masuk ke akun NeuronMotion Anda</p>
+          <p className={styles.subtitle}>
+            Masuk sebagai {role === 'DOCTOR' ? 'dokter / tenaga kesehatan' : 'pasien'}
+          </p>
+        </div>
+
+        <div className={styles.roleTabs}>
+          <button
+            type="button"
+            className={`${styles.roleTab} ${role === 'PATIENT' ? styles.roleTabActive : ''}`}
+            onClick={() => { setRole('PATIENT'); setError(''); }}
+          >
+            🧍 Pasien
+          </button>
+          <button
+            type="button"
+            className={`${styles.roleTab} ${role === 'DOCTOR' ? styles.roleTabActive : ''}`}
+            onClick={() => { setRole('DOCTOR'); setError(''); }}
+          >
+            🩺 Dokter / Nakes
+          </button>
         </div>
 
         {error && <div className={styles.errorBox}>{error}</div>}
@@ -64,7 +94,7 @@ export default function LoginPage() {
               className="input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Contoh: pasien@neuronmotion.id"
+              placeholder={role === 'DOCTOR' ? 'Contoh: dokter@neuronmotion.id' : 'Contoh: pasien@neuronmotion.id'}
               required
             />
           </div>
@@ -93,7 +123,7 @@ export default function LoginPage() {
 
           <button type="submit" className="btn btn-primary btn-lg" disabled={loading} style={{ marginTop: 10 }}>
             {loading && <span className="btnSpinner" />}
-            {loading ? 'Memproses...' : 'Masuk'}
+            {loading ? 'Memproses...' : `Masuk sebagai ${role === 'DOCTOR' ? 'Dokter/Nakes' : 'Pasien'}`}
           </button>
         </form>
 
