@@ -246,6 +246,7 @@ export default function RiwayatPage() {
                       <th>Tanggal</th>
                       <th>Skor</th>
                       <th>Kategori</th>
+                      <th>Analisis AI</th>
                       <th>Catatan Nakes</th>
                       <th></th>
                     </tr>
@@ -259,6 +260,11 @@ export default function RiwayatPage() {
                           <span className={styles.riskPill} style={{ background: `color-mix(in srgb, ${RISK_COLOR[s.riskCategory]} 15%, transparent)`, color: RISK_COLOR[s.riskCategory] }}>
                             {RISK_LABEL[s.riskCategory] || s.riskCategory}
                           </span>
+                        </td>
+                        <td>
+                          {s.aiAnalysis?.available
+                            ? <span className={styles.aiPill}>✨ Tersedia</span>
+                            : <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>Tidak ada</span>}
                         </td>
                         <td className={styles.noteCell}>
                           {s.doctorNote || <span style={{ color: 'var(--text-muted)' }}>Belum ada catatan dari nakes</span>}
@@ -337,19 +343,66 @@ export default function RiwayatPage() {
               )}
             </div>
 
+            {/* Analisis AI yang tersimpan dari sesi ini, supaya rekomendasinya
+                masih bisa dibaca ulang kapan saja, bukan hanya sekali saat selesai tes */}
+            {detail.aiAnalysis?.available && (
+              <div className={styles.aiBox}>
+                <div className={styles.aiHeader}>
+                  <span className={styles.aiTitle}>✨ Analisis Gabungan AI</span>
+                  {detail.aiAnalysis.tingkatKeyakinan && (
+                    <span className={styles.aiConfidence}>Keyakinan: {detail.aiAnalysis.tingkatKeyakinan}</span>
+                  )}
+                </div>
+
+                {detail.aiAnalysis.ringkasan && (
+                  <p className={styles.aiSummary}>{detail.aiAnalysis.ringkasan}</p>
+                )}
+
+                {detail.aiAnalysis.korelasiGejala && detail.aiAnalysis.korelasiGejala.length > 0 && (
+                  <div style={{ marginBottom: 14 }}>
+                    <h4 className={styles.aiSubTitle}>Kaitan keluhan dengan hasil ukur</h4>
+                    {detail.aiAnalysis.korelasiGejala.map((k, i) => (
+                      <div key={i} className={styles.correlationItem}>
+                        <span className={k.konsisten ? styles.dotOk : styles.dotWarn} />
+                        <div>
+                          <div className={styles.correlationSymptom}>{k.gejala}</div>
+                          <div className={styles.correlationFinding}>{k.temuanPengukuran}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {detail.aiAnalysis.saranTindakLanjut && detail.aiAnalysis.saranTindakLanjut.length > 0 && (
+                  <div>
+                    <h4 className={styles.aiSubTitle}>Saran tindak lanjut</h4>
+                    <ul className={styles.aiList}>
+                      {detail.aiAnalysis.saranTindakLanjut.map((s, i) => <li key={i}>{s}</li>)}
+                    </ul>
+                  </div>
+                )}
+
+                {detail.aiAnalysis.perluPerhatianSegera && (
+                  <div className={styles.urgentNote}>
+                    Kombinasi tanda pada sesi ini sebaiknya diperiksa tenaga medis dalam waktu dekat.
+                  </div>
+                )}
+              </div>
+            )}
+
             {detail.recommendations && detail.recommendations.length > 0 && (
               <div style={{ marginBottom: 16 }}>
-                <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 8 }}>Rekomendasi</h3>
-                <ul style={{ paddingLeft: 20, color: 'var(--text-secondary)', fontSize: '0.88rem', lineHeight: 1.7 }}>
+                <h3 className={styles.aiSubTitle}>Rekomendasi Sistem</h3>
+                <ul className={styles.aiList}>
                   {detail.recommendations.map((r, i) => <li key={i}>{r}</li>)}
                 </ul>
               </div>
             )}
 
             {detail.doctorNote && (
-              <div style={{ background: 'var(--bg-secondary)', borderLeft: '3px solid var(--brand)', padding: '12px 14px', borderRadius: 6, marginBottom: 16 }}>
-                <strong style={{ color: 'var(--brand-light)', fontSize: '0.85rem' }}>Catatan Nakes:</strong>
-                <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', marginTop: 4 }}>{detail.doctorNote}</p>
+              <div className={styles.doctorNoteBox}>
+                <strong className={styles.doctorNoteLabel}>Catatan Nakes</strong>
+                <p className={styles.doctorNoteText}>{detail.doctorNote}</p>
               </div>
             )}
 

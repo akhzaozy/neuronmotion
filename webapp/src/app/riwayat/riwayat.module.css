@@ -203,3 +203,146 @@
   font-weight: 700;
   font-family: 'JetBrains Mono', monospace;
 }
+
+.aiPill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  background: var(--purple-dim);
+  color: var(--purple);
+  white-space: nowrap;
+}
+
+/* ── Analisis AI tersimpan ── */
+
+.aiBox {
+  background: var(--purple-dim);
+  border: 1px solid rgba(124, 58, 237, 0.28);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+.aiHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.aiTitle {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--purple);
+}
+
+.aiConfidence {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 99px;
+  background: rgba(124, 58, 237, 0.15);
+  color: var(--purple);
+  white-space: nowrap;
+}
+
+.aiSummary {
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--text-primary);
+  margin-bottom: 14px;
+}
+
+.aiSubTitle {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.correlationItem {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 7px 0;
+}
+
+.dotOk, .dotWarn {
+  width: 8px;
+  height: 8px;
+  min-width: 8px;
+  border-radius: 50%;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+.dotOk { background: var(--green); }
+.dotWarn { background: var(--yellow); }
+
+.correlationSymptom {
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.correlationFinding {
+  font-size: 0.81rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  margin-top: 2px;
+}
+
+.aiList {
+  padding-left: 20px;
+  margin: 0;
+}
+
+.aiList li {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 5px;
+}
+
+.urgentNote {
+  margin-top: 14px;
+  padding: 10px 14px;
+  background: var(--red-dim);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  border-radius: var(--radius-md);
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--red);
+  line-height: 1.55;
+}
+
+.doctorNoteBox {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--brand);
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  margin-bottom: 16px;
+}
+
+.doctorNoteLabel {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--brand-light);
+  margin-bottom: 6px;
+}
+
+.doctorNoteText {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+}

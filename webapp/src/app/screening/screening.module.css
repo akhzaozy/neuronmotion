@@ -161,24 +161,40 @@
   inset: 0;
   background: var(--overlay-bg);
   backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 24px 20px;
+  overflow-y: auto;
 }
 
 .resultCard {
   background: var(--bg-card);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-xl);
-  padding: 40px;
+  padding: 36px;
   width: 100%;
   max-width: 600px;
   text-align: center;
   box-shadow: var(--shadow-md);
   animation: fadeInUp 0.4s ease-out;
+  /* Analisis AI bisa membuat kartu ini jauh lebih tinggi dari layar. Tanpa batas
+     tinggi + scroll, bagian bawah (rekomendasi dan tombol) terpotong dan tidak
+     bisa dijangkau sama sekali. */
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
+
+.resultCard::-webkit-scrollbar { width: 8px; }
+.resultCard::-webkit-scrollbar-track { background: transparent; }
+.resultCard::-webkit-scrollbar-thumb {
+  background: var(--border-light);
+  border-radius: 4px;
+}
+.resultCard::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
 .scoreCircle {
   width: 120px;

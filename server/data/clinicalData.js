@@ -49,10 +49,25 @@ export function getAgeAdjustedReference(age) {
  * Rentang sekarang sengaja dibuat SALING TUMPANG TINDIH mengikuti kenyataan klinis:
  *  - Orang sehat tetap punya tremor fisiologis 6-12 Hz dengan amplitudo sangat kecil,
  *    jadi yang membedakannya dari tremor patologis terutama AMPLITUDO, bukan frekuensi.
+ *    (tremor fisiologis 8-12 Hz: Scholarpedia "Tremor"; AFP 1999 klasifikasi tremor)
  *  - Essential Tremor (4-12 Hz) memang beririsan dengan tremor Parkinson (3-7 Hz).
  *    Membedakan keduanya justru salah satu tantangan diagnosis paling umum.
+ *    (Zhang et al. 2017, Parkinson's Disease: "frekuensi tremor PD 4-6 Hz dan ET juga
+ *    di rentang tersebut, sulit dibedakan hanya dari frekuensi")
  *  - Fungsi motorik menurun bertahap, sehingga Parkinson awal dan lanjut,
  *    maupun pasca stroke dan ataksia, punya wilayah abu-abu yang beririsan.
+ *
+ * KOREKSI CADENCE (penting):
+ * Versi sebelumnya memodelkan cadence Parkinson jauh LEBIH RENDAH dari orang sehat.
+ * Itu keliru. Meta-analisis gait Parkinson (Zanardi et al. 2021, Scientific Reports)
+ * justru menemukan cadence pada PD sedikit LEBIH TINGGI dari kontrol sehat
+ * (sekitar +1,75 langkah/menit); yang benar-benar memendek adalah PANJANG LANGKAH,
+ * bukan jumlah langkah per menit. Pada tahap lanjut bahkan muncul festinasi, yaitu
+ * langkah kecil-kecil yang justru mempercepat cadence.
+ * Karena itu cadence PD kini dibuat setara atau sedikit di atas kelompok sehat, dan
+ * daya pembeda dialihkan ke simetri langkah serta asimetri ayunan lengan yang memang
+ * terganggu pada PD. Cadence rendah tetap dipertahankan untuk pasca stroke dan
+ * ataksia serebelar, karena perlambatan gait pada keduanya memang terdokumentasi.
  *
  * Konsekuensinya akurasi model turun dari 100% ke angka yang jauh lebih jujur dan
  * bisa dipertanggungjawabkan.
@@ -76,7 +91,8 @@ export const CONDITION_PROFILES = {
     biomarkerProfile: {
       tremorFreq: [3.0, 7.0], tremorAmp: [0.006, 0.024],
       tapRate: [2.2, 3.8], tapDecrement: [14, 38],
-      gaitSymmetry: [0.78, 0.92], gaitCadence: [76, 100],
+      // Cadence setara kelompok sehat; pembeda utamanya simetri langkah & ayunan lengan
+      gaitSymmetry: [0.78, 0.92], gaitCadence: [93, 118],
       armAsymmetry: [18, 45], armAmp: [13, 26],
       swayArea: [0.004, 0.013], swayLength: [0.10, 0.21],
     },
@@ -87,7 +103,9 @@ export const CONDITION_PROFILES = {
     biomarkerProfile: {
       tremorFreq: [3.5, 7.0], tremorAmp: [0.018, 0.055],
       tapRate: [0.9, 2.4], tapDecrement: [32, 60],
-      gaitSymmetry: [0.60, 0.80], gaitCadence: [55, 82],
+      // Rentang lebar: sebagian pasien mengalami festinasi (langkah kecil cepat,
+      // cadence tinggi), sebagian lain melambat karena freezing of gait
+      gaitSymmetry: [0.60, 0.80], gaitCadence: [80, 130],
       armAsymmetry: [38, 70], armAmp: [6, 17],
       swayArea: [0.011, 0.028], swayLength: [0.20, 0.40],
     },

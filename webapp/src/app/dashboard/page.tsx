@@ -92,7 +92,15 @@ export default function DashboardPage() {
 
   if (isLoading || loading) return <div style={{ padding: 40, textAlign: 'center' }}>Memuat Dashboard...</div>;
 
-  const latestRisk = summary?.riskDistribution ? Object.keys(summary.riskDistribution).pop() : 'LOW';
+  // riskDistribution adalah objek HITUNGAN ({HIGH: 4, LOW: 1, ...}), bukan urutan sesi.
+  // Sebelumnya kode mengambil key terakhirnya, sehingga kategori yang tampil tidak ada
+  // hubungannya dengan sesi terbaru: skor 88 bisa terlabel "Risiko LOW" berwarna hijau.
+  // Sumber yang benar adalah entri terakhir pada timeline.
+  const timeline = summary?.timeline as Array<{ risk?: string }> | undefined;
+  const latestRisk =
+    timeline?.[timeline.length - 1]?.risk ||
+    (summary?.latestScore >= 65 ? 'HIGH' : summary?.latestScore >= 35 ? 'MEDIUM' : 'LOW');
+  const riskLabelId = latestRisk === 'HIGH' ? 'Tinggi' : latestRisk === 'MEDIUM' ? 'Sedang' : 'Rendah';
 
   return (
     <div className={styles.page}>
@@ -128,7 +136,7 @@ export default function DashboardPage() {
                   latestRisk === 'HIGH' ? 'risk-bg-high risk-high' :
                   latestRisk === 'MEDIUM' ? 'risk-bg-medium risk-medium' : 'risk-bg-low risk-low'
                 }`}>
-                  Risiko {latestRisk}
+                  Risiko {riskLabelId}
                 </div>
                 <div className={styles.trendBox}>
                   <span>{summary.trendDirection === 'WORSENING' ? '📈' : summary.trendDirection === 'IMPROVING' ? '📉' : '➖'}</span>
