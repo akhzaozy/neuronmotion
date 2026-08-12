@@ -26,11 +26,19 @@ export default function LoginPage() {
 
     try {
       const data = await api.login(email, password);
+      const userRole = data.user.role;
 
-      // Validasi tab yang dipilih cocok dengan role akun sungguhan,
-      // supaya pasien & dokter tidak salah masuk ke portal yang salah.
-      if (data.user.role !== role) {
-        const actualLabel = data.user.role === 'DOCTOR' ? 'Dokter / Nakes' : 'Pasien';
+      // Validasi tab yang dipilih cocok dengan role akun di database.
+      // Hanya berlaku untuk PATIENT & DOCTOR — role lain (misal ADMIN) tidak
+      // termasuk dalam pilihan tab, jadi langsung tampilkan pesan informatif.
+      if (userRole !== 'PATIENT' && userRole !== 'DOCTOR') {
+        setError(`Akun ini memiliki peran "${userRole}" yang tidak dapat mengakses portal ini. Hubungi administrator.`);
+        setLoading(false);
+        return;
+      }
+
+      if (userRole !== role) {
+        const actualLabel = userRole === 'DOCTOR' ? 'Dokter / Nakes' : 'Pasien';
         setError(`Akun ini terdaftar sebagai ${actualLabel}. Silakan pilih tab "${actualLabel}" di atas.`);
         setLoading(false);
         return;
@@ -38,10 +46,13 @@ export default function LoginPage() {
 
       login(data.user, data.token);
 
-      if (data.user.role === 'DOCTOR') {
+      if (userRole === 'DOCTOR') {
         router.push('/doctor');
-      } else {
+      } else if (userRole === 'PATIENT') {
         router.push('/dashboard');
+      } else {
+        // Fallback aman — jangan biarkan route ke halaman yang tidak ada
+        router.push('/login');
       }
     } catch (err: any) {
       setError(err.message || 'Gagal login. Periksa email dan password Anda.');
