@@ -18,7 +18,7 @@ interface TremorResult {
 export default function DemoPage() {
   const {
     videoRef, canvasRef, cameraReady, poseReady, error,
-    activeTest, isCapturing, liveMetrics, countdown, capturedData, detectionWarning,
+    activeTest, isCapturing, liveMetrics, countdown, capturedData, detectionWarning, lightingWarning,
     startCamera, startCapture, stopCapture,
   } = useBiomarkerCapture();
 
@@ -74,6 +74,7 @@ export default function DemoPage() {
               countdown={countdown}
               error={error}
               detectionWarning={detectionWarning}
+              lightingWarning={lightingWarning}
               onStart={startCamera}
               onStartCapture={handleInstructionDone}
               showInstruction={showInstruction}

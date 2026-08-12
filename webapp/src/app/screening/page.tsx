@@ -22,7 +22,7 @@ export default function ScreeningPage() {
   
   const {
     videoRef, canvasRef, cameraReady, poseReady, error,
-    activeTest, isCapturing, liveMetrics, countdown, capturedData, detectionWarning,
+    activeTest, isCapturing, liveMetrics, countdown, capturedData, detectionWarning, lightingWarning,
     startCamera, startCapture, stopCapture,
   } = useBiomarkerCapture();
 
@@ -155,6 +155,7 @@ export default function ScreeningPage() {
             countdown={countdown}
             error={error}
             detectionWarning={detectionWarning}
+            lightingWarning={lightingWarning}
             onStart={startCamera}
             onStartCapture={handleInstructionDone}
             showInstruction={showInstruction}
@@ -188,7 +189,7 @@ export default function ScreeningPage() {
                   onClick={handleNext}
                   style={{ background: 'var(--green-dim)', borderColor: 'var(--green)' }}
                 >
-                  {currentStep === TEST_SEQUENCE.length - 1 ? 'Kirim Hasil Skrining' : 'Lanjut ke Tes Berikutnya →'}
+                  {currentStep === TEST_SEQUENCE.length - 1 ? 'Kirim Hasil Skrining' : 'Lanjut ke Tes Berikutnya'}
                 </button>
               )}
             </div>

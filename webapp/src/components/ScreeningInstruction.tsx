@@ -13,26 +13,26 @@ interface InstructionConfig {
 
 const FigureTremor = () => (
   <svg width="120" height="140" viewBox="0 0 120 140" fill="none">
-    {/* Arm */}
-    <line x1="60" y1="70" x2="60" y2="110" stroke="#4b91f7" strokeWidth="6" strokeLinecap="round"/>
-    {/* Hand tremor */}
-    <g className={styles.figureTremor}>
-      <rect x="44" y="108" width="32" height="18" rx="9" fill="#4b91f7" opacity="0.85"/>
-      {/* Fingers */}
-      <rect x="44" y="94" width="7" height="16" rx="3.5" fill="#4b91f7"/>
-      <rect x="54" y="90" width="7" height="20" rx="3.5" fill="#4b91f7"/>
-      <rect x="64" y="91" width="7" height="19" rx="3.5" fill="#4b91f7"/>
-      <rect x="74" y="95" width="7" height="15" rx="3.5" fill="#4b91f7"/>
-    </g>
     {/* Body */}
-    <circle cx="60" cy="28" r="18" fill="#1e3a5f" stroke="#4b91f7" strokeWidth="2"/>
-    <line x1="60" y1="46" x2="60" y2="72" stroke="#4b91f7" strokeWidth="5" strokeLinecap="round"/>
+    <circle cx="60" cy="24" r="18" fill="#1e3a5f" stroke="#4b91f7" strokeWidth="2"/>
+    <line x1="60" y1="42" x2="60" y2="62" stroke="#4b91f7" strokeWidth="5" strokeLinecap="round"/>
     {/* Shoulder lines */}
-    <line x1="60" y1="52" x2="32" y2="68" stroke="#4b91f7" strokeWidth="4" strokeLinecap="round"/>
-    <line x1="60" y1="52" x2="88" y2="68" stroke="#4b91f7" strokeWidth="4" strokeLinecap="round"/>
+    <line x1="60" y1="48" x2="32" y2="64" stroke="#4b91f7" strokeWidth="4" strokeLinecap="round"/>
+    <line x1="60" y1="48" x2="88" y2="64" stroke="#4b91f7" strokeWidth="4" strokeLinecap="round"/>
+    {/* Arm */}
+    <line x1="60" y1="60" x2="60" y2="98" stroke="#4b91f7" strokeWidth="6" strokeLinecap="round"/>
+    {/* Open hand (palm + thumb + 4 evenly-spaced fingers) that trembles as a whole */}
+    <g className={styles.figureTremor}>
+      <rect x="40" y="96" width="40" height="24" rx="12" fill="#4b91f7" opacity="0.85"/>
+      <rect x="25" y="100" width="17" height="10" rx="5" fill="#4b91f7"/>
+      <rect x="44" y="78" width="8" height="20" rx="4" fill="#4b91f7"/>
+      <rect x="54" y="74" width="8" height="24" rx="4" fill="#4b91f7"/>
+      <rect x="66" y="74" width="8" height="24" rx="4" fill="#4b91f7"/>
+      <rect x="76" y="78" width="8" height="20" rx="4" fill="#4b91f7"/>
+    </g>
     {/* Wavy lines — tremor indicator */}
-    <path d="M30 118 Q37 112 44 118 Q51 124 58 118" stroke="#f59e0b" strokeWidth="2" fill="none" strokeDasharray="4 2" opacity="0.8"/>
-    <path d="M62 118 Q69 112 76 118 Q83 124 90 118" stroke="#f59e0b" strokeWidth="2" fill="none" strokeDasharray="4 2" opacity="0.8"/>
+    <path d="M24 114 Q31 108 38 114 Q45 120 52 114" stroke="#f59e0b" strokeWidth="2" fill="none" strokeDasharray="4 2" opacity="0.8"/>
+    <path d="M68 114 Q75 108 82 114 Q89 120 96 114" stroke="#f59e0b" strokeWidth="2" fill="none" strokeDasharray="4 2" opacity="0.8"/>
   </svg>
 );
 
@@ -62,19 +62,21 @@ const FigureTapping = () => (
 
 const FigureGait = () => (
   <svg width="120" height="140" viewBox="0 0 120 140" fill="none">
-    <g className={styles.figureGait}>
-      {/* Head */}
-      <circle cx="60" cy="20" r="16" fill="#1e3a5f" stroke="#4b91f7" strokeWidth="2"/>
-      {/* Body */}
+    {/* Head */}
+    <circle cx="60" cy="20" r="16" fill="#1e3a5f" stroke="#4b91f7" strokeWidth="2"/>
+    {/* Body + arms (sedikit ayun mengikuti langkah) */}
+    <g className={styles.figureGaitBody}>
       <line x1="60" y1="36" x2="60" y2="82" stroke="#4b91f7" strokeWidth="5" strokeLinecap="round"/>
-      {/* Arms */}
       <line x1="60" y1="46" x2="36" y2="66" stroke="#4b91f7" strokeWidth="4" strokeLinecap="round"/>
       <line x1="60" y1="46" x2="84" y2="60" stroke="#4b91f7" strokeWidth="4" strokeLinecap="round"/>
-      {/* Legs */}
+    </g>
+    {/* Kaki depan & belakang bergerak berlawanan arah — siklus langkah yang jelas */}
+    <g className={styles.figureLegFront} style={{ transformOrigin: '60px 82px' }}>
       <line x1="60" y1="82" x2="42" y2="118" stroke="#4b91f7" strokeWidth="5" strokeLinecap="round"/>
-      <line x1="60" y1="82" x2="75" y2="115" stroke="#4b91f7" strokeWidth="5" strokeLinecap="round"/>
-      {/* Feet */}
       <line x1="42" y1="118" x2="30" y2="122" stroke="#4b91f7" strokeWidth="4" strokeLinecap="round"/>
+    </g>
+    <g className={styles.figureLegBack} style={{ transformOrigin: '60px 82px' }}>
+      <line x1="60" y1="82" x2="75" y2="115" stroke="#4b91f7" strokeWidth="5" strokeLinecap="round"/>
       <line x1="75" y1="115" x2="88" y2="120" stroke="#4b91f7" strokeWidth="4" strokeLinecap="round"/>
     </g>
     {/* Ground */}
@@ -159,7 +161,7 @@ const INSTRUCTIONS: Record<string, InstructionConfig> = {
     title: 'Tahan Tangan Rileks',
     steps: [
       'Angkat tangan kanan sejajar dada, telapak menghadap bawah',
-      'Rilekskan seluruh otot tangan — jangan sengaja menahan',
+      'Rilekskan seluruh otot tangan, jangan sengaja menahan',
       'Diam selama 10 detik, tahan posisi ini',
       'Jangan gerakkan tangan secara sengaja',
     ],
@@ -172,7 +174,7 @@ const INSTRUCTIONS: Record<string, InstructionConfig> = {
       'Angkat tangan ke depan kamera, telapak menghadap kamera',
       'Ketuk ibu jari ke telunjuk se-cepat dan se-keras mungkin',
       'Lakukan berulang tanpa henti selama 10 detik',
-      'Usahakan ritme konsisten — jangan melambat di tengah',
+      'Usahakan ritme konsisten, jangan melambat di tengah',
     ],
     figure: <FigureTapping />,
   },
@@ -189,10 +191,10 @@ const INSTRUCTIONS: Record<string, InstructionConfig> = {
   },
   armSwing: {
     badge: 'Tes Arm Swing',
-    title: 'Berjalan & Biarkan Tangan Berayun',
+    title: 'Berjalan dan Biarkan Tangan Berayun',
     steps: [
       'Posisi kamera sama seperti tes gait (±2 meter)',
-      'Berjalan dengan kecepatan normal — jangan paksa tangan',
+      'Berjalan dengan kecepatan normal, jangan paksa tangan',
       'Biarkan kedua tangan berayun natural mengikuti langkah',
       'Lakukan selama 10 detik tanpa menahan ayunan',
     ],
@@ -200,18 +202,18 @@ const INSTRUCTIONS: Record<string, InstructionConfig> = {
   },
   posture: {
     badge: 'Tes Stabilitas Postur',
-    title: 'Berdiri Tegak & Diam',
+    title: 'Berdiri Tegak dan Diam',
     steps: [
       'Berdiri tegak dengan kedua kaki selebar bahu',
       'Pastikan seluruh tubuh terlihat di kamera',
       'Tutup mata (opsional) untuk tes lebih akurat',
-      'Diam selama 10 detik — jangan sengaja menahan badan',
+      'Diam selama 10 detik, jangan sengaja menahan badan',
     ],
     figure: <FigurePosture />,
   },
   rom: {
     badge: 'Tes Range of Motion',
-    title: 'Tekuk & Luruskan Lutut',
+    title: 'Tekuk dan Luruskan Lutut',
     steps: [
       'Duduk di kursi tanpa sandaran tangan, kamera di samping',
       'Angkat satu kaki dan luruskan sepenuhnya',
@@ -267,24 +269,24 @@ export default function ScreeningInstruction({ testType, onReady, onSkip }: Prop
           ))}
         </div>
 
-        {/* Countdown / Start */}
+        {/* Countdown / Start — "Lewati" hanya muncul setelah countdown berjalan (pola "skip iklan") */}
         {!started ? (
-          <div style={{ display: 'flex', gap: 10, width: '100%', marginTop: 4 }}>
-            <button className="btn btn-primary" style={{ flex: 1 }} onClick={startCountdown}>
-              Saya Siap — Mulai →
-            </button>
-            <button className="btn btn-outline" style={{ padding: '0 16px' }} onClick={onSkip}>
-              Lewati
-            </button>
-          </div>
+          <button className="btn btn-primary" style={{ width: '100%' }} onClick={startCountdown}>
+            Saya Siap, Mulai
+          </button>
         ) : (
           <div className={styles.countdownWrap}>
             <div className={styles.countdownBar}>
               <div className={styles.countdownFill} style={{ width: `${pct}%` }} />
             </div>
-            <p className={styles.countdownLabel}>
-              {countdown > 0 ? `Memulai dalam ${countdown} detik...` : 'Mulai!'}
-            </p>
+            <div className={styles.countdownRow}>
+              <p className={styles.countdownLabel}>
+                {countdown > 0 ? `Memulai dalam ${countdown} detik...` : 'Mulai!'}
+              </p>
+              <button className={styles.skipLink} onClick={onSkip}>
+                Lewati
+              </button>
+            </div>
           </div>
         )}
       </div>

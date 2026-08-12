@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { api, Session } from '@/lib/api';
+import AppNav from '@/components/AppNav';
 import styles from './dashboard.module.css';
 
 function getGreeting() {
@@ -95,6 +96,7 @@ export default function DashboardPage() {
 
   return (
     <div className={styles.page}>
+      <AppNav />
       <div className={styles.container}>
         <div className={styles.header}>
           <div>
@@ -107,9 +109,6 @@ export default function DashboardPage() {
               <div className={styles.userName}>{user?.name}</div>
               <div className={styles.userRole}>Pasien Terdaftar</div>
             </div>
-            <button className="btn btn-outline btn-sm" onClick={() => { logout(); router.push('/login'); }} style={{ marginLeft: 16 }}>
-              Keluar
-            </button>
           </div>
         </div>
 
@@ -161,9 +160,14 @@ export default function DashboardPage() {
         </div>
 
         {/* History */}
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: 24 }}>Riwayat Skrining</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Riwayat Terkini</h2>
+          {history.length > 0 && (
+            <Link href="/riwayat" className="btn btn-outline btn-sm">Lihat Semua Riwayat</Link>
+          )}
+        </div>
         <div className={styles.historyList}>
-          {history.length > 0 ? history.map((session, i) => (
+          {history.length > 0 ? history.slice(0, 3).map((session, i) => (
             <div key={session.id} className={styles.historyItem} style={{ flexDirection: 'column', alignItems: 'stretch', gap: 8 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>

@@ -87,6 +87,10 @@ export function useBiomarkerCapture() {
   const validFramesRef = useRef(0);
   const detectionWarningRef = useRef(false);
   const [detectionWarning, setDetectionWarning] = useState<string | null>(null);
+  // Cek pencahayaan: sampel kecerahan rata-rata tiap ~20 frame dari kanvas kecil terpisah
+  const lightingCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const lightingFrameCounterRef = useRef(0);
+  const [lightingWarning, setLightingWarning] = useState<string | null>(null);
 
   const [cameraReady, setCameraReady] = useState(false);
   const [activeTest, setActiveTest] = useState<TestType>(null);
@@ -270,6 +274,34 @@ export function useBiomarkerCapture() {
       ctx.scale(-1, 1);
       ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
       ctx.restore();
+
+      // Cek pencahayaan setiap ~20 frame (bukan tiap frame, demi performa) dengan
+      // menyampel kecerahan rata-rata dari kanvas mini terpisah.
+      lightingFrameCounterRef.current += 1;
+      if (lightingFrameCounterRef.current % 20 === 0) {
+        if (!lightingCanvasRef.current) {
+          lightingCanvasRef.current = document.createElement('canvas');
+          lightingCanvasRef.current.width = 16;
+          lightingCanvasRef.current.height = 12;
+        }
+        const lctx = lightingCanvasRef.current.getContext('2d', { willReadFrequently: true });
+        if (lctx) {
+          lctx.drawImage(video, 0, 0, 16, 12);
+          const data = lctx.getImageData(0, 0, 16, 12).data;
+          let sum = 0;
+          for (let i = 0; i < data.length; i += 4) {
+            sum += 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+          }
+          const avgBrightness = sum / (data.length / 4); // 0 (hitam) – 255 (putih)
+          if (avgBrightness < 45) {
+            setLightingWarning('Ruangan terlalu gelap. Cari pencahayaan lebih terang agar deteksi lebih akurat.');
+          } else if (avgBrightness > 225) {
+            setLightingWarning('Cahaya terlalu terang/silau. Hindari cahaya langsung menghadap kamera.');
+          } else {
+            setLightingWarning(null);
+          }
+        }
+      }
 
       const test = activeTestRef.current;
       const isHandMode = test === 'tremor' || test === 'fingerTapping';
@@ -538,7 +570,7 @@ export function useBiomarkerCapture() {
     videoRef, canvasRef,
     cameraReady, poseReady: modelsReady, error,
     activeTest, isCapturing: isCapturingState,
-    liveMetrics, countdown, capturedData, detectionWarning,
+    liveMetrics, countdown, capturedData, detectionWarning, lightingWarning,
     startCamera, stopCamera,
     startCapture, stopCapture,
   };

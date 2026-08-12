@@ -14,6 +14,7 @@ interface Props {
   countdown: number;
   error: string | null;
   detectionWarning?: string | null;
+  lightingWarning?: string | null;
   onStart: () => void;           // aktifkan kamera
   onStartCapture: () => void;    // mulai rekaman (dipanggil setelah instruksi)
   showInstruction: boolean;      // tampilkan overlay instruksi
@@ -48,7 +49,7 @@ const TEST_LABELS: Record<string, string> = {
 
 export default function CameraView({
   videoRef, canvasRef, cameraReady, poseReady,
-  isCapturing, activeTest, liveMetrics, countdown, error, detectionWarning,
+  isCapturing, activeTest, liveMetrics, countdown, error, detectionWarning, lightingWarning,
   onStart, onStartCapture, showInstruction, instructionTestType, onInstructionDone, onInstructionSkip,
 }: Props) {
   return (
@@ -102,7 +103,7 @@ export default function CameraView({
         {isCapturing && (
           <div className={styles.recBadge}>
             <span className={styles.recDot} />
-            REC — {countdown}s
+            REC {countdown}s
           </div>
         )}
 
@@ -122,9 +123,16 @@ export default function CameraView({
           </div>
         )}
 
+        {/* Peringatan pencahayaan — muncul kapan saja kamera aktif, bukan cuma saat rekam */}
+        {cameraReady && poseReady && lightingWarning && (
+          <div className={styles.lightingWarning}>
+            💡 {lightingWarning}
+          </div>
+        )}
+
         {/* Peringatan live: bagian tubuh yang diminta tidak terdeteksi */}
         {isCapturing && detectionWarning && (
-          <div className={styles.detectionWarning}>
+          <div className={styles.detectionWarning} style={lightingWarning ? { top: 92 } : undefined}>
             ⚠️ {detectionWarning}
           </div>
         )}

@@ -10,6 +10,7 @@ import {
   calculateCompositeRisk,
 } from '../services/biomarkers.js';
 import { getClassifier } from '../data/clinicalData.js';
+import { requireAuth } from '../middleware/auth.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -215,6 +216,20 @@ router.get('/session/:sessionId', async (req, res) => {
       recommendations: session.recommendations ? JSON.parse(session.recommendations) : [],
     });
   } catch (err) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/** DELETE /api/tests/history — hapus semua riwayat sesi skrining milik akun sendiri (hak hapus data, UU PDP) */
+router.delete('/history', requireAuth, async (req, res) => {
+  try {
+    if (req.user.role !== 'PATIENT') {
+      return res.status(403).json({ error: 'Hanya akun pasien yang punya riwayat skrining' });
+    }
+    const result = await prisma.session.deleteMany({ where: { patientId: req.user.userId } });
+    res.json({ message: 'Riwayat pemeriksaan berhasil dihapus', deletedCount: result.count });
+  } catch (err) {
+    console.error('Delete History Error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

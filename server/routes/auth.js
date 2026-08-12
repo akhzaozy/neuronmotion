@@ -2,6 +2,7 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
+import { requireAuth } from '../middleware/auth.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -82,6 +83,89 @@ router.post('/login', async (req, res) => {
     });
   } catch (error) {
     console.error('Login Error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ── Profil ──────────────────────────────────────────────────────────────────
+
+/** GET /api/auth/me — profil akun yang sedang login (untuk refresh data profil) */
+router.get('/me', requireAuth, async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
+    if (!user) return res.status(404).json({ error: 'Akun tidak ditemukan' });
+    const { password, ...safeUser } = user;
+    res.json(safeUser);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/** PUT /api/auth/profile — ubah data pribadi milik akun sendiri */
+router.put('/profile', requireAuth, async (req, res) => {
+  try {
+    const { name, gender, dateOfBirth, specialization, institution } = req.body;
+    const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
+    if (!user) return res.status(404).json({ error: 'Akun tidak ditemukan' });
+
+    const data = {};
+    if (name !== undefined) data.name = name;
+    if (gender !== undefined) data.gender = gender === 'M' || gender === 'F' ? gender : null;
+    if (user.role === 'PATIENT' && dateOfBirth !== undefined) {
+      data.dateOfBirth = dateOfBirth ? new Date(dateOfBirth) : null;
+    }
+    if (user.role === 'DOCTOR') {
+      if (specialization !== undefined) data.specialization = specialization || null;
+      if (institution !== undefined) data.institution = institution || null;
+    }
+
+    const updated = await prisma.user.update({ where: { id: req.user.userId }, data });
+    const { password, ...safeUser } = updated;
+    res.json(safeUser);
+  } catch (error) {
+    console.error('Update Profile Error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/** PUT /api/auth/password — ganti password (wajib password lama yang benar) */
+router.put('/password', requireAuth, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Password lama dan baru wajib diisi' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'Password baru minimal 6 karakter' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
+    if (!user) return res.status(404).json({ error: 'Akun tidak ditemukan' });
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) return res.status(401).json({ error: 'Password lama tidak sesuai' });
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({ where: { id: req.user.userId }, data: { password: hashedPassword } });
+    res.json({ message: 'Password berhasil diperbarui' });
+  } catch (error) {
+    console.error('Change Password Error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/** DELETE /api/auth/account — hapus akun sendiri secara permanen (hak hapus data, UU PDP) */
+router.delete('/account', requireAuth, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    await prisma.$transaction([
+      prisma.session.deleteMany({ where: { OR: [{ patientId: userId }, { doctorId: userId }] } }),
+      prisma.doctorPatient.deleteMany({ where: { OR: [{ doctorId: userId }, { patientId: userId }] } }),
+      prisma.user.delete({ where: { id: userId } }),
+    ]);
+    res.json({ message: 'Akun berhasil dihapus' });
+  } catch (error) {
+    console.error('Delete Account Error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

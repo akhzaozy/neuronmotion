@@ -7,13 +7,20 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  padding: 32px 24px;
+  padding: 36px 24px 20px;
   animation: fadeIn 0.3s ease-out;
+  overflow-y: auto;
 }
+
+/* Kartu instruksi bisa lebih tinggi dari video container di layar pendek —
+   tanpa scroll, tombol "Mulai"/"Lewati" di bagian bawah jadi terpotong dan
+   tidak bisa diklik sama sekali. */
+.overlay::-webkit-scrollbar { width: 5px; }
+.overlay::-webkit-scrollbar-thumb { background: rgba(37,99,235,0.3); border-radius: 3px; }
 
 @keyframes fadeIn {
   from { opacity: 0; }
@@ -24,10 +31,12 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
   max-width: 420px;
   width: 100%;
   text-align: center;
+  margin: auto 0;
+  flex-shrink: 0;
 }
 
 .badge {
@@ -42,10 +51,13 @@
   border-radius: 99px;
 }
 
+/* Kartu ini SELALU berlatar terang (glassmorphism putih) walau situs dalam
+   dark mode, jadi warna teks di sini sengaja tetap (bukan var(--text-*))
+   supaya tidak jadi putih-di-atas-putih yang tidak terbaca. */
 .title {
   font-size: 1.35rem;
   font-weight: 800;
-  color: var(--text-primary);
+  color: #334155;
   letter-spacing: -0.01em;
   margin: 0;
 }
@@ -53,8 +65,8 @@
 /* Animated figure area */
 .figureWrap {
   position: relative;
-  width: 140px;
-  height: 160px;
+  width: 110px;
+  height: 128px;
   flex-shrink: 0;
 }
 
@@ -72,7 +84,7 @@
   align-items: flex-start;
   gap: 12px;
   font-size: 0.85rem;
-  color: var(--text-secondary);
+  color: #475569;
   line-height: 1.5;
   animation: slideIn 0.3s ease-out both;
 }
@@ -129,9 +141,31 @@
   transition: width 1s linear;
 }
 
+.countdownRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
 .countdownLabel {
   font-size: 0.8rem;
-  color: var(--text-muted);
+  color: #64748b;
+}
+
+.skipLink {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748b;
+  background: transparent;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.skipLink:hover {
+  color: #334155;
+  background: rgba(100, 116, 139, 0.1);
 }
 
 .startBtn {
@@ -160,14 +194,30 @@
   50%       { transform: translateY(14px); }
 }
 
-/* Gait: walking cycle — body rocks */
-.figureGait {
+/* Gait: badan & lengan sedikit ayun mengikuti langkah */
+.figureGaitBody {
   animation: walk 0.8s ease-in-out infinite alternate;
   transform-origin: center bottom;
 }
 @keyframes walk {
-  from { transform: rotate(-4deg); }
-  to   { transform: rotate(4deg); }
+  from { transform: rotate(-3deg); }
+  to   { transform: rotate(3deg); }
+}
+
+/* Gait: kaki depan & belakang bergantian — siklus melangkah yang jelas */
+.figureLegFront {
+  animation: legForward 0.8s ease-in-out infinite alternate;
+}
+.figureLegBack {
+  animation: legBackward 0.8s ease-in-out infinite alternate;
+}
+@keyframes legForward {
+  from { transform: rotate(-14deg); }
+  to   { transform: rotate(14deg); }
+}
+@keyframes legBackward {
+  from { transform: rotate(14deg); }
+  to   { transform: rotate(-14deg); }
 }
 
 /* Arm swing: arm swinging */

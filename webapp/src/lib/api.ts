@@ -23,6 +23,21 @@ export const api = {
   login: (email: string, password: string) =>
     request<{ token: string; user: UserProfile }>('POST', '/api/auth/login', { email, password }),
 
+  getMe: (token?: string) =>
+    request<UserProfile>('GET', '/api/auth/me', undefined, token),
+
+  updateProfile: (data: Partial<RegisterInput>, token?: string) =>
+    request<UserProfile>('PUT', '/api/auth/profile', data, token),
+
+  changePassword: (currentPassword: string, newPassword: string, token?: string) =>
+    request('PUT', '/api/auth/password', { currentPassword, newPassword }, token),
+
+  deleteAccount: (token?: string) =>
+    request('DELETE', '/api/auth/account', undefined, token),
+
+  deleteHistory: (token?: string) =>
+    request<{ deletedCount: number }>('DELETE', '/api/tests/history', undefined, token),
+
   // Tests
   analyzeTremor: (data: object) =>
     request('POST', '/api/tests/tremor', data),
@@ -123,6 +138,14 @@ export interface Session {
   gaitResult?: Record<string, unknown>;
   posturalResult?: Record<string, unknown>;
   doctorNote?: string;
+  rawBiomarkers?: {
+    tremor?: { dominantFrequencyHz?: number } | null;
+    fingerTapping?: { tapRatePerSecond?: number } | null;
+    gait?: { symmetryPercent?: number; cadencePerMin?: number } | null;
+    armSwing?: { asymmetryPercent?: number } | null;
+    rom?: { romDeg?: number } | null;
+    posturalStability?: { swayAreaCm2?: number } | null;
+  };
 }
 
 export interface PatientDetail {
