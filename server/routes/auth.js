@@ -8,6 +8,17 @@ const router = express.Router();
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'neuronmotion-secret-key';
 
+/**
+ * Mengenali galat akibat database yang belum mengikuti skema terbaru,
+ * misalnya setelah git pull membawa kolom baru tetapi migrasi belum dijalankan.
+ * P2021 tabel tidak ada, P2022 kolom tidak ada.
+ */
+function isSchemaDriftError(error) {
+  if (error?.code === 'P2021' || error?.code === 'P2022') return true;
+  const msg = String(error?.message || '');
+  return /no such column|no such table|does not exist in the current database/i.test(msg);
+}
+
 // Register User (PATIENT or DOCTOR)
 router.post('/register', async (req, res) => {
   try {
@@ -43,6 +54,14 @@ router.post('/register', async (req, res) => {
     res.status(201).json({ message: 'User created successfully', userId: user.id });
   } catch (error) {
     console.error('Registration Error:', error);
+    // Struktur database tertinggal dari skema (kolom belum ada) menghasilkan galat
+    // Prisma tersendiri. Tanpa dibedakan, kondisi ini muncul sebagai 500 tanpa
+    // petunjuk, padahal perbaikannya cukup menjalankan `npx prisma db push`.
+    if (isSchemaDriftError(error)) {
+      return res.status(500).json({
+        error: 'Struktur database server belum diperbarui. Jalankan "npx prisma db push" di server lalu restart layanan.',
+      });
+    }
     res.status(500).json({ error: 'Internal server error' });
   }
 });

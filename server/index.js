@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { PrismaClient } from '@prisma/client';
 import authRoutes from './routes/auth.js';
 import testRoutes from './routes/tests.js';
 import patientRoutes from './routes/patients.js';
@@ -65,10 +66,35 @@ app.use((req, res) => {
   res.status(404).json({ error: `Route ${req.method} ${req.path} not found` });
 });
 
-app.listen(PORT, () => {
+/**
+ * Memastikan struktur database sudah mengikuti skema terbaru saat server start.
+ * Setelah git pull membawa kolom baru, database di server tidak ikut berubah
+ * (berkas .db sengaja tidak masuk git), dan tanpa peringatan ini kondisi tersebut
+ * baru ketahuan ketika pengguna gagal mendaftar dengan galat 500 tanpa petunjuk.
+ */
+async function checkDatabaseSchema() {
+  const prisma = new PrismaClient();
+  try {
+    // Menyentuh kolom yang ditambahkan paling akhir; gagal berarti database tertinggal
+    await prisma.user.findFirst({ select: { id: true, institution: true } });
+    await prisma.session.findFirst({ select: { id: true, aiAnalysis: true } });
+    return true;
+  } catch (e) {
+    console.error('\n⚠️  Struktur database belum sesuai skema terbaru.');
+    console.error('   Penyebab: kolom baru sudah ada di schema.prisma tetapi belum dibuat di database.');
+    console.error('   Perbaikan: jalankan "npx prisma db push" lalu restart layanan.');
+    console.error(`   Detail: ${e.message.split('\n')[0]}\n`);
+    return false;
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
+app.listen(PORT, async () => {
   console.log(`\n🚀 NeuronMotion Backend v1.0.0`);
   console.log(`   API: http://localhost:${PORT}/api/health`);
   console.log(`   Playground: http://localhost:${PORT}/\n`);
+  await checkDatabaseSchema();
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
