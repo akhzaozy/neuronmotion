@@ -7,6 +7,7 @@ import patientRoutes from './routes/patients.js';
 import doctorRoutes from './routes/doctor.js';
 import adminRoutes from './routes/admin.js';
 import chatRoutes from './routes/chat.js';
+import { isGeminiConfigured } from './services/gemini.js';
 
 dotenv.config();
 const app = express();
@@ -32,10 +33,14 @@ app.use('/doctor',   doctorRoutes);
 app.use('/admin',    adminRoutes);
 app.use('/chat',     chatRoutes);
 
-app.get('/api/health', (req, res) => {
+// Health dipasang di kedua path, sama seperti route lain, karena nginx di produksi
+// memotong awalan /api sehingga permintaan ke /api/health tiba di sini sebagai /health.
+app.get(['/api/health', '/health'], (req, res) => {
   res.json({
     status: 'ok', service: 'neuronmotion-api', version: '1.0.0',
     timestamp: new Date().toISOString(),
+    // Menandai apakah asisten AI siap dipakai, berguna saat memeriksa deployment
+    aiConfigured: isGeminiConfigured(),
     endpoints: {
       auth:     ['/api/auth/register', '/api/auth/login'],
       tests:    ['/api/tests/tremor', '/api/tests/finger-tapping', '/api/tests/gait',
