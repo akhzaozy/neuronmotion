@@ -68,7 +68,7 @@ function PLAYGROUND_HTML(port) {
 <html lang="id">
 <head>
 <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>NeuronMotion — API Playground</title>
+<title>NeuronMotion, API Playground</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:#0d1117;color:#e6edf3;padding:20px}
@@ -106,7 +106,7 @@ button:hover{background:#388bfd}
 </head>
 <body>
 <h1>🧠 NeuronMotion <span class="badge">API v1.0.0</span></h1>
-<p class="sub">Sistem Skrining Gangguan Saraf — Backend Playground</p>
+<p class="sub">Sistem Skrining Gangguan Saraf, Backend Playground</p>
 <div class="info-bar">
   <span><span class="label">Status: </span><span class="value" id="sv">Memeriksa...</span></span>
   <span><span class="label">Port: </span><span class="value">${port}</span></span>

@@ -37,6 +37,15 @@
   align-items: center;
   gap: 4px;
   overflow-x: auto;
+  flex: 1;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .link {

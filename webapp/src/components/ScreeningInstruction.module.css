@@ -16,7 +16,7 @@
   overflow-y: auto;
 }
 
-/* Kartu instruksi bisa lebih tinggi dari video container di layar pendek —
+/* Kartu instruksi bisa lebih tinggi dari video container di layar pendek ,
    tanpa scroll, tombol "Mulai"/"Lewati" di bagian bawah jadi terpotong dan
    tidak bisa diklik sama sekali. */
 .overlay::-webkit-scrollbar { width: 5px; }
@@ -129,7 +129,9 @@
 .countdownBar {
   width: 100%;
   height: 4px;
-  background: rgba(255,255,255,0.1);
+  /* Kartu instruksi selalu berlatar terang, jadi track-nya harus gelap
+     transparan agar terlihat (sebelumnya putih transparan = nyaris hilang). */
+  background: rgba(15, 23, 42, 0.12);
   border-radius: 99px;
   overflow: hidden;
 }
@@ -204,7 +206,7 @@
   to   { transform: rotate(3deg); }
 }
 
-/* Gait: kaki depan & belakang bergantian — siklus melangkah yang jelas */
+/* Gait: kaki depan & belakang bergantian, siklus melangkah yang jelas */
 .figureLegFront {
   animation: legForward 0.8s ease-in-out infinite alternate;
 }

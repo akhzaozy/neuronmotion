@@ -5,12 +5,12 @@ import { CONDITION_PROFILES, generateTrainingDataset, getModelInfo } from '../da
 const router = express.Router();
 const prisma = new PrismaClient();
 
-/** GET /api/admin/model-accuracy — Akurasi K-NN sungguhan (holdout 80/20, bukan angka klaim) */
+/** GET /api/admin/model-accuracy, Akurasi K-NN sungguhan (holdout 80/20, bukan angka klaim) */
 router.get('/model-accuracy', (req, res) => {
   res.json(getModelInfo());
 });
 
-/** GET /api/admin/stats — Statistik sistem keseluruhan */
+/** GET /api/admin/stats, Statistik sistem keseluruhan */
 router.get('/stats', async (req, res) => {
   try {
     const [totalPatients, totalDoctors, totalSessions, riskBreakdown, recentSessions] = await Promise.all([
@@ -44,13 +44,13 @@ router.get('/stats', async (req, res) => {
   }
 });
 
-/** GET /api/admin/conditions — Referensi kondisi klinis */
+/** GET /api/admin/conditions, Referensi kondisi klinis */
 router.get('/conditions', async (req, res) => {
   const conditions = await prisma.condition.findMany();
   res.json(conditions.map(c => ({ ...c, biomarkerThresholds: JSON.parse(c.biomarkerThresholds) })));
 });
 
-/** GET /api/admin/training-data — Preview data training */
+/** GET /api/admin/training-data, Preview data training */
 router.get('/training-data', (req, res) => {
   const { count = 10 } = req.query;
   const dataset = generateTrainingDataset(Math.min(parseInt(count), 50));
@@ -62,7 +62,7 @@ router.get('/training-data', (req, res) => {
   });
 });
 
-/** GET /api/admin/doctors — Daftar dokter */
+/** GET /api/admin/doctors, Daftar dokter */
 router.get('/doctors', async (req, res) => {
   try {
     const doctors = await prisma.user.findMany({

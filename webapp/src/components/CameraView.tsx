@@ -23,7 +23,7 @@ interface Props {
   onInstructionSkip: () => void; // lewati instruksi
 }
 
-// Icon SVG medis — tidak ada nuansa AI
+// Icon SVG medis, tidak ada nuansa AI
 const IconCamera = () => (
   <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
@@ -85,7 +85,7 @@ export default function CameraView({
           </div>
         )}
 
-        {/* Loading MediaPipe — tampilkan progress & petunjuk */}
+        {/* Loading MediaPipe, tampilkan progress & petunjuk */}
         {cameraReady && !poseReady && !error && (
           <div className={styles.loadingOverlay}>
             <div className={styles.loadingCard}>
@@ -107,7 +107,7 @@ export default function CameraView({
           </div>
         )}
 
-        {/* Instruction overlay — blur + animated guide */}
+        {/* Instruction overlay, blur + animated guide */}
         {showInstruction && instructionTestType && (
           <ScreeningInstruction
             testType={instructionTestType}
@@ -123,7 +123,7 @@ export default function CameraView({
           </div>
         )}
 
-        {/* Peringatan pencahayaan — muncul kapan saja kamera aktif, bukan cuma saat rekam */}
+        {/* Peringatan pencahayaan, muncul kapan saja kamera aktif, bukan cuma saat rekam */}
         {cameraReady && poseReady && lightingWarning && (
           <div className={styles.lightingWarning}>
             💡 {lightingWarning}
@@ -188,7 +188,7 @@ function MetricChip({ label, value, color, dot }: { label: string; value: string
   return (
     <div style={{
       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-      padding: '6px 12px', background: 'rgba(14,21,40,0.8)',
+      padding: '6px 12px', background: 'var(--chip-bg)',
       border: '1px solid var(--border)', borderRadius: 8, minWidth: 80,
     }}>
       <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</span>

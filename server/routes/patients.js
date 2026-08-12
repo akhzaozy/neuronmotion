@@ -5,7 +5,7 @@ import { generateTrainingDataset, CONDITION_PROFILES, CLINICAL_REFERENCE } from 
 const router = express.Router();
 const prisma = new PrismaClient();
 
-/** GET /api/patients — Daftar semua pasien (admin/dokter) */
+/** GET /api/patients, Daftar semua pasien (admin/dokter) */
 router.get('/', async (req, res) => {
   try {
     const { search, risk, page = 1, limit = 20 } = req.query;
@@ -44,7 +44,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-/** GET /api/patients/:id — Detail pasien */
+/** GET /api/patients/:id, Detail pasien */
 router.get('/:id', async (req, res) => {
   try {
     const patient = await prisma.user.findUnique({
@@ -94,7 +94,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-/** GET /api/patients/:id/summary — Ringkasan statistik pasien */
+/** GET /api/patients/:id/summary, Ringkasan statistik pasien */
 router.get('/:id/summary', async (req, res) => {
   try {
     const sessions = await prisma.session.findMany({

@@ -5,6 +5,8 @@ import { useAuth } from '@/lib/auth';
 import { api, ScreeningResult } from '@/lib/api';
 import { useBiomarkerCapture, TestType } from '@/hooks/useBiomarkerCapture';
 import CameraView from '@/components/CameraView';
+import AppNav from '@/components/AppNav';
+import PreScreeningQuestionnaire, { QuestionnaireAnswers } from '@/components/PreScreeningQuestionnaire';
 import styles from './screening.module.css';
 
 const TEST_SEQUENCE: { type: TestType; name: string; desc: string; icon: string }[] = [
@@ -32,6 +34,9 @@ export default function ScreeningPage() {
   const [result, setResult] = useState<ScreeningResult | null>(null);
   const [showInstruction, setShowInstruction] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(true);
+  // Alur: onboarding -> kuesioner gejala -> tes gerakan -> hasil gabungan
+  const [phase, setPhase] = useState<'questionnaire' | 'tests'>('questionnaire');
+  const [questionnaire, setQuestionnaire] = useState<QuestionnaireAnswers | null>(null);
 
   // Auto-save captured data when a test finishes
   useEffect(() => {
@@ -85,7 +90,10 @@ export default function ScreeningPage() {
         gait: completedTests['gait'],
         armSwing: completedTests['armSwing'],
         posturalStability: completedTests['posture'],
-        rom: completedTests['rom']
+        rom: completedTests['rom'],
+        // Jawaban kuesioner dikirim bersama biomarker agar server bisa menyusun
+        // analisis gabungan gejala subjektif + pengukuran objektif.
+        questionnaire: questionnaire || undefined,
       };
       
       const res = await api.fullScreening(user.id, payload, token);
@@ -99,30 +107,45 @@ export default function ScreeningPage() {
 
   const currentTest = TEST_SEQUENCE[currentStep];
 
+  // Fase 1: kuesioner gejala subjektif sebelum tes gerakan
+  if (phase === 'questionnaire' && !result) {
+    return (
+      <div className={styles.page}>
+        <AppNav />
+        {showOnboarding && (
+          <div className={styles.resultPanel}>
+            <div className={styles.resultCard} style={{ textAlign: 'left', maxWidth: 520 }}>
+              <h2 style={{ marginBottom: 16 }}>📋 Sebelum Mulai Skrining</h2>
+              <p style={{ color: 'var(--text-secondary)', marginBottom: 16, lineHeight: 1.6 }}>
+                Ini adalah self-test yang Anda lakukan sendiri di depan kamera, tanpa didampingi tenaga
+                medis secara langsung. Mohon perhatikan hal berikut sebelum mulai:
+              </p>
+              <ul style={{ color: 'var(--text-secondary)', lineHeight: 1.9, marginBottom: 24, paddingLeft: 20 }}>
+                <li>Anda akan mengisi <strong>kuesioner gejala singkat</strong> lebih dulu, lalu menjalani <strong>6 tes gerakan</strong> (± 5-7 menit total).</li>
+                <li>Gunakan ruangan dengan <strong>pencahayaan cukup</strong> dan ruang gerak yang cukup, terutama untuk tes berjalan.</li>
+                <li>Ikuti bagian tubuh yang diminta di setiap tes. Sistem akan menampilkan peringatan jika bagian tubuh tidak terdeteksi jelas di kamera.</li>
+                <li>Hasil skrining ini <strong>bukan diagnosis medis</strong>, hanya alat bantu deteksi dini. Jika hasil menunjukkan risiko sedang/tinggi, konsultasikan ke dokter.</li>
+                <li>Jika memungkinkan, lakukan didampingi keluarga atau tenaga kesehatan agar lebih mudah memahami instruksi dan hasilnya.</li>
+              </ul>
+              <button className="btn btn-primary btn-lg" style={{ width: '100%' }} onClick={() => setShowOnboarding(false)}>
+                Saya Mengerti, Mulai Skrining
+              </button>
+            </div>
+          </div>
+        )}
+        <div style={{ padding: '32px 5% 60px' }}>
+          <PreScreeningQuestionnaire
+            onComplete={answers => { setQuestionnaire(answers); setPhase('tests'); }}
+            onSkip={() => setPhase('tests')}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.page}>
-      {showOnboarding && (
-        <div className={styles.resultPanel}>
-          <div className={styles.resultCard} style={{ textAlign: 'left', maxWidth: 520 }}>
-            <h2 style={{ marginBottom: 16 }}>📋 Sebelum Mulai Skrining</h2>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: 16, lineHeight: 1.6 }}>
-              Ini adalah self-test yang Anda lakukan sendiri di depan kamera, tanpa didampingi tenaga
-              medis secara langsung. Mohon perhatikan hal berikut sebelum mulai:
-            </p>
-            <ul style={{ color: 'var(--text-secondary)', lineHeight: 1.9, marginBottom: 24, paddingLeft: 20 }}>
-              <li>Ada <strong>6 tes gerakan</strong> singkat (± 3-5 menit total), masing-masing dengan instruksi & contoh gerakan sebelum mulai.</li>
-              <li>Gunakan ruangan dengan <strong>pencahayaan cukup</strong> dan ruang gerak yang cukup, terutama untuk tes berjalan.</li>
-              <li>Ikuti bagian tubuh yang diminta di setiap tes. Sistem akan menampilkan peringatan jika bagian tubuh tidak terdeteksi jelas di kamera.</li>
-              <li>Hasil skrining ini <strong>bukan diagnosis medis</strong>, hanya alat bantu deteksi dini. Jika hasil menunjukkan risiko sedang/tinggi, konsultasikan ke dokter.</li>
-              <li>Jika memungkinkan, lakukan didampingi keluarga atau tenaga kesehatan agar lebih mudah memahami instruksi dan hasilnya.</li>
-            </ul>
-            <button className="btn btn-primary btn-lg" style={{ width: '100%' }} onClick={() => setShowOnboarding(false)}>
-              Saya Mengerti, Mulai Skrining
-            </button>
-          </div>
-        </div>
-      )}
-
+      <AppNav />
       <div className={styles.container}>
         <div className={styles.header}>
           <h1>Skrining Klinis NeuronMotion</h1>
@@ -219,40 +242,120 @@ export default function ScreeningPage() {
       {isSubmitting && (
         <div className={styles.resultPanel}>
           <div className={styles.resultCard}>
-            <h2 style={{ marginBottom: 20 }}>Menganalisis Data Biomarker...</h2>
-            <p style={{ color: 'var(--text-secondary)' }}>Memproses hasil pengukuran motorik, mohon tunggu sebentar.</p>
+            <h2 style={{ marginBottom: 20 }}>Menganalisis Data...</h2>
+            <p style={{ color: 'var(--text-secondary)' }}>
+              {questionnaire
+                ? 'Menggabungkan hasil pengukuran gerakan dengan keluhan yang Anda laporkan. Proses ini bisa memakan beberapa detik.'
+                : 'Memproses hasil pengukuran motorik, mohon tunggu sebentar.'}
+            </p>
           </div>
         </div>
       )}
 
       {result && (
         <div className={styles.resultPanel}>
-          <div className={styles.resultCard}>
-            <div 
-              className={styles.scoreCircle}
-              style={{
-                borderColor: result.composite.riskCategory === 'HIGH' ? 'var(--red)' : 
-                             result.composite.riskCategory === 'MEDIUM' ? 'var(--yellow)' : 'var(--green)',
-                color: result.composite.riskCategory === 'HIGH' ? 'var(--red)' : 
-                       result.composite.riskCategory === 'MEDIUM' ? 'var(--yellow)' : 'var(--green)'
-              }}
-            >
-              {Math.round(result.composite.compositeScore)}
+          <div className={styles.resultCard} style={{ maxWidth: 620, textAlign: 'left' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div
+                className={styles.scoreCircle}
+                style={{
+                  borderColor: result.composite.riskCategory === 'HIGH' ? 'var(--red)' :
+                               result.composite.riskCategory === 'MEDIUM' ? 'var(--yellow)' : 'var(--green)',
+                  color: result.composite.riskCategory === 'HIGH' ? 'var(--red)' :
+                         result.composite.riskCategory === 'MEDIUM' ? 'var(--yellow)' : 'var(--green)'
+                }}
+              >
+                {Math.round(result.composite.compositeScore)}
+              </div>
+
+              <h2 style={{ fontSize: '1.8rem', marginBottom: 8 }}>{result.composite.riskLabel}</h2>
+
+              {result.composite.mlClassification?.predictedLabel && (
+                <div className="badge badge-brand" style={{ marginBottom: 16, fontSize: '0.95rem', padding: '6px 16px' }}>
+                  {result.composite.mlClassification.predictedLabel}
+                </div>
+              )}
             </div>
-            
-            <h2 style={{ fontSize: '2rem', marginBottom: 8 }}>{result.composite.riskLabel}</h2>
-            
-            {result.composite.mlClassification?.predictedLabel && (
-              <div className="badge badge-brand" style={{ marginBottom: 24, fontSize: '1rem', padding: '6px 16px' }}>
-                {result.composite.mlClassification.predictedLabel}
+
+            {/* Perbandingan dua sumber data: keluhan subjektif vs pengukuran objektif */}
+            {result.questionnaireResult && (
+              <div className={styles.sourceGrid}>
+                <div className={styles.sourceBox}>
+                  <div className={styles.sourceLabel}>Skor Gejala (Kuesioner)</div>
+                  <div className={styles.sourceValue}>{Math.round(result.questionnaireResult.score)}</div>
+                </div>
+                <div className={styles.sourceBox}>
+                  <div className={styles.sourceLabel}>Skor Pengukuran (Kamera)</div>
+                  <div className={styles.sourceValue}>{Math.round(result.composite.compositeScore)}</div>
+                </div>
               </div>
             )}
-            
-            <p style={{ color: 'var(--text-secondary)', marginBottom: 32, lineHeight: 1.6 }}>
-              {result.composite.recommendations[0]}
-            </p>
-            
-            <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
+
+            {/* Analisis gabungan dari AI */}
+            {result.aiAnalysis?.available && (
+              <div className={styles.aiBox}>
+                <div className={styles.aiHeader}>
+                  <span className={styles.aiTitle}>✨ Analisis Gabungan AI</span>
+                  {result.aiAnalysis.tingkatKeyakinan && (
+                    <span className={styles.aiConfidence}>
+                      Keyakinan: {result.aiAnalysis.tingkatKeyakinan}
+                    </span>
+                  )}
+                </div>
+
+                <p className={styles.aiSummary}>{result.aiAnalysis.ringkasan}</p>
+
+                {result.aiAnalysis.korelasiGejala && result.aiAnalysis.korelasiGejala.length > 0 && (
+                  <div style={{ marginBottom: 14 }}>
+                    <h4 className={styles.aiSubTitle}>Kaitan keluhan dengan hasil ukur</h4>
+                    {result.aiAnalysis.korelasiGejala.map((k, i) => (
+                      <div key={i} className={styles.correlationItem}>
+                        <span className={k.konsisten ? styles.dotOk : styles.dotWarn} />
+                        <div>
+                          <div className={styles.correlationSymptom}>{k.gejala}</div>
+                          <div className={styles.correlationFinding}>{k.temuanPengukuran}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {result.aiAnalysis.saranTindakLanjut && result.aiAnalysis.saranTindakLanjut.length > 0 && (
+                  <div>
+                    <h4 className={styles.aiSubTitle}>Saran tindak lanjut</h4>
+                    <ul className={styles.aiList}>
+                      {result.aiAnalysis.saranTindakLanjut.map((s, i) => <li key={i}>{s}</li>)}
+                    </ul>
+                  </div>
+                )}
+
+                {result.aiAnalysis.perluPerhatianSegera && (
+                  <div className={styles.urgentNote}>
+                    Kombinasi tanda yang Anda laporkan sebaiknya diperiksa tenaga medis dalam waktu dekat.
+                  </div>
+                )}
+
+                <p className={styles.aiDisclaimer}>
+                  Ringkasan ini disusun AI untuk membantu Anda memahami hasil. Skor risiko tetap dihitung
+                  oleh mesin analisis terpisah dan tidak diubah oleh AI. Ini bukan diagnosis medis.
+                </p>
+              </div>
+            )}
+
+            {result.aiAnalysis && !result.aiAnalysis.available && (
+              <div className={styles.aiFallback}>{result.aiAnalysis.error}</div>
+            )}
+
+            {!result.aiAnalysis && (
+              <p style={{ color: 'var(--text-secondary)', marginBottom: 24, lineHeight: 1.6 }}>
+                {result.composite.recommendations[0]}
+              </p>
+            )}
+
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 20 }}>
+              <button className="btn btn-outline" onClick={() => router.push('/riwayat')}>
+                Lihat Riwayat
+              </button>
               <button className="btn btn-primary" onClick={() => router.push('/dashboard')}>
                 Kembali ke Dashboard
               </button>

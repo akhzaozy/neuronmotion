@@ -4,7 +4,7 @@ import { PrismaClient } from '@prisma/client';
 const router = express.Router();
 const prisma = new PrismaClient();
 
-/** GET /api/doctor/patients — Daftar pasien dokter */
+/** GET /api/doctor/patients, Daftar pasien dokter */
 router.get('/patients', async (req, res) => {
   try {
     const { doctorId } = req.query;
@@ -45,7 +45,7 @@ router.get('/patients', async (req, res) => {
   }
 });
 
-/** POST /api/doctor/link — Hubungkan dokter ke pasien */
+/** POST /api/doctor/link, Hubungkan dokter ke pasien */
 router.post('/link', async (req, res) => {
   try {
     const { doctorId, patientId } = req.body;
@@ -60,7 +60,7 @@ router.post('/link', async (req, res) => {
   }
 });
 
-/** PUT /api/doctor/sessions/:sessionId/note — Tambah catatan nakes */
+/** PUT /api/doctor/sessions/:sessionId/note, Tambah catatan nakes */
 router.put('/sessions/:sessionId/note', async (req, res) => {
   try {
     const { doctorId, note, followUpDate } = req.body;
@@ -78,7 +78,7 @@ router.put('/sessions/:sessionId/note', async (req, res) => {
   }
 });
 
-/** GET /api/doctor/dashboard/:doctorId — Statistik dashboard dokter */
+/** GET /api/doctor/dashboard/:doctorId, Statistik dashboard dokter */
 router.get('/dashboard/:doctorId', async (req, res) => {
   try {
     const doctorId = parseInt(req.params.doctorId);

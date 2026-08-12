@@ -89,7 +89,7 @@ router.post('/login', async (req, res) => {
 
 // ── Profil ──────────────────────────────────────────────────────────────────
 
-/** GET /api/auth/me — profil akun yang sedang login (untuk refresh data profil) */
+/** GET /api/auth/me, profil akun yang sedang login (untuk refresh data profil) */
 router.get('/me', requireAuth, async (req, res) => {
   try {
     const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
@@ -101,7 +101,7 @@ router.get('/me', requireAuth, async (req, res) => {
   }
 });
 
-/** PUT /api/auth/profile — ubah data pribadi milik akun sendiri */
+/** PUT /api/auth/profile, ubah data pribadi milik akun sendiri */
 router.put('/profile', requireAuth, async (req, res) => {
   try {
     const { name, gender, dateOfBirth, specialization, institution } = req.body;
@@ -128,7 +128,7 @@ router.put('/profile', requireAuth, async (req, res) => {
   }
 });
 
-/** PUT /api/auth/password — ganti password (wajib password lama yang benar) */
+/** PUT /api/auth/password, ganti password (wajib password lama yang benar) */
 router.put('/password', requireAuth, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
@@ -154,7 +154,7 @@ router.put('/password', requireAuth, async (req, res) => {
   }
 });
 
-/** DELETE /api/auth/account — hapus akun sendiri secara permanen (hak hapus data, UU PDP) */
+/** DELETE /api/auth/account, hapus akun sendiri secara permanen (hak hapus data, UU PDP) */
 router.delete('/account', requireAuth, async (req, res) => {
   try {
     const userId = req.user.userId;

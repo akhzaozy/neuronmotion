@@ -30,7 +30,7 @@ const FigureTremor = () => (
       <rect x="66" y="74" width="8" height="24" rx="4" fill="#4b91f7"/>
       <rect x="76" y="78" width="8" height="20" rx="4" fill="#4b91f7"/>
     </g>
-    {/* Wavy lines — tremor indicator */}
+    {/* Wavy lines, tremor indicator */}
     <path d="M24 114 Q31 108 38 114 Q45 120 52 114" stroke="#f59e0b" strokeWidth="2" fill="none" strokeDasharray="4 2" opacity="0.8"/>
     <path d="M68 114 Q75 108 82 114 Q89 120 96 114" stroke="#f59e0b" strokeWidth="2" fill="none" strokeDasharray="4 2" opacity="0.8"/>
   </svg>
@@ -70,7 +70,7 @@ const FigureGait = () => (
       <line x1="60" y1="46" x2="36" y2="66" stroke="#4b91f7" strokeWidth="4" strokeLinecap="round"/>
       <line x1="60" y1="46" x2="84" y2="60" stroke="#4b91f7" strokeWidth="4" strokeLinecap="round"/>
     </g>
-    {/* Kaki depan & belakang bergerak berlawanan arah — siklus langkah yang jelas */}
+    {/* Kaki depan & belakang bergerak berlawanan arah, siklus langkah yang jelas */}
     <g className={styles.figureLegFront} style={{ transformOrigin: '60px 82px' }}>
       <line x1="60" y1="82" x2="42" y2="118" stroke="#4b91f7" strokeWidth="5" strokeLinecap="round"/>
       <line x1="42" y1="118" x2="30" y2="122" stroke="#4b91f7" strokeWidth="4" strokeLinecap="round"/>
@@ -269,7 +269,7 @@ export default function ScreeningInstruction({ testType, onReady, onSkip }: Prop
           ))}
         </div>
 
-        {/* Countdown / Start — "Lewati" hanya muncul setelah countdown berjalan (pola "skip iklan") */}
+        {/* Countdown / Start, "Lewati" hanya muncul setelah countdown berjalan (pola "skip iklan") */}
         {!started ? (
           <button className="btn btn-primary" style={{ width: '100%' }} onClick={startCountdown}>
             Saya Siap, Mulai

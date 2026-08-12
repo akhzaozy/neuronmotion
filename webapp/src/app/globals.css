@@ -41,6 +41,12 @@
   --shadow-glow: 0 10px 25px -5px rgba(37, 99, 235, 0.15);
   --shadow-glow-green: 0 10px 25px -5px rgba(5, 150, 105, 0.15);
 
+  /* Permukaan khusus yang harus ikut berubah antar tema */
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --overlay-bg: rgba(15, 23, 42, 0.55);
+  --chip-bg: rgba(255, 255, 255, 0.9);
+  --track-bg: rgba(15, 23, 42, 0.1);
+
   /* Border radius */
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -49,40 +55,58 @@
 }
 
 [data-theme="dark"] {
-  --bg-primary: #0f172a; 
+  --bg-primary: #0f172a;
   --bg-secondary: #1e293b;
   --bg-card: #1e293b;
   --bg-card-hover: #334155;
   --border: #334155;
   --border-light: #475569;
   --nav-bg: rgba(15, 23, 42, 0.85);
-  
+
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
-  
+
   --brand-dim: rgba(59, 130, 246, 0.15);
-  
+  --green-dim: rgba(16, 185, 129, 0.16);
+  --yellow-dim: rgba(245, 158, 11, 0.16);
+  --red-dim: rgba(239, 68, 68, 0.16);
+  --purple-dim: rgba(139, 92, 246, 0.16);
+
+  --glass-bg: rgba(30, 41, 59, 0.75);
+  --overlay-bg: rgba(2, 6, 16, 0.72);
+  --chip-bg: rgba(15, 23, 42, 0.85);
+  --track-bg: rgba(255, 255, 255, 0.1);
+
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg-primary: #0f172a; 
+    --bg-primary: #0f172a;
     --bg-secondary: #1e293b;
     --bg-card: #1e293b;
     --bg-card-hover: #334155;
     --border: #334155;
     --border-light: #475569;
     --nav-bg: rgba(15, 23, 42, 0.85);
-    
+
     --text-primary: #f8fafc;
     --text-secondary: #94a3b8;
     --text-muted: #64748b;
-    
+
     --brand-dim: rgba(59, 130, 246, 0.15);
-    
+    --green-dim: rgba(16, 185, 129, 0.16);
+    --yellow-dim: rgba(245, 158, 11, 0.16);
+    --red-dim: rgba(239, 68, 68, 0.16);
+    --purple-dim: rgba(139, 92, 246, 0.16);
+
+    --glass-bg: rgba(30, 41, 59, 0.75);
+    --overlay-bg: rgba(2, 6, 16, 0.72);
+    --chip-bg: rgba(15, 23, 42, 0.85);
+    --track-bg: rgba(255, 255, 255, 0.1);
+
     --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
   }
@@ -151,12 +175,15 @@ input, textarea, select { font-family: inherit; outline: none; }
 
 .animate-fadeInUp { animation: fadeInUp 0.5s ease forwards; }
 
-/* Glass card */
+/* Glass card, mengikuti tema aktif (sebelumnya di-hardcode gelap sehingga
+   kartu login tetap gelap walau situs sedang dalam mode terang) */
 .glass {
-  background: rgba(20, 27, 45, 0.8);
+  background: var(--glass-bg);
   backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
 }
 
 /* Badge */
@@ -232,7 +259,7 @@ input, textarea, select { font-family: inherit; outline: none; }
 .risk-bg-medium { background: var(--yellow-dim); border-color: rgba(245,158,11,0.3); }
 .risk-bg-low { background: var(--green-dim); border-color: rgba(16,185,129,0.3); }
 
-/* Accessible focus ring — consistent across all interactive elements */
+/* Accessible focus ring, consistent across all interactive elements */
 a:focus-visible, button:focus-visible, .input:focus-visible,
 [tabindex]:focus-visible {
   outline: 2px solid var(--brand-light);

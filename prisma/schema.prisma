@@ -61,6 +61,10 @@ model Session {
   mlPrediction        String?  // JSON - K-NN classification result
   updrsEstimate       String?  // JSON - estimated UPDRS scores
   recommendations     String?  // JSON array
+  // Kuesioner pra-skrining + analisis AI gabungan (gejala subjektif + biomarker objektif)
+  questionnaire       String?  // JSON - jawaban kuesioner pra-skrining
+  questionnaireScore  Float?   // skor gejala subjektif (0-100)
+  aiAnalysis          String?  // JSON - hasil analisis Gemini atas gabungan kedua sumber
   // Doctor input
   doctorNote          String?
   followUpDate        DateTime?

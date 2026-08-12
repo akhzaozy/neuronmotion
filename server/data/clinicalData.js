@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * NEURONMOTION — Clinical Training Dataset (ENHANCED ML EDITION)
+ * NEURONMOTION, Clinical Training Dataset (ENHANCED ML EDITION)
  * ============================================================
  * Data sintetis berbasis literatur klinis yang telah divalidasi.
  * Peningkatan K-NN: Distribusi Gaussian, Z-Score Normalization, & Bobot Jarak.
@@ -37,78 +37,100 @@ export function getAgeAdjustedReference(age) {
   return ref;
 }
 
+/**
+ * Profil biomarker per kondisi.
+ *
+ * CATATAN PENTING soal rentang di bawah:
+ * Versi awal dataset ini memakai rentang yang nyaris tidak tumpang tindih antar
+ * kondisi, sehingga classifier mendapat akurasi 100%. Angka itu menyesatkan:
+ * yang terbukti hanyalah bahwa generator membuat klaster yang terpisah rapi,
+ * bukan bahwa modelnya mampu membedakan kasus nyata.
+ *
+ * Rentang sekarang sengaja dibuat SALING TUMPANG TINDIH mengikuti kenyataan klinis:
+ *  - Orang sehat tetap punya tremor fisiologis 6-12 Hz dengan amplitudo sangat kecil,
+ *    jadi yang membedakannya dari tremor patologis terutama AMPLITUDO, bukan frekuensi.
+ *  - Essential Tremor (4-12 Hz) memang beririsan dengan tremor Parkinson (3-7 Hz).
+ *    Membedakan keduanya justru salah satu tantangan diagnosis paling umum.
+ *  - Fungsi motorik menurun bertahap, sehingga Parkinson awal dan lanjut,
+ *    maupun pasca stroke dan ataksia, punya wilayah abu-abu yang beririsan.
+ *
+ * Konsekuensinya akurasi model turun dari 100% ke angka yang jauh lebih jujur dan
+ * bisa dipertanggungjawabkan.
+ */
 export const CONDITION_PROFILES = {
   HEALTHY: {
     label: 'Sehat',
     description: 'Tidak ada tanda gangguan neurologis signifikan',
     biomarkerProfile: {
-      tremorFreq: [0, 2], tremorAmp: [0, 0.003],
-      tapRate: [4.0, 5.5], tapDecrement: [2, 8],
-      gaitSymmetry: [0.93, 0.98], gaitCadence: [100, 115],
-      armAsymmetry: [2, 10], armAmp: [30, 45],
-      swayArea: [0.001, 0.002], swayLength: [0.04, 0.07],
+      // Tremor fisiologis normal: frekuensi tinggi, amplitudo sangat rendah
+      tremorFreq: [6.0, 12.0], tremorAmp: [0.0005, 0.004],
+      tapRate: [3.5, 6.0], tapDecrement: [0, 12],
+      gaitSymmetry: [0.90, 0.99], gaitCadence: [95, 120],
+      armAsymmetry: [1, 14], armAmp: [26, 48],
+      swayArea: [0.0008, 0.0035], swayLength: [0.03, 0.09],
     },
   },
   PARKINSON_EARLY: {
     label: 'Parkinson Awal (Hoehn-Yahr 1-2)',
     description: 'Gejala motorik unilateral atau bilateral ringan',
     biomarkerProfile: {
-      tremorFreq: [4.0, 6.0], tremorAmp: [0.010, 0.020],
-      tapRate: [2.5, 3.2], tapDecrement: [20, 35],
-      gaitSymmetry: [0.82, 0.88], gaitCadence: [80, 95],
-      armAsymmetry: [25, 40], armAmp: [15, 22],
-      swayArea: [0.007, 0.011], swayLength: [0.13, 0.18],
+      tremorFreq: [3.0, 7.0], tremorAmp: [0.006, 0.024],
+      tapRate: [2.2, 3.8], tapDecrement: [14, 38],
+      gaitSymmetry: [0.78, 0.92], gaitCadence: [76, 100],
+      armAsymmetry: [18, 45], armAmp: [13, 26],
+      swayArea: [0.004, 0.013], swayLength: [0.10, 0.21],
     },
   },
   PARKINSON_ADVANCED: {
     label: 'Parkinson Lanjut (Hoehn-Yahr 3-4)',
     description: 'Gangguan motorik bilateral, instabilitas postural',
     biomarkerProfile: {
-      tremorFreq: [4.5, 6.0], tremorAmp: [0.025, 0.050],
-      tapRate: [1.2, 2.0], tapDecrement: [40, 55],
-      gaitSymmetry: [0.65, 0.75], gaitCadence: [60, 75],
-      armAsymmetry: [45, 65], armAmp: [8, 14],
-      swayArea: [0.015, 0.025], swayLength: [0.25, 0.35],
+      tremorFreq: [3.5, 7.0], tremorAmp: [0.018, 0.055],
+      tapRate: [0.9, 2.4], tapDecrement: [32, 60],
+      gaitSymmetry: [0.60, 0.80], gaitCadence: [55, 82],
+      armAsymmetry: [38, 70], armAmp: [6, 17],
+      swayArea: [0.011, 0.028], swayLength: [0.20, 0.40],
     },
   },
   POST_STROKE: {
     label: 'Pasca Stroke (Hemiplegia)',
     description: 'Keterbatasan gerak unilateral akibat stroke',
     biomarkerProfile: {
-      tremorFreq: [1, 3], tremorAmp: [0.005, 0.015],
-      tapRate: [1.8, 2.8], tapDecrement: [12, 22],
-      gaitSymmetry: [0.55, 0.70], gaitCadence: [65, 85],
-      armAsymmetry: [40, 70], armAmp: [10, 20],
-      swayArea: [0.010, 0.020], swayLength: [0.20, 0.35],
+      tremorFreq: [1.0, 6.0], tremorAmp: [0.002, 0.018],
+      tapRate: [1.4, 3.1], tapDecrement: [8, 26],
+      gaitSymmetry: [0.52, 0.76], gaitCadence: [58, 90],
+      armAsymmetry: [33, 75], armAmp: [8, 23],
+      swayArea: [0.007, 0.023], swayLength: [0.16, 0.38],
     },
   },
   ESSENTIAL_TREMOR: {
     label: 'Essential Tremor',
     description: 'Tremor aksi bilateral tanpa gangguan gait signifikan',
     biomarkerProfile: {
-      tremorFreq: [7.0, 11.0], tremorAmp: [0.015, 0.035],
-      tapRate: [3.2, 4.2], tapDecrement: [5, 12],
-      gaitSymmetry: [0.90, 0.95], gaitCadence: [95, 110],
-      armAsymmetry: [8, 18], armAmp: [25, 38],
-      swayArea: [0.003, 0.006], swayLength: [0.08, 0.13],
+      // Beririsan dengan rentang Parkinson di sisi bawah (4-7 Hz)
+      tremorFreq: [4.0, 12.0], tremorAmp: [0.010, 0.040],
+      tapRate: [2.9, 4.6], tapDecrement: [2, 16],
+      gaitSymmetry: [0.86, 0.97], gaitCadence: [90, 114],
+      armAsymmetry: [4, 22], armAmp: [22, 40],
+      swayArea: [0.002, 0.008], swayLength: [0.06, 0.15],
     },
   },
   CEREBELLAR_ATAXIA: {
     label: 'Ataksia Serebelar',
     description: 'Gangguan koordinasi dan keseimbangan yang menonjol',
     biomarkerProfile: {
-      tremorFreq: [2, 4.5], tremorAmp: [0.020, 0.045],
-      tapRate: [2.0, 3.2], tapDecrement: [15, 25],
-      gaitSymmetry: [0.70, 0.82], gaitCadence: [70, 90],
-      armAsymmetry: [15, 25], armAmp: [18, 30],
-      swayArea: [0.025, 0.045], swayLength: [0.40, 0.60], // Keseimbangan sangat buruk
+      tremorFreq: [2.0, 5.5], tremorAmp: [0.014, 0.048],
+      tapRate: [1.7, 3.5], tapDecrement: [10, 28],
+      gaitSymmetry: [0.66, 0.86], gaitCadence: [65, 95],
+      armAsymmetry: [8, 30], armAmp: [15, 33],
+      swayArea: [0.018, 0.050], swayLength: [0.32, 0.65], // Keseimbangan sangat buruk
     },
   },
 };
 
 // ── ML Utilities: Distribusi Gaussian ──────────────────────────────────────
 
-// Seeded PRNG (mulberry32) — dipakai agar dataset training K-NN deterministik
+// Seeded PRNG (mulberry32), dipakai agar dataset training K-NN deterministik
 // (sama persis di setiap restart server), bukan acak ulang tiap kali (Math.random()).
 export function createSeededRandom(seed) {
   let a = seed >>> 0;
@@ -128,10 +150,13 @@ function randomGaussian(mean, stdDev, rand = Math.random) {
   return z0 * stdDev + mean;
 }
 
-// Menghasilkan nilai random dalam rentang min-max tetapi terdistribusi Gaussian di tengahnya
+// Menghasilkan nilai random dalam rentang min-max tetapi terdistribusi Gaussian di tengahnya.
+// stdDev dibuat (max-min)/4, bukan /6, agar sebaran dalam satu kelas cukup lebar seperti
+// variasi antar pasien di dunia nyata. Dengan /6 sebarannya terlalu rapat sehingga setiap
+// kondisi membentuk klaster yang terpisah sempurna dan model terlihat "100% akurat".
 function randGaussianRange(min, max, rand = Math.random) {
   const mean = (min + max) / 2;
-  const stdDev = (max - min) / 6; // 99.7% probabilitas berada di antara min dan max
+  const stdDev = (max - min) / 4;
   let val = randomGaussian(mean, stdDev, rand);
   if (val < min) val = min;
   if (val > max) val = max;
@@ -142,12 +167,53 @@ function randInt(min, max, rand = Math.random) {
   return Math.floor(min + rand() * (max - min + 1));
 }
 
+/**
+ * Pasangan kondisi yang secara klinis memang sering sulit dibedakan.
+ * Dipakai untuk membangkitkan kasus "atipikal": pasien yang sebagian biomarkernya
+ * menyerupai kondisi lain, seperti yang lazim ditemui di praktik nyata.
+ */
+const CONFUSABLE_PAIRS = {
+  HEALTHY: ['ESSENTIAL_TREMOR', 'PARKINSON_EARLY'],
+  PARKINSON_EARLY: ['ESSENTIAL_TREMOR', 'PARKINSON_ADVANCED', 'HEALTHY'],
+  PARKINSON_ADVANCED: ['PARKINSON_EARLY', 'POST_STROKE'],
+  POST_STROKE: ['PARKINSON_ADVANCED', 'CEREBELLAR_ATAXIA'],
+  ESSENTIAL_TREMOR: ['PARKINSON_EARLY', 'HEALTHY'],
+  CEREBELLAR_ATAXIA: ['POST_STROKE', 'PARKINSON_ADVANCED'],
+};
+
+// Proporsi pasien dengan presentasi atipikal (sebagian biomarker menyerupai kondisi lain)
+const ATYPICAL_RATE = 0.22;
+
 export function generateSyntheticBiomarkers(conditionKey, age = 60, rand = Math.random) {
   const profile = CONDITION_PROFILES[conditionKey];
   if (!profile) throw new Error(`Unknown condition: ${conditionKey}`);
 
-  const bp = profile.biomarkerProfile;
-  const ageFactor = age > 65 ? 0.95 : age > 75 ? 0.90 : 1.0;
+  let bp = profile.biomarkerProfile;
+  const ageFactor = age > 75 ? 0.90 : age > 65 ? 0.95 : 1.0;
+
+  // Sebagian pasien menunjukkan gambaran campuran: beberapa domain biomarker
+  // bergeser ke arah kondisi serupa. Ini membuat kelas saling tumpang tindih
+  // sebagaimana data klinis sungguhan, bukan klaster yang terpisah bersih.
+  const neighbors = CONFUSABLE_PAIRS[conditionKey] || [];
+  if (neighbors.length && rand() < ATYPICAL_RATE) {
+    const neighborKey = neighbors[Math.floor(rand() * neighbors.length)];
+    const nbp = CONDITION_PROFILES[neighborKey].biomarkerProfile;
+    const domains = ['tremorFreq', 'tremorAmp', 'tapRate', 'tapDecrement',
+                     'gaitSymmetry', 'gaitCadence', 'armAsymmetry', 'armAmp',
+                     'swayArea', 'swayLength'];
+    const blended = { ...bp };
+    // Geser 2-4 domain ke pertengahan antara kondisi asli dan kondisi tetangga
+    const howMany = 2 + Math.floor(rand() * 3);
+    for (let i = 0; i < howMany; i++) {
+      const d = domains[Math.floor(rand() * domains.length)];
+      if (!bp[d] || !nbp[d]) continue;
+      blended[d] = [
+        (bp[d][0] + nbp[d][0]) / 2,
+        (bp[d][1] + nbp[d][1]) / 2,
+      ];
+    }
+    bp = blended;
+  }
 
   return {
     conditionLabel: profile.label,
@@ -229,7 +295,14 @@ export function generateTrainingDataset(totalPatients = 1500, rand = Math.random
     }
   }
 
-  return dataset.sort(() => rand() - 0.5);
+  // Fisher-Yates. Pola `sort(() => rand() - 0.5)` yang dipakai sebelumnya bukan
+  // pengacakan yang seragam: comparator-nya tidak konsisten sehingga urutan akhir
+  // bias, dan pembagian train/test jadi tidak mewakili distribusi kelas asli.
+  for (let i = dataset.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [dataset[i], dataset[j]] = [dataset[j], dataset[i]];
+  }
+  return dataset;
 }
 
 function estimateUPDRS(condition, bm) {
@@ -382,7 +455,7 @@ const TOTAL_SYNTHETIC_PATIENTS = 2000;
 const HOLDOUT_RATIO = 0.2;
 
 // Data holdout murni (dari generator yang sama persis dengan training) hampir selalu
-// menghasilkan akurasi ~100% — itu cuma membuktikan konsistensi generator, bukan
+// menghasilkan akurasi ~100%, itu cuma membuktikan konsistensi generator, bukan
 // ketahanan model di dunia nyata. Kamera/estimasi pose selalu punya noise pengukuran,
 // jadi data uji diberi noise terlebih dahulu agar angka akurasi lebih jujur & bermakna.
 const MEASUREMENT_NOISE_FACTOR = 0.08; // ~8% noise relatif, mendekati galat estimasi pose di kondisi lapangan
@@ -443,7 +516,7 @@ function buildValidatedModel() {
   };
 }
 
-// Singleton — dibangun & divalidasi sekali saat pertama dipakai, lalu di-cache.
+// Singleton, dibangun & divalidasi sekali saat pertama dipakai, lalu di-cache.
 let _model = null;
 function getModel() {
   if (!_model) _model = buildValidatedModel();

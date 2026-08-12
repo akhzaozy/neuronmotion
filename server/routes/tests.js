@@ -11,6 +11,8 @@ import {
 } from '../services/biomarkers.js';
 import { getClassifier } from '../data/clinicalData.js';
 import { requireAuth } from '../middleware/auth.js';
+import { getPublicQuestionnaire, scoreQuestionnaire } from '../data/questionnaire.js';
+import { generateCombinedAnalysis, isGeminiConfigured } from '../services/gemini.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -59,6 +61,21 @@ router.post('/posture', (req, res) => {
   res.json({ test: 'POSTURAL_STABILITY', ...result });
 });
 
+// ── Kuesioner Pra-Skrining ────────────────────────────────────────────────────
+
+/** GET /api/tests/questionnaire, daftar pertanyaan pra-skrining */
+router.get('/questionnaire', (req, res) => {
+  res.json({
+    questions: getPublicQuestionnaire(),
+    aiEnabled: isGeminiConfigured(),
+  });
+});
+
+/** POST /api/tests/questionnaire/score, hitung skor gejala tanpa menyimpan sesi */
+router.post('/questionnaire/score', (req, res) => {
+  res.json(scoreQuestionnaire(req.body?.answers || {}));
+});
+
 // ── Tes Lengkap (Semua Biomarker Sekaligus) ───────────────────────────────────
 
 /**
@@ -69,7 +86,7 @@ router.post('/posture', (req, res) => {
  */
 router.post('/full-screening', async (req, res) => {
   try {
-    const { patientId, tremor, fingerTapping, gait, armSwing, rom, posturalStability } = req.body;
+    const { patientId, tremor, fingerTapping, gait, armSwing, rom, posturalStability, questionnaire } = req.body;
 
     if (!patientId) return res.status(400).json({ error: 'patientId wajib diisi' });
 
@@ -77,7 +94,7 @@ router.post('/full-screening', async (req, res) => {
     // (proposal: "dibandingkan dengan rentang normal untuk kelompok usia pengguna").
     const patientRecord = await prisma.user.findUnique({
       where: { id: parseInt(patientId) },
-      select: { dateOfBirth: true },
+      select: { dateOfBirth: true, gender: true },
     });
     const age = patientRecord?.dateOfBirth
       ? Math.floor((Date.now() - new Date(patientRecord.dateOfBirth)) / (365.25 * 24 * 3600 * 1000))
@@ -113,6 +130,23 @@ router.post('/full-screening', async (req, res) => {
       console.warn("K-NN Warning:", e);
     }
 
+    // Skor gejala subjektif dari kuesioner pra-skrining (jika diisi)
+    const questionnaireResult = questionnaire ? scoreQuestionnaire(questionnaire) : null;
+
+    // Analisis gabungan oleh Gemini: menautkan keluhan subjektif dengan biomarker
+    // objektif. Sengaja TIDAK memengaruhi compositeScore agar skor risiko tetap
+    // deterministik dan dapat diaudit; Gemini hanya menyusun narasi & saran.
+    let aiAnalysis = null;
+    if (questionnaireResult) {
+      aiAnalysis = await generateCombinedAnalysis({
+        questionnaire: questionnaireResult,
+        biomarkers: testResults,
+        composite: { ...composite, mlClassification: mlPrediction },
+        age,
+        gender: patientRecord?.gender,
+      });
+    }
+
     // Simpan ke database
     const session = await prisma.session.create({
       data: {
@@ -128,6 +162,9 @@ router.post('/full-screening', async (req, res) => {
         mlPrediction: mlPrediction ? JSON.stringify(mlPrediction) : null,
         updrsEstimate: JSON.stringify(composite.updrsEstimate),
         recommendations: JSON.stringify(composite.recommendations),
+        questionnaire: questionnaire ? JSON.stringify(questionnaire) : null,
+        questionnaireScore: questionnaireResult ? questionnaireResult.score : null,
+        aiAnalysis: aiAnalysis ? JSON.stringify(aiAnalysis) : null,
       },
     });
 
@@ -154,6 +191,8 @@ router.post('/full-screening', async (req, res) => {
       timestamp: session.timestamp,
       composite,
       testResults,
+      questionnaireResult,
+      aiAnalysis,
       summary: composite.riskLabel,
     });
 
@@ -166,7 +205,7 @@ router.post('/full-screening', async (req, res) => {
 
 // ── Ambil Hasil Skrining ──────────────────────────────────────────────────────
 
-/** GET /api/tests/history/:patientId — riwayat lengkap dengan breakdown */
+/** GET /api/tests/history/:patientId, riwayat lengkap dengan breakdown */
 router.get('/history/:patientId', async (req, res) => {
   try {
     const sessions = await prisma.session.findMany({
@@ -187,6 +226,8 @@ router.get('/history/:patientId', async (req, res) => {
       mlPrediction: s.mlPrediction ? JSON.parse(s.mlPrediction) : null,
       updrsEstimate: s.updrsEstimate ? JSON.parse(s.updrsEstimate) : null,
       recommendations: s.recommendations ? JSON.parse(s.recommendations) : [],
+      questionnaire: s.questionnaire ? JSON.parse(s.questionnaire) : null,
+      aiAnalysis: s.aiAnalysis ? JSON.parse(s.aiAnalysis) : null,
     }));
 
     res.json({ patientId: parseInt(req.params.patientId), total: sessions.length, sessions: enriched });
@@ -196,7 +237,7 @@ router.get('/history/:patientId', async (req, res) => {
   }
 });
 
-/** GET /api/tests/session/:sessionId — detail satu sesi */
+/** GET /api/tests/session/:sessionId, detail satu sesi */
 router.get('/session/:sessionId', async (req, res) => {
   try {
     const session = await prisma.session.findUnique({ where: { id: parseInt(req.params.sessionId) } });
@@ -214,13 +255,15 @@ router.get('/session/:sessionId', async (req, res) => {
       mlPrediction: session.mlPrediction ? JSON.parse(session.mlPrediction) : null,
       updrsEstimate: session.updrsEstimate ? JSON.parse(session.updrsEstimate) : null,
       recommendations: session.recommendations ? JSON.parse(session.recommendations) : [],
+      questionnaire: session.questionnaire ? JSON.parse(session.questionnaire) : null,
+      aiAnalysis: session.aiAnalysis ? JSON.parse(session.aiAnalysis) : null,
     });
   } catch (err) {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-/** DELETE /api/tests/history — hapus semua riwayat sesi skrining milik akun sendiri (hak hapus data, UU PDP) */
+/** DELETE /api/tests/history, hapus semua riwayat sesi skrining milik akun sendiri (hak hapus data, UU PDP) */
 router.delete('/history', requireAuth, async (req, res) => {
   try {
     if (req.user.role !== 'PATIENT') {

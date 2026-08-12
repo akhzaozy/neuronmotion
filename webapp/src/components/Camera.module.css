@@ -147,12 +147,15 @@
   bottom: 12px;
   left: 50%;
   transform: translateX(-50%);
+  /* Badge ini selalu berada di atas gambar video yang gelap, jadi warnanya
+     sengaja tetap (bukan token tema). Sebelumnya memakai var(--text-primary)
+     sehingga teksnya jadi gelap di atas latar gelap saat mode terang. */
   background: rgba(10, 14, 26, 0.9);
-  border: 1px solid var(--border-light);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 99px;
   padding: 8px 20px;
   font-size: 0.82rem;
-  color: var(--text-primary);
+  color: #f8fafc;
   backdrop-filter: blur(8px);
   white-space: nowrap;
   z-index: 5;

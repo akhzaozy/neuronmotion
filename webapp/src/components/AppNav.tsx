@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Logo from './Logo';
+import { ThemeToggle } from '@/lib/theme';
 import styles from './AppNav.module.css';
 
 const NAV_ITEMS = [
@@ -32,6 +33,9 @@ export default function AppNav() {
               {item.label}
             </Link>
           ))}
+        </div>
+        <div className={styles.actions}>
+          <ThemeToggle size="sm" />
         </div>
       </div>
     </nav>

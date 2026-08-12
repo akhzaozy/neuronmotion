@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { api } from '@/lib/api';
 import Logo from '@/components/Logo';
 import { EyeIcon, EyeOffIcon } from '@/components/icons';
+import { ThemeToggle } from '@/lib/theme';
 import styles from '../login/auth.module.css';
 
 const SPECIALIZATIONS = ['Neurolog', 'Dokter Umum', 'Fisioterapis', 'Perawat'];
@@ -56,6 +57,10 @@ export default function RegisterPage() {
       <div className={styles.bgElements}>
         <div className={styles.circle1} />
         <div className={styles.circle2} />
+      </div>
+
+      <div style={{ position: 'absolute', top: 20, right: 20, zIndex: 2 }}>
+        <ThemeToggle size="sm" />
       </div>
 
       <div className={`${styles.authCard} glass`}>

@@ -1,5 +1,5 @@
 /**
- * NeuronMotion — Database Seeder
+ * NeuronMotion, Database Seeder
  * Mengisi database dengan data pasien sintetis berbasis klinis
  */
 import { PrismaClient } from '@prisma/client';

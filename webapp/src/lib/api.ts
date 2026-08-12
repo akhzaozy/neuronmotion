@@ -57,6 +57,9 @@ export const api = {
   analyzeROM: (data: object) =>
     request('POST', '/api/tests/rom', data),
 
+  getQuestionnaire: () =>
+    request<{ questions: QuestionnaireQuestion[]; aiEnabled: boolean }>('GET', '/api/tests/questionnaire'),
+
   fullScreening: (patientId: number, biomarkerData: object, token?: string) =>
     request<ScreeningResult>('POST', '/api/tests/full-screening', { patientId, ...biomarkerData }, token),
 
@@ -138,6 +141,8 @@ export interface Session {
   gaitResult?: Record<string, unknown>;
   posturalResult?: Record<string, unknown>;
   doctorNote?: string;
+  questionnaireScore?: number | null;
+  aiAnalysis?: AiAnalysis | null;
   rawBiomarkers?: {
     tremor?: { dominantFrequencyHz?: number } | null;
     fingerTapping?: { tapRatePerSecond?: number } | null;
@@ -158,8 +163,40 @@ export interface PatientDetail {
   trend: Array<{ date: string; score: number; risk: string }>;
 }
 
+export interface QuestionnaireQuestion {
+  id: string;
+  category: string;
+  question: string;
+  help?: string;
+  type: 'choice' | 'multi' | 'text';
+  options?: Array<{ value: string; label: string }>;
+}
+
+export interface QuestionnaireResult {
+  score: number;
+  category: 'LOW' | 'MEDIUM' | 'HIGH';
+  flaggedSymptoms: Array<{ id: string; question: string; answer: string }>;
+  freeText: string;
+  answeredCount: number;
+}
+
+export interface AiAnalysis {
+  available: boolean;
+  error?: string;
+  model?: string;
+  usedFallback?: boolean;
+  ringkasan?: string;
+  korelasiGejala?: Array<{ gejala: string; temuanPengukuran: string; konsisten: boolean }>;
+  tingkatKeyakinan?: 'RENDAH' | 'SEDANG' | 'TINGGI';
+  alasanKeyakinan?: string;
+  saranTindakLanjut?: string[];
+  perluPerhatianSegera?: boolean;
+}
+
 export interface ScreeningResult {
   sessionId: number;
+  questionnaireResult?: QuestionnaireResult | null;
+  aiAnalysis?: AiAnalysis | null;
   composite: {
     compositeScore: number;
     riskCategory: string;

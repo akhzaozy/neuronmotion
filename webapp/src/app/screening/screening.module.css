@@ -159,7 +159,7 @@
 .resultPanel {
   position: fixed;
   inset: 0;
-  background: rgba(10, 14, 26, 0.9);
+  background: var(--overlay-bg);
   backdrop-filter: blur(8px);
   z-index: 1000;
   display: flex;
@@ -191,4 +191,160 @@
   font-weight: 800;
   margin: 0 auto 24px;
   border: 8px solid;
+}
+
+/* ── Hasil gabungan: kuesioner + biomarker + analisis AI ── */
+
+.sourceGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.sourceBox {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  text-align: center;
+}
+
+.sourceLabel {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+.sourceValue {
+  font-size: 1.5rem;
+  font-weight: 800;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.aiBox {
+  background: var(--purple-dim);
+  border: 1px solid rgba(124, 58, 237, 0.28);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: 8px;
+}
+
+.aiHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.aiTitle {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--purple);
+}
+
+.aiConfidence {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 99px;
+  background: rgba(124, 58, 237, 0.15);
+  color: var(--purple);
+  white-space: nowrap;
+}
+
+.aiSummary {
+  font-size: 0.92rem;
+  line-height: 1.7;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
+.aiSubTitle {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.correlationItem {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 8px 0;
+}
+
+.dotOk, .dotWarn {
+  width: 8px;
+  height: 8px;
+  min-width: 8px;
+  border-radius: 50%;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+.dotOk { background: var(--green); }
+.dotWarn { background: var(--yellow); }
+
+.correlationSymptom {
+  font-size: 0.86rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.correlationFinding {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  margin-top: 2px;
+}
+
+.aiList {
+  padding-left: 20px;
+  margin: 0;
+}
+
+.aiList li {
+  font-size: 0.86rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 4px;
+}
+
+.urgentNote {
+  margin-top: 14px;
+  padding: 10px 14px;
+  background: var(--red-dim);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--red);
+  line-height: 1.55;
+}
+
+.aiDisclaimer {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(124, 58, 237, 0.2);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.aiFallback {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  font-size: 0.86rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 12px;
 }

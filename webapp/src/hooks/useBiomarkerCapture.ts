@@ -1,6 +1,6 @@
 'use client';
 /**
- * useBiomarkerCapture — Hook utama MediaPipe + biomarker extraction
+ * useBiomarkerCapture, Hook utama MediaPipe + biomarker extraction
  * Menggunakan @mediapipe/tasks-vision untuk pose & hand estimation real-time
  */
 import { useRef, useState, useCallback, useEffect } from 'react';
@@ -78,7 +78,7 @@ export function useBiomarkerCapture() {
   // State machine finger tapping
   const tapStateRef = useRef<'OPEN' | 'CLOSED'>('OPEN');
   const tapTimesRef = useRef<number[]>([]);
-  // Deteksi langkah (peak) untuk live counter gait — bukan angka simetri yang di-hardcode
+  // Deteksi langkah (peak) untuk live counter gait, bukan angka simetri yang di-hardcode
   const gaitStepCountRef = useRef(0);
   const gaitLastPeakTimeRef = useRef<number | null>(null);
   // Validasi bagian tubuh yang benar sedang terekam (bukan cuma jumlah total sampel)
@@ -124,7 +124,7 @@ export function useBiomarkerCapture() {
 
   // ── Init MediaPipe Models ───────────────────────────────────────────────────
   const initMediaPipe = useCallback(async () => {
-    // Timeout 30 detik — jika model tidak selesai load, tampilkan error
+    // Timeout 30 detik, jika model tidak selesai load, tampilkan error
     const timeoutId = setTimeout(() => {
       if (!modelsRef.current) {
         setError('Sistem analisis tidak bisa dimuat (timeout). Periksa koneksi internet lalu refresh halaman.');
@@ -221,7 +221,7 @@ export function useBiomarkerCapture() {
       return; // Memaksa user untuk mengulang (tanpa men-trigger setCapturedData)
     }
 
-    // QUALITY GATE 2: Validasi proporsi frame valid — mencegah tes "lolos" hanya karena
+    // QUALITY GATE 2: Validasi proporsi frame valid, mencegah tes "lolos" hanya karena
     // total sampel numerik cukup, padahal sebagian besar durasi bagian tubuh yang benar
     // tidak terdeteksi sama sekali (mis. diminta gerakkan kaki tapi yang terekam tangan).
     const validRatio = totalFramesRef.current > 0 ? validFramesRef.current / totalFramesRef.current : 1;
@@ -325,7 +325,7 @@ export function useBiomarkerCapture() {
       }
 
       // Validasi live: apakah bagian tubuh yang benar sedang benar-benar terekam,
-      // bukan cuma "ada orang di kamera" — mengatasi kasus tes tetap "lanjut" walau
+      // bukan cuma "ada orang di kamera", mengatasi kasus tes tetap "lanjut" walau
       // bagian tubuh yang diminta (mis. kaki) tidak terlihat sama sekali.
       if (isCapturing.current) {
         totalFramesRef.current += 1;

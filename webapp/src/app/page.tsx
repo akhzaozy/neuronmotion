@@ -3,9 +3,10 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { api, ModelAccuracy } from '@/lib/api';
 import Logo from '@/components/Logo';
+import { ThemeToggle } from '@/lib/theme';
 import styles from './landing.module.css';
 
-// SVG Icon medis minimalis — bukan AI/tech look
+// SVG Icon medis minimalis, bukan AI/tech look
 const IconTremor = () => (
   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v2"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/>
@@ -178,89 +179,22 @@ const ANIMATIONS = [
   <AnimatedSpineGraphic key="spine" />
 ];
 
-const ThemeToggleBtn = ({ theme, toggleTheme }: { theme: string, toggleTheme: () => void }) => (
-  <button 
-    onClick={toggleTheme} 
-    title="Toggle Theme"
-    style={{
-      display: 'inline-flex',
-      alignItems: 'center',
-      position: 'relative',
-      width: '56px',
-      height: '30px',
-      borderRadius: '15px',
-      background: theme === 'light' ? '#e2e8f0' : '#1e293b',
-      border: '1px solid',
-      borderColor: theme === 'light' ? '#cbd5e1' : '#334155',
-      cursor: 'pointer',
-      padding: '0',
-      transition: 'background 0.2s ease, border-color 0.2s ease',
-    }}
-  >
-    {/* Thumb */}
-    <div style={{
-      position: 'absolute',
-      top: '2px',
-      left: theme === 'light' ? '2px' : '28px',
-      width: '24px',
-      height: '24px',
-      background: '#fff',
-      borderRadius: '50%',
-      boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
-      transition: 'left 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
-      zIndex: 2,
-    }} />
-    
-    {/* Sun Icon */}
-    <div style={{ position: 'absolute', left: '6px', display: 'flex', zIndex: 1, color: theme === 'light' ? '#f59e0b' : '#64748b', transition: 'color 0.2s' }}>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-      </svg>
-    </div>
-
-    {/* Moon Icon */}
-    <div style={{ position: 'absolute', right: '6px', display: 'flex', zIndex: 1, color: theme === 'dark' ? '#60a5fa' : '#94a3b8', transition: 'color 0.2s' }}>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-      </svg>
-    </div>
-  </button>
-);
-
 export default function LandingPage() {
   const [modelIndex, setModelIndex] = useState(0);
-  const [theme, setTheme] = useState('light');
   const [modelInfo, setModelInfo] = useState<ModelAccuracy | null>(null);
 
   useEffect(() => {
     // Ambil akurasi model SUNGGUHAN (hasil validasi holdout di backend),
-    // bukan angka klaim statis — bisa gagal jika backend belum siap.
+    // bukan angka klaim statis, bisa gagal jika backend belum siap.
     api.getModelAccuracy().then(setModelInfo).catch(() => setModelInfo(null));
   }, []);
 
   useEffect(() => {
-    // Check local storage or system preference
-    const saved = localStorage.getItem('theme');
-    if (saved) {
-      setTheme(saved);
-      document.documentElement.setAttribute('data-theme', saved);
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      setTheme('dark');
-      document.documentElement.setAttribute('data-theme', 'dark');
-    }
-
     const timer = setInterval(() => {
       setModelIndex(prev => (prev + 1) % ANIMATIONS.length);
     }, 5000);
     return () => clearInterval(timer);
   }, []);
-
-  const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    document.documentElement.setAttribute('data-theme', newTheme);
-    localStorage.setItem('theme', newTheme);
-  };
 
   return (
     <div className={styles.page}>
@@ -272,7 +206,7 @@ export default function LandingPage() {
           <span className="badge badge-brand">Beta</span>
         </div>
         <div className={styles.navLinks}>
-          <ThemeToggleBtn theme={theme} toggleTheme={toggleTheme} />
+          <ThemeToggle />
           <Link href="/login" className="btn btn-outline btn-sm">Masuk</Link>
           <Link href="/register" className="btn btn-primary btn-sm">Daftar Gratis</Link>
         </div>

@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * NEURONMOTION — Enhanced Scoring Engine
+ * NEURONMOTION, Enhanced Scoring Engine
  * Menggabungkan rule-based threshold + K-NN classification
  * ============================================================
  */
@@ -64,10 +64,10 @@ export function analyzeTremor({ samples, bodyPart = 'WRIST_RIGHT' }) {
     interpretation = `Tidak ada tremor signifikan (amplitudo ${(amplitude * 1000).toFixed(1)}mm).`;
   } else if (dominantFrequencyHz >= ref.parkinsonsFreqMin && dominantFrequencyHz <= ref.parkinsonsFreqMax) {
     category = 'PARKINSON_TREMOR'; score = 85; updrsEstimate = 3;
-    interpretation = `⚠️ Tremor istirahat ${dominantFrequencyHz.toFixed(1)} Hz di ${bodyPart} — pola khas Parkinson (4-6 Hz). Konsultasi spesialis saraf segera.`;
+    interpretation = `⚠️ Tremor istirahat ${dominantFrequencyHz.toFixed(1)} Hz di ${bodyPart}, pola khas Parkinson (4-6 Hz). Konsultasi spesialis saraf segera.`;
   } else if (dominantFrequencyHz > ref.essentialTremorMin && dominantFrequencyHz <= ref.essentialTremorMax) {
     category = 'ESSENTIAL_TREMOR'; score = 55; updrsEstimate = 2;
-    interpretation = `Tremor frekuensi tinggi ${dominantFrequencyHz.toFixed(1)} Hz — kemungkinan Essential Tremor (bukan Parkinson).`;
+    interpretation = `Tremor frekuensi tinggi ${dominantFrequencyHz.toFixed(1)} Hz, kemungkinan Essential Tremor (bukan Parkinson).`;
   } else if (amplitude > ref.pathologicalAmplitude) {
     category = 'PATHOLOGICAL'; score = 60; updrsEstimate = 2;
     interpretation = `Tremor amplitudo tinggi (${(amplitude * 1000).toFixed(1)}mm), perlu evaluasi lebih lanjut.`;
@@ -136,7 +136,7 @@ export function analyzeFingerTapping({ taps }) {
   const durationSec = Math.max((taps[taps.length - 1].timestamp - taps[0].timestamp) / 1000, 0.1);
   const tapRatePerSecond = tapCount / durationSec;
 
-  // 3. Hitung decrement (penurunan amplitudo awal vs akhir — khas Parkinson)
+  // 3. Hitung decrement (penurunan amplitudo awal vs akhir, khas Parkinson)
   let decrementPercent = 0;
   if (validTaps.length >= 6) {
     const third = Math.ceil(validTaps.length / 3);
@@ -166,7 +166,7 @@ export function analyzeFingerTapping({ taps }) {
     interpretation = `Bradikinesia ringan: ${tapRatePerSecond.toFixed(1)} ketuk/det. Pantau dan evaluasi.`;
   } else if (decrementPercent > ref.decrementSignif) {
     category = 'SIGNIFICANT_DECREMENT'; score = 60; updrsEstimate = 3;
-    interpretation = `Kecepatan awal baik namun turun ${decrementPercent.toFixed(0)}% — tanda akinesia/fatigue motorik khas Parkinson.`;
+    interpretation = `Kecepatan awal baik namun turun ${decrementPercent.toFixed(0)}%, tanda akinesia/fatigue motorik khas Parkinson.`;
   } else if (decrementPercent > ref.decrementMild) {
     category = 'MILD_DECREMENT'; score = 35; updrsEstimate = 1;
     interpretation = `Penurunan amplitudo sedang (${decrementPercent.toFixed(0)}%). Perlu pemantauan.`;
@@ -240,7 +240,7 @@ export function analyzeGait({ steps, age }) {
     interpretation = `Pola jalan normal: simetri ${(strideSymmetryIndex * 100).toFixed(0)}%, kadense ${cadencePerMin.toFixed(0)} langkah/menit.`;
   } else if (strideSymmetryIndex < ref.severeAsymmetry) {
     category = 'SEVERE_ASYMMETRY'; score = 88; updrsEstimate = 4;
-    interpretation = `⚠️ Asimetri gait berat (${(strideSymmetryIndex * 100).toFixed(0)}%). Risiko tinggi — rujukan segera.`;
+    interpretation = `⚠️ Asimetri gait berat (${(strideSymmetryIndex * 100).toFixed(0)}%). Risiko tinggi, rujukan segera.`;
   } else if (strideSymmetryIndex < ref.moderateAsymmetry) {
     category = 'MODERATE_ASYMMETRY'; score = 60; updrsEstimate = 3;
     interpretation = `Asimetri gait moderat (${(strideSymmetryIndex * 100).toFixed(0)}%).`;
@@ -303,13 +303,13 @@ export function analyzeArmSwing({ frames }) {
     interpretation = `Ayunan tangan simetris dan normal (asimetri ${asymmetryPercent.toFixed(0)}%).`;
   } else if (asymmetryPercent > ref.significantAsymmetry) {
     category = 'SIGNIFICANT_ASYMMETRY'; score = 78; updrsEstimate = 3;
-    interpretation = `⚠️ Asimetri ayunan tangan signifikan (${asymmetryPercent.toFixed(0)}%) — tangan ${weakerSide} berkurang. Khas pada Parkinson unilateral.`;
+    interpretation = `⚠️ Asimetri ayunan tangan signifikan (${asymmetryPercent.toFixed(0)}%), tangan ${weakerSide} berkurang. Khas pada Parkinson unilateral.`;
   } else if (asymmetryPercent > ref.mildAsymmetry) {
     category = 'MILD_ASYMMETRY'; score = 40; updrsEstimate = 2;
-    interpretation = `Asimetri ayunan tangan sedang (${asymmetryPercent.toFixed(0)}%) — tangan ${weakerSide} lebih terbatas.`;
+    interpretation = `Asimetri ayunan tangan sedang (${asymmetryPercent.toFixed(0)}%), tangan ${weakerSide} lebih terbatas.`;
   } else if (leftAmp < ref.reducedAmplitude || rightAmp < ref.reducedAmplitude) {
     category = 'BILATERAL_REDUCTION'; score = 55; updrsEstimate = 2;
-    interpretation = `Ayunan tangan bilateral berkurang — indikasi rigiditas.`;
+    interpretation = `Ayunan tangan bilateral berkurang, indikasi rigiditas.`;
   } else {
     category = 'BORDERLINE'; score = 15; updrsEstimate = 1;
     interpretation = `Ayunan tangan sedikit asimetris, pantau berkala.`;
@@ -383,7 +383,7 @@ export function analyzePosturalStability({ frames }) {
     interpretation = `Postur stabil (sway area ${(swayArea * 10000).toFixed(2)} cm²).`;
   } else if (swayArea > ref.severeSwayArea || swayLength > ref.severeSwayLength) {
     category = 'SEVERELY_UNSTABLE'; score = 85; updrsEstimate = 4;
-    interpretation = `⚠️ Ketidakstabilan postur berat (sway area ${(swayArea * 10000).toFixed(2)} cm²). Risiko jatuh tinggi — rujukan segera.`;
+    interpretation = `⚠️ Ketidakstabilan postur berat (sway area ${(swayArea * 10000).toFixed(2)} cm²). Risiko jatuh tinggi, rujukan segera.`;
   } else if (swayArea > ref.mildSwayArea || swayLength > ref.mildSwayLength) {
     category = 'MODERATELY_UNSTABLE'; score = 50; updrsEstimate = 2;
     interpretation = `Postur tidak stabil sedang (sway area ${(swayArea * 10000).toFixed(2)} cm²). Latihan keseimbangan dianjurkan.`;
