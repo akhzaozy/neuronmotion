@@ -60,6 +60,43 @@
   opacity: 0.9;
 }
 
+/* Tombol kembali ke beranda. Sebelumnya jalan keluar dari halaman ini hanya
+   lewat logo, yang tidak terlihat sebagai tombol sehingga mudah terlewat. */
+.backHome {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 99px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  transition: color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.backHome:hover {
+  color: var(--brand-light);
+  border-color: var(--brand);
+  transform: translateX(-2px);
+}
+
+@media (max-width: 520px) {
+  .backHome {
+    top: 16px;
+    left: 16px;
+    padding: 7px 12px;
+    font-size: 0.8rem;
+  }
+}
+
 .title {
   font-size: 1.8rem;
   font-weight: 800;

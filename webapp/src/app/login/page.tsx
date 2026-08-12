@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import Logo from '@/components/Logo';
-import { EyeIcon, EyeOffIcon } from '@/components/icons';
+import { EyeIcon, EyeOffIcon, ArrowLeftIcon } from '@/components/icons';
 import { ThemeToggle } from '@/lib/theme';
 import styles from './auth.module.css';
 
@@ -67,6 +67,11 @@ export default function LoginPage() {
         <div className={styles.circle1} />
         <div className={styles.circle2} />
       </div>
+
+      <Link href="/" className={styles.backHome}>
+        <ArrowLeftIcon />
+        Kembali ke Beranda
+      </Link>
 
       <div style={{ position: 'absolute', top: 20, right: 20, zIndex: 2 }}>
         <ThemeToggle size="sm" />
