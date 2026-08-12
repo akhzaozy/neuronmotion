@@ -332,7 +332,8 @@ export default function LandingPage() {
       <footer className={styles.footer}>
         <p>NeuronMotion adalah alat skrining awal. Bukan pengganti diagnosis tenaga medis.</p>
         <p style={{ marginTop: 4, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-          Referensi: MDS-UPDRS &bull; Shimoyama 1990 &bull; Zijlstra & Hof 2003 &bull; mPower Study
+          Rentang klinis mengacu pada MDS-UPDRS &bull; Hoehn &amp; Yahr &bull; Zhang dkk. 2017 (tremor)
+          &bull; Zanardi dkk. 2021 (gait) &bull; Lewek dkk. 2010 (ayunan lengan)
         </p>
       </footer>
     </div>

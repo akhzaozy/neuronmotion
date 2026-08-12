@@ -55,7 +55,9 @@ router.get('/training-data', (req, res) => {
   const { count = 10 } = req.query;
   const dataset = generateTrainingDataset(Math.min(parseInt(count), 50));
   res.json({
-    description: 'Data sintetis berbasis literatur klinis (MDS-UPDRS, mPower, Shimoyama 1990)',
+    description: 'Data sintetis dengan rentang mengacu pada MDS-UPDRS, Hoehn & Yahr, Zhang dkk. 2017 (tremor), '
+      + 'Zanardi dkk. 2021 (gait), dan Lewek dkk. 2010 (ayunan lengan). Daftar lengkap beserta status '
+      + 'verifikasi tiap parameter ada di dataset/NeuronMotion-Dataset-Training.xlsx sheet Referensi.',
     count: dataset.length,
     conditions: Object.keys(CONDITION_PROFILES),
     sample: dataset.slice(0, 5),

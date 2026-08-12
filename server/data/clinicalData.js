@@ -93,7 +93,9 @@ export const CONDITION_PROFILES = {
       tapRate: [2.2, 3.8], tapDecrement: [14, 38],
       // Cadence setara kelompok sehat; pembeda utamanya simetri langkah & ayunan lengan
       gaitSymmetry: [0.78, 0.92], gaitCadence: [93, 118],
-      armAsymmetry: [18, 45], armAmp: [13, 26],
+      // Asimetri ayunan lengan PD tahap awal: 13,9 +/- 7,9% (Lewek et al. 2010),
+      // versus kontrol sehat 5,1 +/- 4,0%. Keduanya memang beririsan.
+      armAsymmetry: [6, 27], armAmp: [13, 26],
       swayArea: [0.004, 0.013], swayLength: [0.10, 0.21],
     },
   },
@@ -106,7 +108,8 @@ export const CONDITION_PROFILES = {
       // Rentang lebar: sebagian pasien mengalami festinasi (langkah kecil cepat,
       // cadence tinggi), sebagian lain melambat karena freezing of gait
       gaitSymmetry: [0.60, 0.80], gaitCadence: [80, 130],
-      armAsymmetry: [38, 70], armAmp: [6, 17],
+      // Diskalakan naik dari tahap awal (13,9 +/- 7,9%) seiring keparahan
+      armAsymmetry: [20, 55], armAmp: [6, 17],
       swayArea: [0.011, 0.028], swayLength: [0.20, 0.40],
     },
   },
