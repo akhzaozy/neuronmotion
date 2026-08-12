@@ -1,5 +1,6 @@
 'use client';
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { api } from '@/lib/api';
 import styles from './LiveChat.module.css';
 
 interface ChatMessage {
@@ -66,15 +67,11 @@ export default function LiveChat() {
     const history = [...messages, userMsg].map(({ role, parts }) => ({ role, parts }));
 
     try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: history }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.error || 'Gagal menghubungi AI');
+      // Lewat api.ts agar mengarah ke backend Express (NEXT_PUBLIC_API_URL),
+      // sama seperti seluruh pemanggilan API lain. Sebelumnya memakai URL
+      // relatif '/api/chat', yang di produksi diteruskan nginx ke Express
+      // sebagai POST /chat dan berakhir 404.
+      const data = await api.chat(history);
 
       const botMsg: ChatMessage = {
         role: 'model',

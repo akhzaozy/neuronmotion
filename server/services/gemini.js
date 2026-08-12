@@ -156,6 +156,96 @@ async function callGemini(model, prompt, apiKey) {
  * Menghasilkan analisis gabungan. Selalu mengembalikan objek (tidak pernah throw)
  * agar kegagalan Gemini tidak sampai menggagalkan penyimpanan sesi skrining.
  */
+// ── Asisten Percakapan (NeuroBot) ────────────────────────────────────────────
+
+const CHAT_SYSTEM_INSTRUCTION = `Anda adalah asisten kesehatan virtual NeuronMotion bernama "NeuroBot".
+Anda membantu pengguna memahami hasil skrining gangguan motorik saraf (seperti Parkinson dan tremor).
+
+ATURAN PENTING:
+1. Anda BUKAN dokter dan TIDAK BOLEH memberikan diagnosis medis. Selalu ingatkan pengguna untuk berkonsultasi dengan dokter ahli saraf.
+2. Gunakan bahasa Indonesia yang hangat, ramah, dan mudah dipahami awam.
+3. Jelaskan istilah medis dengan bahasa sederhana jika diperlukan.
+4. Fokus pada: membantu memahami skor skrining, memberikan edukasi umum tentang kesehatan motorik, dan mendorong gaya hidup sehat.
+5. Jika ditanya tentang darurat medis, segera sarankan untuk menghubungi layanan darurat atau pergi ke IGD.
+6. Jawab dengan singkat, padat, dan informatif. Maksimal 3-4 paragraf per jawaban.
+7. Anda beroperasi dalam platform NeuronMotion, sebuah sistem skrining gangguan saraf motorik berbasis kamera dan AI.`;
+
+// Batasi riwayat yang dikirim agar permintaan tidak membengkak pada percakapan panjang
+const MAX_CHAT_HISTORY = 20;
+
+async function callGeminiChat(model, messages, apiKey) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+  try {
+    const res = await fetch(`${API_BASE}/${model}:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: CHAT_SYSTEM_INSTRUCTION }] },
+        contents: messages,
+        generationConfig: { temperature: 0.7, maxOutputTokens: 1024 },
+      }),
+    });
+
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(`Gemini HTTP ${res.status}: ${body.slice(0, 200)}`);
+    }
+
+    const data = await res.json();
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) throw new Error('Respons Gemini kosong');
+    return text;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+/**
+ * Menjawab percakapan NeuroBot. Mengembalikan { reply } bila berhasil,
+ * atau { error, status } agar route dapat membalas dengan kode yang sesuai.
+ */
+export async function chatWithAssistant(messages) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    return { error: 'Layanan chat AI belum dikonfigurasi di server.', status: 503 };
+  }
+
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return { error: 'Pesan tidak boleh kosong.', status: 400 };
+  }
+
+  // Bersihkan payload: hanya role & teks yang diteruskan ke Gemini
+  const sanitized = messages
+    .filter(m => m && (m.role === 'user' || m.role === 'model') && Array.isArray(m.parts))
+    .slice(-MAX_CHAT_HISTORY)
+    .map(m => ({
+      role: m.role,
+      parts: m.parts
+        .filter(p => typeof p?.text === 'string')
+        .map(p => ({ text: p.text.slice(0, 4000) })),
+    }))
+    .filter(m => m.parts.length > 0);
+
+  if (sanitized.length === 0) {
+    return { error: 'Pesan tidak valid.', status: 400 };
+  }
+
+  try {
+    return { reply: await callGeminiChat(PRIMARY_MODEL, sanitized, apiKey) };
+  } catch (primaryError) {
+    console.warn(`Chat Gemini primary (${PRIMARY_MODEL}) gagal:`, primaryError.message);
+    try {
+      return { reply: await callGeminiChat(FALLBACK_MODEL, sanitized, apiKey) };
+    } catch (fallbackError) {
+      console.error(`Chat Gemini fallback (${FALLBACK_MODEL}) juga gagal:`, fallbackError.message);
+      return { error: 'Layanan AI sementara tidak tersedia. Silakan coba lagi nanti.', status: 503 };
+    }
+  }
+}
+
 export async function generateCombinedAnalysis(input) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {

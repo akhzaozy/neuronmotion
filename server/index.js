@@ -6,6 +6,7 @@ import testRoutes from './routes/tests.js';
 import patientRoutes from './routes/patients.js';
 import doctorRoutes from './routes/doctor.js';
 import adminRoutes from './routes/admin.js';
+import chatRoutes from './routes/chat.js';
 
 dotenv.config();
 const app = express();
@@ -21,6 +22,7 @@ app.use('/api/tests',    testRoutes);
 app.use('/api/patients', patientRoutes);
 app.use('/api/doctor',   doctorRoutes);
 app.use('/api/admin',    adminRoutes);
+app.use('/api/chat',     chatRoutes);
 
 // Mount at root (for production Nginx which strips /api)
 app.use('/auth',     authRoutes);
@@ -28,6 +30,7 @@ app.use('/tests',    testRoutes);
 app.use('/patients', patientRoutes);
 app.use('/doctor',   doctorRoutes);
 app.use('/admin',    adminRoutes);
+app.use('/chat',     chatRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({
@@ -43,6 +46,7 @@ app.get('/api/health', (req, res) => {
                  '/api/doctor/sessions/:sessionId/note'],
       admin:    ['/api/admin/stats', '/api/admin/conditions', '/api/admin/training-data',
                  '/api/admin/doctors'],
+      chat:     ['/api/chat', '/api/chat/status'],
     },
   });
 });

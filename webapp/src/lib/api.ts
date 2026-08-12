@@ -91,6 +91,10 @@ export const api = {
   saveNote: (sessionId: number, data: object, token?: string) =>
     request('PUT', `/api/doctor/sessions/${sessionId}/note`, data, token),
 
+  // Chat asisten (NeuroBot)
+  chat: (messages: ChatApiMessage[]) =>
+    request<{ reply: string }>('POST', '/api/chat', { messages }),
+
   // Admin
   getStats: () => request('GET', '/api/admin/stats'),
   getConditions: () => request('GET', '/api/admin/conditions'),
@@ -161,6 +165,11 @@ export interface PatientDetail {
   age?: number;
   sessions: Session[];
   trend: Array<{ date: string; score: number; risk: string }>;
+}
+
+export interface ChatApiMessage {
+  role: 'user' | 'model';
+  parts: Array<{ text: string }>;
 }
 
 export interface QuestionnaireQuestion {
