@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { api, Session } from '@/lib/api';
 import AppNav from '@/components/AppNav';
+import LiveChat from '@/components/LiveChat';
 import styles from './dashboard.module.css';
 
 function getGreeting() {
@@ -105,6 +106,7 @@ export default function DashboardPage() {
   return (
     <div className={styles.page}>
       <AppNav />
+      <LiveChat />
       <div className={styles.container}>
         <div className={styles.header}>
           <div>
