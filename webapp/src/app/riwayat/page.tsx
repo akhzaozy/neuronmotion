@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { api, Session } from '@/lib/api';
 import AppNav from '@/components/AppNav';
+import ReportTemplate from '@/components/ReportTemplate';
+import ReportPrintHost from '@/components/ReportPrintHost';
 import styles from './riwayat.module.css';
 
 const RISK_COLOR: Record<string, string> = {
@@ -106,6 +108,7 @@ export default function RiwayatPage() {
   const [loading, setLoading] = useState(true);
   const [compareA, setCompareA] = useState<number | null>(null);
   const [compareB, setCompareB] = useState<number | null>(null);
+  const [printing, setPrinting] = useState(false);
   const [detail, setDetail] = useState<Session | null>(null);
 
   useEffect(() => {
@@ -129,16 +132,46 @@ export default function RiwayatPage() {
   const sessionB = useMemo(() => sessions.find(s => s.id === compareB) || null, [sessions, compareB]);
 
   const exportCSV = () => {
+    // Seluruh kolom diikutsertakan agar berkas dapat langsung diolah ulang,
+    // tidak sekadar menampilkan ringkasan seperti versi sebelumnya.
+    const num = (v: unknown) => (v === undefined || v === null ? '' : String(v));
     const rows = [
-      ['ID Sesi', 'Tanggal', 'Skor', 'Kategori Risiko', 'Prediksi', 'Catatan Nakes'],
-      ...sessions.map(s => [
-        String(s.id),
-        formatDate(s.timestamp),
-        String(Math.round(s.compositeScore)),
-        RISK_LABEL[s.riskCategory] || s.riskCategory,
-        s.mlPrediction?.predictedLabel || '',
-        (s.doctorNote || '').replace(/\n/g, ' '),
-      ]),
+      [
+        'ID Sesi', 'Tanggal', 'Skor Komposit', 'Kategori Risiko',
+        'Skor Gejala Kuesioner', 'Pola Terdekat (ML)', 'Keyakinan ML (%)',
+        'Tremor Frekuensi (Hz)', 'Tremor Amplitudo (mm)',
+        'Finger Tapping (ketuk/detik)', 'Dekremen Tapping (%)',
+        'Simetri Langkah (%)', 'Kadense (langkah/menit)',
+        'Asimetri Ayunan Lengan (%)', 'Sway Area (cm2)', 'ROM Lutut (derajat)',
+        'Ringkasan AI', 'Keyakinan AI', 'Saran AI', 'Rekomendasi Sistem', 'Catatan Nakes',
+      ],
+      ...sessions.map(s => {
+        const b = s.rawBiomarkers || {};
+        const t = (s.tremorResult || {}) as Record<string, unknown>;
+        return [
+          String(s.id),
+          formatDate(s.timestamp),
+          String(Math.round(s.compositeScore)),
+          RISK_LABEL[s.riskCategory] || s.riskCategory,
+          num(s.questionnaireScore !== null && s.questionnaireScore !== undefined ? Math.round(s.questionnaireScore) : ''),
+          s.mlPrediction?.predictedLabel || '',
+          num(s.mlPrediction?.confidence),
+          num(b.tremor?.dominantFrequencyHz),
+          num(t.amplitudeMillimeter),
+          num(b.fingerTapping?.tapRatePerSecond),
+          num((s.fingerTappingResult as Record<string, unknown> | undefined)?.decrementPercent),
+          num(b.gait?.symmetryPercent),
+          num(b.gait?.cadencePerMin),
+          num(b.armSwing?.asymmetryPercent),
+          num(b.posturalStability?.swayAreaCm2),
+          num(b.rom?.romDeg),
+          (s.aiAnalysis?.ringkasan || '').replace(/\n/g, ' '),
+          s.aiAnalysis?.tingkatKeyakinan || '',
+          (s.aiAnalysis?.saranTindakLanjut || []).join(' | ').replace(/\n/g, ' '),
+          (s.recommendations || []).join(' | ').replace(/\n/g, ' '),
+          (s.doctorNote || '').replace(/\n/g, ' '),
+        ];
+      }),
     ];
     const csv = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -170,7 +203,7 @@ export default function RiwayatPage() {
           </div>
           {sessions.length > 0 && (
             <div className={styles.exportRow}>
-              <button className="btn btn-outline btn-sm" onClick={() => window.print()}>Unduh PDF</button>
+              <button className="btn btn-outline btn-sm" onClick={() => setPrinting(true)}>Unduh PDF</button>
               <button className="btn btn-outline btn-sm" onClick={exportCSV}>Ekspor CSV</button>
             </div>
           )}
@@ -410,6 +443,24 @@ export default function RiwayatPage() {
           </div>
         </div>
       )}
+
+      {/* Laporan cetak memakai template khusus, bukan menyalin tampilan halaman */}
+      <div data-report-host="">
+        <ReportPrintHost open={printing} onClose={() => setPrinting(false)}>
+          <ReportTemplate
+            patient={{
+              name: user?.name,
+              email: user?.email,
+              gender: user?.gender,
+              dateOfBirth: user?.dateOfBirth,
+              city: user?.city,
+              state: user?.state,
+              countryName: user?.countryName,
+            }}
+            sessions={sessions}
+          />
+        </ReportPrintHost>
+      </div>
     </div>
   );
 }

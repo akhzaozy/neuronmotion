@@ -1,0 +1,56 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: #64748b;
+  overflow-y: auto;
+  padding: 0 0 40px;
+}
+
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 12px 20px;
+  background: #1e293b;
+  border-bottom: 1px solid #334155;
+}
+
+.hint {
+  font-size: 0.85rem;
+  color: #cbd5e1;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+}
+
+.paperWrap {
+  margin: 24px auto;
+  width: 210mm;
+  max-width: calc(100% - 32px);
+  background: #fff;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+@media print {
+  .backdrop {
+    position: static;
+    background: #fff;
+    padding: 0;
+    overflow: visible;
+  }
+  .toolbar { display: none; }
+  .paperWrap {
+    margin: 0;
+    width: auto;
+    max-width: none;
+    box-shadow: none;
+  }
+}

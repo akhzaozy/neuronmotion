@@ -316,3 +316,20 @@ a:focus-visible, button:focus-visible, .input:focus-visible,
   background-size: 200% 100%;
   animation: shimmer 1.4s infinite;
 }
+
+/* ── Mode cetak laporan ──────────────────────────────────────────────────────
+   Saat pratinjau laporan aktif, seluruh isi halaman disembunyikan dari hasil
+   cetak dan hanya kotak laporan yang ikut. Tanpa ini, mencetak akan membawa
+   navigasi, tombol, dan kartu dashboard ke atas kertas. */
+@media print {
+  body.printing-report > *:not([data-report-host]) {
+    display: none !important;
+  }
+  body.printing-report {
+    background: #fff;
+  }
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+}
