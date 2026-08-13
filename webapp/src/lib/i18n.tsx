@@ -602,7 +602,9 @@ export function LanguageToggle() {
             fontSize: '0.74rem',
             fontWeight: 700,
             letterSpacing: '0.03em',
-            background: lang === l ? 'var(--gradient-brand)' : 'transparent',
+            // Warna rata, bukan gradien. Gradien pada kepingan selebar 32 piksel
+            // hanya terbaca sebagai warna kotor, bukan sebagai gradasi.
+            background: lang === l ? 'var(--brand)' : 'transparent',
             color: lang === l ? '#fff' : 'var(--text-secondary)',
             transition: 'background 0.15s, color 0.15s',
           }}

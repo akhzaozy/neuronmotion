@@ -123,11 +123,23 @@
   margin-bottom: 16px;
 }
 
+/* Tombol keluar.
+   Sebelumnya merah pekat selebar kartu, membuatnya tampak lebih genting
+   daripada tombol hapus akun tepat di atasnya, padahal keluar adalah tindakan
+   biasa yang bisa dibatalkan dengan masuk kembali. Warna merah dikembalikan
+   kepada tindakan yang memang merusak. */
 .logoutBtn {
   width: 100%;
-  background: var(--red);
-  color: #fff;
-  font-weight: 700;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.logoutBtn:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-light);
+  color: var(--text-primary);
 }
 
 .logoutBtn:hover {

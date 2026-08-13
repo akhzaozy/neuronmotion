@@ -38,6 +38,7 @@
 }
 
 .tab {
+  min-height: 34px;
   padding: 7px 14px;
   border-radius: var(--radius-sm);
   background: transparent;
@@ -83,7 +84,7 @@
 .rowTotal {
   font-size: 0.8rem;
   color: var(--text-muted);
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), ui-monospace, Menlo, monospace;
   white-space: nowrap;
 }
 

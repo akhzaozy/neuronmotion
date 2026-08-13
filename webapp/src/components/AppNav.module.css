@@ -38,15 +38,22 @@
   font-weight: 800;
 }
 
+/* Penanda peran.
+   Sebelumnya ungu pekat, sehingga satu bilah navigasi memuat tiga warna aksen
+   sekaligus: biru untuk menu aktif, biru untuk pilihan bahasa, dan ungu di
+   sini. Warna aksen yang saling bersaing membuat bilahnya terbaca seperti
+   rakitan komponen. Penanda ini keterangan, bukan tindakan, jadi dikembalikan
+   ke warna netral. */
 .roleBadge {
-  padding: 4px 10px;
-  border-radius: 99px;
-  background: var(--purple-dim);
-  border: 1px solid rgba(124, 58, 237, 0.3);
-  color: var(--purple-text);
+  padding: 5px 11px;
+  border-radius: 7px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
   font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   white-space: nowrap;
 }
 

@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
   /* Colors (Light Clinical Theme) */
@@ -154,12 +153,32 @@
 
 html, body {
   height: 100%;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
   background: var(--bg-primary);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
   transition: background-color 0.15s ease-out, color 0.15s ease-out;
+}
+
+/* ── Kaidah tipografi ────────────────────────────────────────────────────────
+   Judul dirapatkan jaraknya karena Plus Jakarta Sans agak lebih lebar daripada
+   Inter, dan tanpa pengetatan judul besar terasa renggang. Angka memakai lebar
+   tetap agar skor dan tanggal tidak bergeser-geser ketika nilainya berubah,
+   hal yang paling terlihat pada penghitung skor yang bergerak naik. */
+h1, h2, h3, h4 {
+  letter-spacing: -0.02em;
+}
+
+h1 {
+  letter-spacing: -0.03em;
+}
+
+.tabular,
+table,
+time {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
 }
 
 a { color: inherit; text-decoration: none; }

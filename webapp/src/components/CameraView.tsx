@@ -193,7 +193,7 @@ function MetricChip({ label, value, color, dot }: { label: string; value: string
       border: '1px solid var(--border)', borderRadius: 8, minWidth: 80,
     }}>
       <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</span>
-      <span style={{ fontSize: '0.88rem', fontWeight: 700, color: colorMap[color] || '#fff', fontFamily: 'JetBrains Mono, monospace', display: 'flex', alignItems: 'center', gap: 4 }}>
+      <span style={{ fontSize: '0.88rem', fontWeight: 700, color: colorMap[color] || '#fff', fontFamily: 'var(--font-mono), ui-monospace, Menlo, monospace', display: 'flex', alignItems: 'center', gap: 4 }}>
         {dot && <span style={{ width: 6, height: 6, borderRadius: '50%', background: colorMap[color], display: 'inline-block', flexShrink: 0 }} />}
         {value}
       </span>

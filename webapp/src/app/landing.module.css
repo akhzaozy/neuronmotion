@@ -186,6 +186,7 @@
 }
 
 .statVal {
+  font-variant-numeric: tabular-nums;
   font-size: 1.8rem;
   font-weight: 800;
   color: var(--text-primary);
