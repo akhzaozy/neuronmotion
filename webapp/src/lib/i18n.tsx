@@ -1,6 +1,7 @@
 'use client';
 import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from 'react';
 import PageTranslator from './pageTranslator';
+import langStyles from './i18n.module.css';
 
 export type Lang = 'id' | 'en';
 
@@ -288,7 +289,6 @@ const DICT: Record<string, { id: string; en: string }> = {
   'scr.startRecording': { id: 'Mulai Rekam', en: 'Start Recording' },
   'scr.stopRecording': { id: 'Hentikan Rekaman', en: 'Stop Recording' },
   'scr.nextTest': { id: 'Lanjut ke Tes Berikutnya', en: 'Continue to Next Test' },
-  'scr.submit': { id: 'Kirim Hasil Skrining', en: 'Submit Screening Results' },
   'scr.enableCamera': { id: 'Aktifkan Kamera', en: 'Enable Camera' },
   'scr.allowCamera': { id: 'Izinkan Akses Kamera', en: 'Allow Camera Access' },
 
@@ -512,8 +512,345 @@ const DICT: Record<string, { id: string; en: string }> = {
   'doc.clinicalNote': { id: 'Catatan Klinis Dokter', en: 'Clinical Notes' },
   'doc.saveNote': { id: 'Simpan Catatan & Rekomendasi', en: 'Save Notes & Recommendations' },
 
+  // ── Tes gerakan ────────────────────────────────────────────────────────────
+  // Satu-satunya teks instruksi yang berlaku. Token {d} diganti durasi nyata
+  // dari mesin perekam, jadi teks dan mesin tidak akan pernah berbeda.
+  'test.tremor.name': { id: 'Tremor', en: 'Tremor' },
+  'test.tremor.desc': {
+    id: 'Mengukur frekuensi dan amplitudo getaran tangan saat diam.',
+    en: 'Measures the frequency and amplitude of hand tremor at rest.',
+  },
+  'test.tremor.cue': { id: 'Tahan tangan setinggi dada, rileks', en: 'Hold your hand at chest height, relaxed' },
+  'test.tremor.step1': { id: 'Duduk atau berdiri menghadap kamera', en: 'Sit or stand facing the camera' },
+  'test.tremor.step2': { id: 'Angkat tangan kanan setinggi dada', en: 'Raise your right hand to chest height' },
+  'test.tremor.step3': { id: 'Telapak menghadap ke bawah, jari rileks', en: 'Palm facing down, fingers relaxed' },
+  'test.tremor.step4': { id: 'Tahan tanpa menegangkan otot selama {d} detik', en: 'Hold without tensing for {d} seconds' },
+
+  'test.fingerTapping.name': { id: 'Ketukan Jari', en: 'Finger Tapping' },
+  'test.fingerTapping.desc': {
+    id: 'Mengukur kecepatan ketukan dan penurunan amplitudo akibat kelelahan gerak.',
+    en: 'Measures tapping speed and the amplitude decrement caused by motor fatigue.',
+  },
+  'test.fingerTapping.cue': { id: 'Ketuk ibu jari dan telunjuk, selebar mungkin', en: 'Tap thumb and index finger, as wide as you can' },
+  'test.fingerTapping.step1': { id: 'Angkat satu tangan menghadap kamera', en: 'Raise one hand toward the camera' },
+  'test.fingerTapping.step2': { id: 'Buka ibu jari dan telunjuk selebar mungkin', en: 'Open thumb and index finger as wide as you can' },
+  // Terjemahan lama menulis "se-keras mungkin", yang membuat pengguna mengetuk
+  // sekuat tenaga alih-alih selebar mungkin, dan itu merusak pembacaan amplitudo.
+  'test.fingerTapping.step3': { id: 'Ketuk keduanya secepat dan selebar mungkin', en: 'Tap them as fast and as wide as you can' },
+  'test.fingerTapping.step4': { id: 'Lanjutkan tanpa berhenti selama {d} detik', en: 'Keep going without stopping for {d} seconds' },
+
+  'test.gait.name': { id: 'Pola Jalan', en: 'Gait' },
+  'test.gait.desc': {
+    id: 'Mengukur kadense, panjang langkah, dan simetri berjalan.',
+    en: 'Measures cadence, stride length, and walking symmetry.',
+  },
+  'test.gait.cue': { id: 'Berjalan lurus mendekati kamera', en: 'Walk straight toward the camera' },
+  'test.gait.step1': { id: 'Mundur 2 sampai 3 meter dari perangkat', en: 'Step back 2 to 3 metres from the device' },
+  'test.gait.step2': { id: 'Pastikan seluruh tubuh sampai kaki terlihat', en: 'Make sure your whole body down to your feet is visible' },
+  'test.gait.step3': { id: 'Berjalan lurus mendekati kamera dengan langkah biasa', en: 'Walk straight toward the camera at your normal pace' },
+  'test.gait.step4': { id: 'Terus berjalan sampai aba-aba selesai, sekitar {d} detik', en: 'Keep walking until the end cue, about {d} seconds' },
+
+  'test.armSwing.name': { id: 'Ayunan Lengan', en: 'Arm Swing' },
+  'test.armSwing.desc': {
+    id: 'Mengukur selisih amplitudo ayunan lengan kiri dan kanan saat berjalan.',
+    en: 'Measures the amplitude difference between left and right arm swing while walking.',
+  },
+  'test.armSwing.cue': { id: 'Berjalan di tempat, biarkan lengan berayun', en: 'Walk in place, let your arms swing' },
+  'test.armSwing.step1': { id: 'Mundur sampai tubuh bagian atas terlihat penuh', en: 'Step back until your upper body is fully visible' },
+  'test.armSwing.step2': { id: 'Berjalan di tempat dengan langkah santai', en: 'Walk in place at a relaxed pace' },
+  'test.armSwing.step3': { id: 'Biarkan kedua lengan berayun alami selama {d} detik', en: 'Let both arms swing naturally for {d} seconds' },
+
+  'test.posture.name': { id: 'Keseimbangan', en: 'Postural Stability' },
+  'test.posture.desc': {
+    id: 'Mengukur goyangan titik berat tubuh saat berdiri diam.',
+    en: 'Measures centre-of-mass sway while standing still.',
+  },
+  'test.posture.cue': { id: 'Berdiri diam, kaki selebar bahu', en: 'Stand still, feet shoulder-width apart' },
+  'test.posture.step1': { id: 'Mundur sampai seluruh tubuh terlihat', en: 'Step back until your whole body is visible' },
+  // Dua teks lama bertentangan, satu menyuruh kaki rapat dan satu menyuruh
+  // selebar bahu, padahal keduanya menghasilkan pengukuran sway yang berbeda.
+  'test.posture.step2': { id: 'Berdiri tegak, kaki selebar bahu, tangan di samping', en: 'Stand upright, feet shoulder-width apart, arms at your sides' },
+  'test.posture.step3': { id: 'Tahan posisi tanpa bergerak selama {d} detik', en: 'Hold the position without moving for {d} seconds' },
+
+  'test.rom.name': { id: 'Rentang Gerak Lutut', en: 'Knee Range of Motion' },
+  'test.rom.desc': {
+    id: 'Mengukur sudut maksimum tekukan dan luruskan lutut.',
+    en: 'Measures the maximum knee flexion and extension angle.',
+  },
+  'test.rom.cue': { id: 'Tekuk dan luruskan lutut secara penuh', en: 'Bend and straighten your knee fully' },
+  // Instruksi lama bertentangan antara berdiri menyamping dan duduk di kursi.
+  // Versi ini memilih duduk, karena berdiri satu kaki adalah risiko jatuh bagi
+  // pengguna lansia yang justru diskrining karena gangguan keseimbangan.
+  'test.rom.step1': { id: 'Duduk menyamping di kursi, seluruh kaki terlihat kamera', en: 'Sit sideways on a chair with your whole leg visible to the camera' },
+  'test.rom.step2': { id: 'Luruskan satu kaki ke depan sejauh yang nyaman', en: 'Straighten one leg forward as far as is comfortable' },
+  'test.rom.step3': { id: 'Tekuk kembali sampai telapak menyentuh lantai', en: 'Bend it back until your foot touches the floor' },
+  'test.rom.step4': { id: 'Ulangi gerakan penuh selama {d} detik', en: 'Repeat the full movement for {d} seconds' },
+
+  'test.safety.chair': {
+    id: 'Kalau Anda merasa goyah, lakukan sambil berpegangan pada kursi atau minta seseorang mendampingi.',
+    en: 'If you feel unsteady, hold on to a chair or ask someone to stay with you.',
+  },
+
+  // ── Kamera ─────────────────────────────────────────────────────────────────
+  'cam.enable': { id: 'Nyalakan kamera', en: 'Turn on the camera' },
+  'cam.enableBody': {
+    id: 'Perekaman gerakan berjalan di perangkat Anda sendiri. Video tidak dikirim ke mana pun dan tidak disimpan, yang dikirim hanya angka hasil pengukuran.',
+    en: 'Movement capture runs on your own device. The video is never uploaded and never stored; only the resulting measurements are sent.',
+  },
+  'cam.allow': { id: 'Izinkan akses kamera', en: 'Allow camera access' },
+  'cam.loading': { id: 'Menyiapkan sistem pengukuran', en: 'Preparing the measurement system' },
+  'cam.loadingBody': {
+    id: 'Mengunduh model estimasi pose. Sekali unduh memakan 10 sampai 30 detik tergantung koneksi.',
+    en: 'Downloading the pose estimation model. The one-time download takes 10 to 30 seconds depending on your connection.',
+  },
+  'cam.retry': { id: 'Coba lagi', en: 'Try again' },
+
+  'cam.fault.denied.title': { id: 'Izin kamera ditolak', en: 'Camera permission denied' },
+  'cam.fault.denied.body': {
+    id: 'Browser memblokir kamera untuk halaman ini, jadi menekan coba lagi tidak akan memunculkan permintaan izin. Buka ikon gembok atau pengaturan situs di bilah alamat, ubah Kamera menjadi Izinkan, lalu muat ulang halaman ini.',
+    en: 'Your browser has blocked the camera for this page, so trying again will not bring the permission prompt back. Open the lock icon or site settings in the address bar, set Camera to Allow, then reload this page.',
+  },
+  'cam.fault.notFound.title': { id: 'Kamera tidak ditemukan', en: 'No camera found' },
+  'cam.fault.notFound.body': {
+    id: 'Perangkat ini tidak punya kamera yang bisa dipakai. Coba buka NeuronMotion dari ponsel, atau sambungkan kamera lalu muat ulang halaman.',
+    en: 'This device has no usable camera. Try opening NeuronMotion on a phone, or connect a camera and reload the page.',
+  },
+  'cam.fault.inUse.title': { id: 'Kamera sedang dipakai aplikasi lain', en: 'The camera is in use by another app' },
+  'cam.fault.inUse.body': {
+    id: 'Tutup aplikasi lain yang sedang memakai kamera, misalnya panggilan video, lalu tekan coba lagi.',
+    en: 'Close the other app using the camera, such as a video call, then try again.',
+  },
+  'cam.fault.insecure.title': { id: 'Halaman tidak dilayani secara aman', en: 'This page is not served securely' },
+  'cam.fault.insecure.body': {
+    id: 'Browser hanya mengizinkan kamera pada alamat HTTPS. Buka NeuronMotion lewat alamat resminya.',
+    en: 'Browsers only allow camera access over HTTPS. Please open NeuronMotion at its official address.',
+  },
+  'cam.fault.modelTimeout.title': { id: 'Sistem pengukuran gagal dimuat', en: 'The measurement system failed to load' },
+  'cam.fault.modelTimeout.body': {
+    id: 'Pengunduhan model melebihi 30 detik, biasanya karena koneksi lambat. Sambungkan ke jaringan yang lebih stabil lalu coba lagi.',
+    en: 'The model download passed 30 seconds, usually because the connection is slow. Move to a more stable network and try again.',
+  },
+  'cam.fault.modelFailed.title': { id: 'Sistem pengukuran gagal dimuat', en: 'The measurement system failed to load' },
+  'cam.fault.modelFailed.body': {
+    id: 'Model tidak bisa diambil. Periksa koneksi Anda lalu coba lagi.',
+    en: 'The model could not be fetched. Check your connection and try again.',
+  },
+  'cam.fault.unknown.title': { id: 'Kamera tidak bisa diakses', en: 'The camera could not be opened' },
+  'cam.fault.unknown.body': {
+    id: 'Terjadi kesalahan yang tidak dikenali saat membuka kamera. Muat ulang halaman lalu coba lagi.',
+    en: 'An unrecognised error occurred while opening the camera. Reload the page and try again.',
+  },
+
+  // ── Perekaman ──────────────────────────────────────────────────────────────
+  'scr.recording': { id: 'Merekam', en: 'Recording' },
+  'scr.secondsLeft': { id: 'detik lagi', en: 'seconds left' },
+  'scr.getReady': { id: 'Bersiap', en: 'Get ready' },
+  'scr.startNow': { id: 'Mulai sekarang', en: 'Start now' },
+  'scr.addTime': { id: 'Tambah 10 detik', en: 'Add 10 seconds' },
+  'scr.pause': { id: 'Jeda', en: 'Pause' },
+  'scr.resume': { id: 'Lanjutkan', en: 'Resume' },
+  'scr.skipTest': { id: 'Lewati tes ini', en: 'Skip this test' },
+  'scr.stop': { id: 'Hentikan perekaman', en: 'Stop recording' },
+  'scr.retake': { id: 'Ulangi tes ini', en: 'Redo this test' },
+  'scr.beginTest': { id: 'Mulai tes', en: 'Start test' },
+  'scr.backToTests': { id: 'Batal, kembali ke daftar tes', en: 'Cancel, back to the test list' },
+  'scr.next': { id: 'Lanjut ke tes berikutnya', en: 'Next test' },
+  'scr.submit': { id: 'Kirim hasil skrining', en: 'Submit screening' },
+  'scr.done': { id: 'Selesai', en: 'Done' },
+  'scr.pending': { id: 'Belum dikerjakan', en: 'Not yet done' },
+  'scr.current': { id: 'Sedang dikerjakan', en: 'In progress' },
+  'scr.sequence': { id: 'Urutan tes', en: 'Test sequence' },
+  'scr.stepOf': { id: 'Tes {a} dari {b}', en: 'Test {a} of {b}' },
+  'scr.analysing': { id: 'Menghitung hasil', en: 'Calculating results' },
+  'scr.analysingBody': {
+    id: 'Menggabungkan pengukuran gerakan dengan keluhan yang Anda laporkan.',
+    en: 'Combining your movement measurements with the symptoms you reported.',
+  },
+
+  'scr.reject.tooFew.title': { id: 'Rekaman belum bisa dipakai', en: 'That take cannot be used yet' },
+  'scr.reject.tooFew.body': {
+    id: 'Gerakan Anda hanya terekam sebagian, jadi hasilnya tidak cukup untuk dihitung. Biasanya ini terjadi kalau tubuh keluar dari frame atau ruangan terlalu gelap.',
+    en: 'Only part of your movement was captured, so there is not enough data to compute a result. This usually happens when the body leaves the frame or the room is too dark.',
+  },
+  'scr.reject.bodyPart.title': { id: 'Bagian tubuh yang diukur tidak terlihat', en: 'The measured body part was not visible' },
+
+  // ── Hasil ──────────────────────────────────────────────────────────────────
+  'res.title': { id: 'Hasil skrining', en: 'Screening result' },
+  'res.scoreOf': { id: 'dari 100', en: 'of 100' },
+  'res.scaleNote': {
+    id: 'Makin tinggi angkanya, makin perlu diperiksa tenaga medis. Ini bukan nilai ujian dan bukan vonis.',
+    en: 'The higher the number, the more worth checking with a clinician. This is not a grade and not a verdict.',
+  },
+  'res.notDiagnosis': {
+    id: 'Ini bukan diagnosis medis. NeuronMotion mengukur gerakan, dan hanya tenaga medis yang bisa menegakkan diagnosis.',
+    en: 'This is not a medical diagnosis. NeuronMotion measures movement; only a clinician can make a diagnosis.',
+  },
+  'res.experimental': {
+    id: 'Model eksperimental, belum tervalidasi klinis',
+    en: 'Experimental model, not yet clinically validated',
+  },
+  'res.experimentalBody': {
+    id: 'Dugaan pola di bawah ini berasal dari model yang masih dalam pengembangan dan belum diuji bersama tenaga medis. Jangan dijadikan dasar pengobatan.',
+    en: 'The pattern suggested below comes from a model still in development that has not been validated with clinicians. Do not use it as a basis for treatment.',
+  },
+  'res.symptomScore': { id: 'Skor gejala, dari kuesioner', en: 'Symptom score, from the questionnaire' },
+  'res.measuredScore': { id: 'Skor pengukuran, dari kamera', en: 'Measured score, from the camera' },
+  'res.compositeScore': { id: 'Skor gabungan', en: 'Composite score' },
+  'res.lowTitle': { id: 'Tidak ada tanda yang menonjol', en: 'No notable signs' },
+  'res.lowBody': {
+    id: 'Pengukuran hari ini tidak menunjukkan tanda yang menonjol. Simpan hasil ini sebagai titik awal, lalu ulangi skrining beberapa bulan lagi supaya perubahannya terlihat.',
+    en: 'Today’s measurements show no notable signs. Keep this as your baseline and screen again in a few months so any change becomes visible.',
+  },
+  'res.correlation': { id: 'Kaitan keluhan dengan hasil ukur', en: 'How your symptoms relate to the measurements' },
+  'res.consistent': { id: 'Sejalan', en: 'Consistent' },
+  'res.inconsistent': { id: 'Belum sejalan', en: 'Not yet consistent' },
+  'res.followUp': { id: 'Saran tindak lanjut', en: 'Suggested next steps' },
+  'res.urgent': {
+    id: 'Kombinasi tanda yang Anda laporkan sebaiknya diperiksa tenaga medis dalam waktu dekat.',
+    en: 'The combination of signs you reported is worth having checked by a clinician soon.',
+  },
+  'res.aiNote': {
+    id: 'Ringkasan ini disusun AI untuk membantu Anda membaca hasil. Skor dihitung mesin analisis terpisah dan tidak diubah oleh AI.',
+    en: 'This summary was written by AI to help you read the result. The score is computed by a separate analysis engine and is not altered by the AI.',
+  },
+  'res.saveForDoctor': { id: 'Simpan untuk dokter', en: 'Save for your doctor' },
+  'res.viewHistory': { id: 'Lihat riwayat', en: 'View history' },
+  'res.backToDashboard': { id: 'Kembali ke beranda', en: 'Back to dashboard' },
+  'res.needHelp': { id: 'Butuh penjelasan lebih lanjut', en: 'Need more explanation' },
+
+  // ── Pembuka ────────────────────────────────────────────────────────────────
+  'intro.title': { id: 'Sebelum mulai', en: 'Before you start' },
+  'intro.lead': {
+    id: 'Anda akan melakukan tes ini sendiri di depan kamera, tanpa didampingi tenaga medis. Berikut yang perlu disiapkan.',
+    en: 'You will run this test yourself in front of the camera, with no clinician present. Here is what to prepare.',
+  },
+  'intro.room': { id: 'Ruangan', en: 'Room' },
+  'intro.roomBody': {
+    id: 'Cahaya cukup dan ruang gerak sekitar tiga meter untuk tes berjalan.',
+    en: 'Enough light, and about three metres of space for the walking tests.',
+  },
+  'intro.device': { id: 'Perangkat', en: 'Device' },
+  'intro.deviceBody': {
+    id: 'Sandarkan ponsel pada benda yang stabil setinggi pinggang, lalu pastikan Anda masih terlihat saat mundur.',
+    en: 'Prop your phone against something stable at waist height, then check you are still visible when you step back.',
+  },
+  'intro.time': { id: 'Waktu', en: 'Time' },
+  'intro.timeBody': {
+    id: 'Perekaman totalnya sekitar {s} detik. Sisanya adalah persiapan dan berpindah posisi, jadi sediakan sekitar sepuluh menit tanpa terburu-buru.',
+    en: 'Recording totals about {s} seconds. The rest is setup and repositioning, so allow around ten minutes without rushing.',
+  },
+  'intro.privacy': { id: 'Privasi', en: 'Privacy' },
+  'intro.privacyBody': {
+    id: 'Video diproses di perangkat Anda dan tidak pernah diunggah. Yang dikirim hanya angka hasil pengukuran.',
+    en: 'Video is processed on your device and never uploaded. Only the resulting measurements are sent.',
+  },
+  'intro.begin': { id: 'Saya siap, mulai', en: 'I am ready, begin' },
+
+  // ── Masuk dan daftar ───────────────────────────────────────────────────────
+  'auth.roleLabel': { id: 'Masuk sebagai', en: 'Sign in as' },
+  'auth.showPassword': { id: 'Tampilkan', en: 'Show' },
+  'auth.hidePassword': { id: 'Sembunyikan', en: 'Hide' },
+
+  // ── Beranda pasien ─────────────────────────────────────────────────────────
+  'dash.traceLabel': { id: 'Skor gabungan antar sesi', en: 'Composite score across sessions' },
+  'dash.emptyBody': {
+    id: 'Skrining pertama Anda akan jadi titik acuan. Perubahan baru terlihat setelah ada sesi kedua, jadi mulailah sekarang supaya ada pembandingnya nanti.',
+    en: 'Your first screening becomes the baseline. Change only becomes visible once there is a second session, so start now to have something to compare against later.',
+  },
+  'hist.finding': { id: 'Temuan', en: 'Finding' },
+
+  // ── Halaman publik ─────────────────────────────────────────────────────────
+  'land.specimen': { id: 'Yang diukur', en: 'What is measured' },
+  'land.colTest': { id: 'Tes', en: 'Test' },
+  'land.colMeasures': { id: 'Mengukur', en: 'Measures' },
+  'land.colDuration': { id: 'Durasi', en: 'Duration' },
+  'land.mechanismTitle': {
+    id: 'Perhitungannya terjadi di perangkat Anda',
+    en: 'The computation happens on your device',
+  },
+  'land.mechanismBody': {
+    id: 'Deteksi titik tubuh dan penghitungan biomarker berjalan di dalam browser Anda. Video tidak pernah diunggah, tidak pernah disimpan, dan tidak pernah melewati server kami. Yang dikirim hanya angka hasil pengukuran.',
+    en: 'Body keypoint detection and biomarker extraction run inside your browser. The video is never uploaded, never stored, and never passes through our servers. Only the resulting numbers are sent.',
+  },
+  'land.mechanismBody2': {
+    id: 'Karena itu NeuronMotion tidak butuh server GPU dan tetap berjalan di ponsel biasa. Itulah yang membuatnya bisa dipakai di daerah yang tidak punya akses ke dokter saraf.',
+    en: 'That is why NeuronMotion needs no GPU server and still runs on an ordinary phone. It is what makes the tool usable in places with no access to a neurologist.',
+  },
+  'land.provenance': { id: 'Asal-usul model', en: 'Model provenance' },
+  'land.testProfiles': { id: 'Profil uji terpisah', en: 'Held-out test profiles' },
+  'land.referenceLead': { id: 'Rentang klinis mengacu pada', en: 'Clinical ranges reference' },
+
+  // ── Kuesioner ──────────────────────────────────────────────────────────────
+  'quest.cat.MOTORIK': { id: 'Gejala gerakan', en: 'Movement symptoms' },
+  'quest.cat.NON_MOTORIK': { id: 'Gejala non-gerakan', en: 'Non-movement symptoms' },
+  'quest.cat.RIWAYAT': { id: 'Riwayat kesehatan', en: 'Medical history' },
+  'quest.cat.TAMBAHAN': { id: 'Keterangan tambahan', en: 'Additional notes' },
+  'quest.kicker': { id: 'Kuesioner gejala', en: 'Symptom questionnaire' },
+  'quest.count': { id: '{n} pertanyaan', en: '{n} questions' },
+  'quest.loading': { id: 'Memuat kuesioner', en: 'Loading the questionnaire' },
+  'quest.unavailable': { id: 'Kuesioner tidak dapat dimuat', en: 'The questionnaire could not be loaded' },
+  'quest.unavailableBody': {
+    id: 'Anda tetap dapat melanjutkan ke tes gerakan. Hasil skrining akan dihitung dari pengukuran kamera saja.',
+    en: 'You can still continue to the movement tests. The screening will be computed from the camera measurements alone.',
+  },
+  'quest.continueToTests': { id: 'Lanjut ke tes gerakan', en: 'Continue to the movement tests' },
+  'quest.introTitle': {
+    id: 'Sebelum tes gerakan, ceritakan kondisi Anda',
+    en: 'Before the movement tests, tell us how you feel',
+  },
+  'quest.introLead': {
+    id: 'Kamera dapat mengukur bagaimana tubuh Anda bergerak, tetapi tidak dapat mengetahui apa yang Anda rasakan sehari-hari. Beberapa tanda awal justru berupa keluhan yang hanya Anda sendiri yang tahu, misalnya berkurangnya kemampuan membau atau perubahan tulisan tangan.',
+    en: 'A camera can measure how your body moves, but it cannot know what you feel day to day. Some of the earliest signs are things only you would notice, such as a reduced sense of smell or a change in your handwriting.',
+  },
+  'quest.point1': { id: 'Ada {n} pertanyaan singkat, sekitar dua menit.', en: 'There are {n} short questions, about two minutes.' },
+  'quest.point2': { id: 'Jawab sejujurnya. Tidak ada jawaban benar atau salah.', en: 'Answer honestly. There are no right or wrong answers.' },
+  'quest.point3': {
+    id: 'Jawaban Anda digabungkan dengan hasil pengukuran kamera untuk memberi gambaran yang lebih utuh.',
+    en: 'Your answers are combined with the camera measurements to give a fuller picture.',
+  },
+  'quest.point4': {
+    id: 'Anda boleh melewati kuesioner ini, tetapi hasil skriningnya akan kurang lengkap.',
+    en: 'You may skip this questionnaire, but the screening result will be less complete.',
+  },
+  'quest.begin': { id: 'Mulai kuesioner', en: 'Start the questionnaire' },
+  'quest.skip': { id: 'Lewati kuesioner', en: 'Skip the questionnaire' },
+  'quest.progress': { id: 'Pertanyaan {a} dari {b}', en: 'Question {a} of {b}' },
+  'quest.optional': { id: 'Boleh dikosongkan', en: 'May be left blank' },
+  'quest.placeholder': {
+    id: 'Contoh: getaran muncul terutama saat pagi hari dan berkurang setelah beraktivitas',
+    en: 'For example: the tremor appears mostly in the morning and eases after moving around',
+  },
+  'quest.back': { id: 'Pertanyaan sebelumnya', en: 'Previous question' },
+  'quest.backToIntro': { id: 'Kembali ke penjelasan', en: 'Back to the introduction' },
+  'quest.next': { id: 'Lanjut', en: 'Next' },
+  'quest.finish': { id: 'Selesai, lanjut ke tes gerakan', en: 'Done, continue to the movement tests' },
+  'quest.needAnswer': { id: 'Pilih salah satu jawaban untuk melanjutkan.', en: 'Choose an answer to continue.' },
+
+  // ── Peragaan ───────────────────────────────────────────────────────────────
+  'demo.kicker': { id: 'Peragaan terbuka', en: 'Open demonstration' },
+  'demo.title': { id: 'Coba satu pengukuran, tanpa akun', en: 'Try one measurement, no account' },
+  'demo.lead': {
+    id: 'Satu dari enam tes NeuronMotion, berjalan penuh di perangkat Anda. Video tidak diunggah dan hasilnya tidak disimpan.',
+    en: 'One of the six NeuronMotion tests, running entirely on your device. No video is uploaded and no result is stored.',
+  },
+  'demo.measured': { id: 'Nilai terukur', en: 'Measured values' },
+  'demo.frequency': { id: 'Frekuensi dominan', en: 'Dominant frequency' },
+  'demo.amplitude': { id: 'Amplitudo', en: 'Amplitude' },
+  'demo.oneOfSix': { id: 'Ini baru satu dari enam parameter', en: 'This is one of six parameters' },
+  'demo.inviteBody': {
+    id: 'Skrining lengkap menggabungkan enam pengukuran dengan kuesioner gejala, dan menyimpan riwayat supaya perubahan antar waktu terlihat.',
+    en: 'A full screening combines six measurements with a symptom questionnaire, and keeps a history so change over time becomes visible.',
+  },
+  'demo.register': { id: 'Buat akun untuk skrining lengkap', en: 'Create an account for the full screening' },
+  'demo.notStored': {
+    id: 'Hasil peragaan ini tidak disimpan di mana pun.',
+    en: 'This demonstration result is not stored anywhere.',
+  },
+
   // Bahasa
   'lang.switch': { id: 'Bahasa', en: 'Language' },
+  'nav.label': { id: 'Navigasi utama', en: 'Main navigation' },
+  'nav.skipToContent': { id: 'Lewati ke isi halaman', en: 'Skip to content' },
 };
 
 interface I18nContextValue {
@@ -581,33 +918,15 @@ export function LanguageToggle() {
       // Label "ID"/"EN" adalah kode bahasa, bukan kalimat. Tanpa penanda ini
       // penerjemah halaman akan mengubah "ID" menjadi "Identity".
       data-no-translate=""
-      style={{
-        display: 'inline-flex',
-        border: '1px solid var(--border)',
-        borderRadius: 99,
-        overflow: 'hidden',
-        flexShrink: 0,
-      }}
+      className={langStyles.group}
     >
       {(['id', 'en'] as Lang[]).map(l => (
         <button
           key={l}
+          type="button"
           onClick={() => setLang(l)}
           aria-pressed={lang === l}
-          // Tinggi minimum 32px agar tetap nyaman disentuh di layar sentuh;
-          // sebelumnya kotak singgungnya hanya 25px.
-          style={{
-            minHeight: 32,
-            padding: '0 12px',
-            fontSize: '0.74rem',
-            fontWeight: 700,
-            letterSpacing: '0.03em',
-            // Warna rata, bukan gradien. Gradien pada kepingan selebar 32 piksel
-            // hanya terbaca sebagai warna kotor, bukan sebagai gradasi.
-            background: lang === l ? 'var(--brand)' : 'transparent',
-            color: lang === l ? '#fff' : 'var(--text-secondary)',
-            transition: 'background 0.15s, color 0.15s',
-          }}
+          className={langStyles.option}
         >
           {l.toUpperCase()}
         </button>

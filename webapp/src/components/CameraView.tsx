@@ -1,202 +1,250 @@
 'use client';
+import { RefObject, useEffect, useRef } from 'react';
+import { useI18n } from '@/lib/i18n';
+import { CameraFault, LiveMetrics, TestType } from '@/hooks/useBiomarkerCapture';
+import { TestSpec } from '@/lib/tests';
 import styles from './Camera.module.css';
-import { LiveMetrics, TestType } from '@/hooks/useBiomarkerCapture';
-import ScreeningInstruction from './ScreeningInstruction';
-import { BulbIcon, WarningIcon } from './icons';
+
+/**
+ * Jendela perekaman.
+ *
+ * Aturan utama komponen ini adalah kebalikan dari versi sebelumnya: instruksi
+ * TAMPIL selama perekaman, bukan disembunyikan. Pengguna menekan tombol,
+ * menjauh dua meter, lalu melakukan gerakan yang tidak bisa ia lihat umpan
+ * baliknya. Pada saat itulah satu-satunya kalimat yang penting justru dulu
+ * dihapus dari layar.
+ *
+ * Karena itu semua yang tampil saat merekam diukur untuk jarak dua meter, dan
+ * pengaturan waktunya juga diberikan lewat suara, supaya tidak menuntut
+ * membaca sama sekali.
+ */
+
+/** Nada aba-aba. Dibangkitkan WebAudio, tanpa berkas audio yang harus diunduh. */
+function useCues(enabled: boolean) {
+  const ctxRef = useRef<AudioContext | null>(null);
+
+  const beep = (freq: number, ms: number, gain = 0.09) => {
+    if (!enabled) return;
+    try {
+      const Ctx =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (!Ctx) return;
+      const ctx = ctxRef.current ?? new Ctx();
+      ctxRef.current = ctx;
+      if (ctx.state === 'suspended') void ctx.resume();
+
+      const osc = ctx.createOscillator();
+      const amp = ctx.createGain();
+      osc.frequency.value = freq;
+      osc.type = 'sine';
+      amp.gain.setValueAtTime(gain, ctx.currentTime);
+      amp.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + ms / 1000);
+      osc.connect(amp).connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + ms / 1000);
+    } catch {
+      /* Aba-aba suara adalah tambahan, bukan syarat. */
+    }
+  };
+
+  return {
+    tick: () => beep(660, 120),
+    start: () => beep(880, 220),
+    end: () => beep(440, 420),
+  };
+}
 
 interface Props {
-  videoRef: React.RefObject<HTMLVideoElement | null>;
-  canvasRef: React.RefObject<HTMLCanvasElement | null>;
+  videoRef: RefObject<HTMLVideoElement | null>;
+  canvasRef: RefObject<HTMLCanvasElement | null>;
   cameraReady: boolean;
   poseReady: boolean;
   isCapturing: boolean;
   activeTest: TestType;
+  test: TestSpec;
   liveMetrics: LiveMetrics;
   countdown: number;
-  error: string | null;
-  detectionWarning?: string | null;
-  lightingWarning?: string | null;
-  onStart: () => void;           // aktifkan kamera
-  onStartCapture: () => void;    // mulai rekaman (dipanggil setelah instruksi)
-  showInstruction: boolean;      // tampilkan overlay instruksi
-  instructionTestType?: TestType;// tipe tes untuk instruksi (bisa ada sebelum activeTest di-set)
-  onInstructionDone: () => void; // instruksi selesai → mulai
-  onInstructionSkip: () => void; // lewati instruksi
+  fault: CameraFault | null;
+  detectionWarning: string | null;
+  lightingWarning: string | null;
+  /** Bilah metrik mentah hanya untuk peragaan, tidak pernah tampil ke pasien. */
+  showMetrics?: boolean;
+  onStart: () => void;
+  onStop: () => void;
 }
-
-// Icon SVG medis, tidak ada nuansa AI
-const IconCamera = () => (
-  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-    <circle cx="12" cy="13" r="4"/>
-  </svg>
-);
-
-const IconAlert = () => (
-  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-    <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-  </svg>
-);
-
-const TEST_LABELS: Record<string, string> = {
-  tremor:        'Tahan tangan rileks sejajar dada',
-  fingerTapping: 'Ketuk ibu jari ke telunjuk berulang kali',
-  gait:          'Berjalan lurus mendekati kamera',
-  armSwing:      'Berjalan dan biarkan lengan berayun natural',
-  posture:       'Berdiri tegak dan diam di depan kamera',
-  rom:           'Tekuk dan luruskan lutut secara penuh',
-};
 
 export default function CameraView({
-  videoRef, canvasRef, cameraReady, poseReady,
-  isCapturing, activeTest, liveMetrics, countdown, error, detectionWarning, lightingWarning,
-  onStart, onStartCapture, showInstruction, instructionTestType, onInstructionDone, onInstructionSkip,
+  videoRef,
+  canvasRef,
+  cameraReady,
+  poseReady,
+  isCapturing,
+  test,
+  liveMetrics,
+  countdown,
+  fault,
+  detectionWarning,
+  lightingWarning,
+  showMetrics = false,
+  onStart,
+  onStop,
 }: Props) {
+  const { t } = useI18n();
+  const cues = useCues(true);
+  const lastTickRef = useRef<number | null>(null);
+
+  // Aba-aba suara mengikuti hitung mundur mesin, jadi ia selalu sinkron dengan
+  // durasi yang sebenarnya direkam.
+  useEffect(() => {
+    if (!isCapturing) {
+      lastTickRef.current = null;
+      return;
+    }
+    if (lastTickRef.current === countdown) return;
+    lastTickRef.current = countdown;
+    if (countdown > 0 && countdown <= 3) cues.tick();
+    if (countdown === 0) cues.end();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [countdown, isCapturing]);
+
+  useEffect(() => {
+    if (isCapturing) cues.start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCapturing]);
+
+  /* ── Kegagalan kamera ─────────────────────────────────────────────────────
+     Setiap sebab punya layarnya sendiri dengan pemulihan yang benar. Versi
+     sebelumnya meringkas semuanya jadi satu kalimat dan menawarkan tombol
+     coba lagi yang, setelah blokir permanen, tidak melakukan apa pun. */
+  if (fault) {
+    const canRetry = fault === 'inUse' || fault === 'modelTimeout' || fault === 'modelFailed';
+    return (
+      <section className={styles.stateBox} role="alert">
+        <h2 className={styles.stateTitle}>{t(`cam.fault.${fault}.title`)}</h2>
+        <p className={styles.stateBody}>{t(`cam.fault.${fault}.body`)}</p>
+        {canRetry && (
+          <button type="button" className="btn btn--primary btn--lg" onClick={onStart}>
+            {t('cam.retry')}
+          </button>
+        )}
+      </section>
+    );
+  }
+
+  /* ── Sebelum izin diberikan ───────────────────────────────────────────────
+     Layar ini menyebut bahwa video tidak pernah diunggah. Itu pembeda utama
+     produk ini, dan sebelumnya justru absen persis di titik pengguna
+     memutuskan untuk percaya atau tidak. */
+  if (!cameraReady) {
+    return (
+      <section className={styles.stateBox}>
+        <h2 className={styles.stateTitle}>{t('cam.enable')}</h2>
+        <p className={styles.stateBody}>{t('cam.enableBody')}</p>
+        <button type="button" className="btn btn--primary btn--lg" onClick={onStart}>
+          {t('cam.allow')}
+        </button>
+      </section>
+    );
+  }
+
+  if (!poseReady) {
+    return (
+      <section className={styles.stateBox} aria-live="polite">
+        <h2 className={styles.stateTitle}>{t('cam.loading')}</h2>
+        <p className={styles.stateBody}>{t('cam.loadingBody')}</p>
+      </section>
+    );
+  }
+
   return (
-    <div className={styles.wrapper}>
-      {/* Video + Canvas overlay */}
-      <div className={styles.videoContainer}>
+    <section className={styles.stage} data-capturing={isCapturing ? '' : undefined}>
+      <div className={styles.frame}>
         <video ref={videoRef} className={styles.video} playsInline muted />
-        <canvas ref={canvasRef} className={styles.canvas} />
+        <canvas
+          ref={canvasRef}
+          className={styles.canvas}
+          role="img"
+          aria-label={t(test.cueKey)}
+        />
 
-        {/* Not started overlay */}
-        {!cameraReady && !error && (
-          <div className={styles.overlay}>
-            <div className={styles.startBox}>
-              <div className={styles.cameraIcon}><IconCamera /></div>
-              <h3>Aktifkan Kamera</h3>
-              <p>Kamera diperlukan untuk pengukuran biomarker motorik</p>
-              <button className="btn btn-primary" onClick={onStart}>
-                Izinkan Akses Kamera
-              </button>
-            </div>
+        {/* Peringatan kondisi. Keduanya ditumpuk di satu jalur supaya tidak
+            saling menimpa, dan keduanya diumumkan ke pembaca layar. */}
+        {(lightingWarning || detectionWarning) && (
+          <div className={styles.warnStack} aria-live="polite">
+            {lightingWarning && <p className={styles.warn}>{lightingWarning}</p>}
+            {detectionWarning && <p className={styles.warn}>{detectionWarning}</p>}
           </div>
         )}
 
-        {/* Error overlay */}
-        {error && (
-          <div className={styles.overlay}>
-            <div className={styles.errorBox}>
-              <div className={styles.cameraIcon} style={{ color: 'var(--red-text)' }}><IconAlert /></div>
-              <h3>Terjadi Masalah</h3>
-              <p>{error}</p>
-              <button className="btn btn-primary" onClick={onStart}>Coba Lagi</button>
-            </div>
-          </div>
-        )}
-
-        {/* Loading MediaPipe, tampilkan progress & petunjuk */}
-        {cameraReady && !poseReady && !error && (
-          <div className={styles.loadingOverlay}>
-            <div className={styles.loadingCard}>
-              <div className={styles.spinner} />
-              <p className={styles.loadingTitle}>Memuat sistem pengukuran...</p>
-              <p className={styles.loadingHint}>
-                Mengunduh model estimasi pose dari server.<br />
-                Proses ini memakan 10 sampai 30 detik tergantung koneksi.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Recording indicator */}
+        {/* Pita instruksi. Inilah yang dulu dihapus tepat saat dibutuhkan. */}
         {isCapturing && (
-          <div className={styles.recBadge}>
-            <span className={styles.recDot} />
-            REC {countdown}s
+          <div className={styles.cueBand}>
+            <p className={styles.cueText}>{t(test.cueKey)}</p>
+            <p className={styles.cueCount} aria-live="assertive">
+              <span className={styles.cueNum}>{countdown}</span>
+              <span className={styles.cueUnit}>{t('scr.secondsLeft')}</span>
+            </p>
           </div>
         )}
 
-        {/* Instruction overlay, blur + animated guide */}
-        {showInstruction && instructionTestType && (
-          <ScreeningInstruction
-            testType={instructionTestType}
-            onReady={onInstructionDone}
-            onSkip={onInstructionSkip}
-          />
+        {isCapturing && (
+          <p className={styles.recFlag}>
+            <span className={styles.recDot} aria-hidden="true" />
+            {t('scr.recording')}
+          </p>
         )}
-
-        {/* Test instruction (minimal badge, setelah instruksi) */}
-        {activeTest && !isCapturing && poseReady && !showInstruction && (
-          <div className={styles.instructionBadge}>
-            {TEST_LABELS[activeTest]}
-          </div>
-        )}
-
-        {/* Peringatan pencahayaan, muncul kapan saja kamera aktif, bukan cuma saat rekam */}
-        {cameraReady && poseReady && lightingWarning && (
-          <div className={styles.lightingWarning}>
-            <BulbIcon size={16} /> {lightingWarning}
-          </div>
-        )}
-
-        {/* Peringatan live: bagian tubuh yang diminta tidak terdeteksi */}
-        {isCapturing && detectionWarning && (
-          <div className={styles.detectionWarning} style={lightingWarning ? { top: 92 } : undefined}>
-            <WarningIcon size={16} /> {detectionWarning}
-          </div>
-        )}
-
-        {/* Scan lines effect when capturing */}
-        {isCapturing && <div className={styles.scanline} />}
       </div>
 
-      {/* Live Metrics bar */}
-      {cameraReady && (
-        <div className={styles.metricsBar}>
-          <MetricChip label="Sensor" value={poseReady ? 'Aktif' : 'Loading'} color={poseReady ? 'green' : 'yellow'} dot />
+      {/* Bilah metrik mentah. Tersembunyi dari pasien secara bawaan: angka
+          tanpa satuan dan tanpa rentang normal, yang berubah merah saat tubuh
+          pengguna diukur, hanya menambah kecemasan tanpa memberi informasi. */}
+      {showMetrics && (
+        <dl className={styles.metrics}>
           {liveMetrics.tremorAmp !== undefined && (
-            <MetricChip label="Tremor Amp" value={`${liveMetrics.tremorAmp} mm`} color="blue" />
-          )}
-          {liveMetrics.tapRate !== undefined && (
-            <MetricChip label="Tap Rate" value={`${liveMetrics.tapRate} /s`} color="purple" />
+            <div className={styles.metric}>
+              <dt>Tremor amp</dt>
+              <dd>{liveMetrics.tremorAmp.toFixed(1)} mm</dd>
+            </div>
           )}
           {liveMetrics.tapCount !== undefined && (
-            <MetricChip label="Tap Count" value={String(liveMetrics.tapCount)} color="blue" />
+            <div className={styles.metric}>
+              <dt>Tap count</dt>
+              <dd>{liveMetrics.tapCount}</dd>
+            </div>
           )}
           {liveMetrics.gaitSteps !== undefined && (
-            <MetricChip label="Langkah Terdeteksi" value={String(liveMetrics.gaitSteps)} color="blue" />
+            <div className={styles.metric}>
+              <dt>Langkah</dt>
+              <dd>{liveMetrics.gaitSteps}</dd>
+            </div>
           )}
           {liveMetrics.armAsymmetry !== undefined && (
-            <MetricChip
-              label="Asimetri Lengan"
-              value={`${liveMetrics.armAsymmetry}%`}
-              color={liveMetrics.armAsymmetry < 15 ? 'green' : liveMetrics.armAsymmetry < 30 ? 'yellow' : 'red'}
-            />
+            <div className={styles.metric}>
+              <dt>Asimetri lengan</dt>
+              <dd>{liveMetrics.armAsymmetry.toFixed(0)} %</dd>
+            </div>
           )}
           {liveMetrics.swayArea !== undefined && (
-            <MetricChip
-              label="Sway Area"
-              value={`${liveMetrics.swayArea} cm²`}
-              color={liveMetrics.swayArea < 30 ? 'green' : liveMetrics.swayArea < 80 ? 'yellow' : 'red'}
-            />
+            <div className={styles.metric}>
+              <dt>Sway area</dt>
+              <dd>{liveMetrics.swayArea.toFixed(1)} cm²</dd>
+            </div>
           )}
           {liveMetrics.romKnee !== undefined && (
-            <MetricChip label="ROM Lutut" value={`${liveMetrics.romKnee}°`} color="blue" />
+            <div className={styles.metric}>
+              <dt>ROM lutut</dt>
+              <dd>{liveMetrics.romKnee.toFixed(0)}°</dd>
+            </div>
           )}
-        </div>
+        </dl>
       )}
-    </div>
-  );
-}
 
-function MetricChip({ label, value, color, dot }: { label: string; value: string; color: string; dot?: boolean }) {
-  const colorMap: Record<string, string> = {
-    green: 'var(--green)', blue: 'var(--brand-light)',
-    yellow: 'var(--yellow)', red: 'var(--red)', purple: 'var(--purple)',
-  };
-  return (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-      padding: '6px 12px', background: 'var(--chip-bg)',
-      border: '1px solid var(--border)', borderRadius: 8, minWidth: 80,
-    }}>
-      <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</span>
-      <span style={{ fontSize: '0.88rem', fontWeight: 700, color: colorMap[color] || '#fff', fontFamily: 'var(--font-mono), ui-monospace, Menlo, monospace', display: 'flex', alignItems: 'center', gap: 4 }}>
-        {dot && <span style={{ width: 6, height: 6, borderRadius: '50%', background: colorMap[color], display: 'inline-block', flexShrink: 0 }} />}
-        {value}
-      </span>
-    </div>
+      {isCapturing && (
+        <button type="button" className="btn btn--danger btn--lg btn--block" onClick={onStop}>
+          {t('scr.stop')}
+        </button>
+      )}
+    </section>
   );
 }

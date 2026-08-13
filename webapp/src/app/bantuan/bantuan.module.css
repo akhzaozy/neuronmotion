@@ -1,158 +1,228 @@
+/* Lembar bantuan.
+   Modus baca: prosa dibatasi ukuran ukur yang nyaman, bagian dipisah garis
+   rambut dan garis kepala, bukan tumpukan kartu. */
+
 .page {
   min-height: 100vh;
-  background: var(--bg-primary);
+  background: var(--sheet);
 }
 
-.container {
+.pad {
+  padding: var(--s6) 0 var(--s9);
   max-width: 900px;
-  margin: 0 auto;
-  padding: 32px 5% 60px;
 }
 
-.header {
-  margin-bottom: 28px;
+.lead {
+  margin-top: var(--s3);
+  font-size: var(--t-lead);
+  color: var(--ink-secondary);
 }
 
-.header h1 {
-  font-size: 2rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  margin-bottom: 6px;
+/* ── Batas kemampuan alat ───────────────────────────────────────────────────
+   Garis kiri tebal di atas ground inset. Tidak bisa ditutup, tidak bersyarat,
+   dan duduk sebelum isi supaya terbaca lebih dulu. */
+
+.disclaimer {
+  margin-bottom: var(--s7);
+  padding: var(--s4) var(--s5);
+  background: var(--inset);
+  border-left: 3px solid var(--ink);
 }
 
-.header p {
-  color: var(--text-secondary);
+.disclaimerLabel {
+  color: var(--ink);
+  margin-bottom: var(--s2);
 }
 
-.card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 28px;
-  margin-bottom: 24px;
+.disclaimerBody {
+  max-width: 78ch;
+  color: var(--ink);
+  font-weight: 600;
 }
 
-.cardTitle {
-  font-size: 1.15rem;
+/* Gejala darurat memakai bahasa tingkat tinggi: label garis kiri 6px dan
+   warna tingkat tinggi, bukan warna saja. */
+.emergency {
+  margin-top: var(--s4);
+  padding: var(--s3) var(--s4);
+  max-width: 78ch;
+  background: var(--level-high-wash);
+  border-left: 6px solid var(--level-high);
+  color: var(--level-high);
   font-weight: 700;
-  margin-bottom: 20px;
 }
+
+/* ── Bagian ─────────────────────────────────────────────────────────────── */
+
+.section {
+  margin-top: var(--s8);
+}
+
+.sectionHead {
+  font-size: var(--t-head);
+  padding-bottom: var(--s3);
+  border-bottom: 2px solid var(--rule-heavy);
+  margin-bottom: var(--s5);
+}
+
+/* ── Panduan langkah ────────────────────────────────────────────────────── */
 
 .steps {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
+  list-style: none;
 }
 
 .step {
-  display: flex;
-  gap: 16px;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: var(--s4);
+  padding: var(--s4) 0;
+  border-top: 1px solid var(--rule-hair);
 }
 
+.step:first-child {
+  border-top: 0;
+}
+
+/* Nomor langkah adalah data, jadi mono dan tabular. Ia menggantikan bulatan
+   berikon yang dipakai sebelumnya. */
 .stepNum {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  min-width: 40px;
-  border-radius: 50%;
-  background: var(--brand-dim);
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  color: var(--brand-text);
-  flex-shrink: 0;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: var(--t-lead);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+  line-height: 1.3;
+}
+
+.stepText {
+  min-width: 0;
 }
 
 .stepTitle {
-  font-weight: 700;
-  margin-bottom: 4px;
+  font-size: var(--t-lead);
 }
 
 .stepDesc {
-  font-size: 0.88rem;
-  color: var(--text-secondary);
-  line-height: 1.6;
+  margin-top: var(--s2);
+  max-width: 68ch;
+  color: var(--ink-secondary);
+}
+
+@media (max-width: 560px) {
+  .step {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s2);
+  }
+}
+
+/* ── Pertanyaan yang sering diajukan ────────────────────────────────────── */
+
+.faq {
+  display: block;
 }
 
 .faqItem {
-  border-bottom: 1px solid var(--border);
+  border-top: 1px solid var(--rule-hair);
 }
 
 .faqItem:last-child {
-  border-bottom: none;
+  border-bottom: 1px solid var(--rule-hair);
 }
 
-.faqQuestion {
-  width: 100%;
+.faqHeader {
+  margin: 0;
+  font-size: var(--t-body);
+  font-weight: 400;
+  line-height: inherit;
+  letter-spacing: normal;
+}
+
+.faqTrigger {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 16px 0;
-  background: transparent;
+  gap: var(--s4);
+  width: 100%;
+  min-height: var(--touch-lg);
+  padding: var(--s3) var(--s2);
   text-align: left;
-  font-size: 0.95rem;
+  color: var(--ink);
+  background: transparent;
+  transition: background-color 0.14s ease-out;
+}
+
+.faqTrigger:hover {
+  background: var(--field);
+}
+
+.faqQuestion {
+  font-size: var(--t-body);
   font-weight: 600;
-  color: var(--text-primary);
-  transition: color 0.15s;
+  max-width: 68ch;
 }
 
-.faqQuestion:hover {
-  color: var(--brand-text);
+.faqTrigger[data-state='open'] .faqQuestion {
+  font-weight: 700;
 }
 
-.faqIcon {
-  font-size: 1.2rem;
-  color: var(--brand-text);
+.faqState {
   flex-shrink: 0;
-  transition: transform 0.2s;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: var(--t-record);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
 }
 
-.faqIconOpen {
-  transform: rotate(45deg);
+.faqStateOpen {
+  display: none;
+}
+
+.faqTrigger[data-state='open'] .faqStateClosed {
+  display: none;
+}
+
+.faqTrigger[data-state='open'] .faqStateOpen {
+  display: inline;
+}
+
+.faqContent {
+  overflow: hidden;
 }
 
 .faqAnswer {
-  padding: 0 0 18px;
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  line-height: 1.7;
-  animation: fadeInUp 0.2s ease-out;
+  padding: 0 var(--s2) var(--s5);
+  max-width: 68ch;
+  color: var(--ink-secondary);
 }
 
-.contactGrid {
+/* ── Kontak ─────────────────────────────────────────────────────────────── */
+
+.contactList {
+  border-top: 1px solid var(--rule-hair);
+}
+
+.contactRow {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
-}
-
-.contactItem {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 18px;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: var(--s4);
+  align-items: baseline;
+  padding: var(--s3) var(--s2);
+  border-bottom: 1px solid var(--rule-hair);
 }
 
 .contactLabel {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 6px;
+  margin: 0;
 }
 
 .contactValue {
-  font-size: 0.92rem;
   font-weight: 600;
+  overflow-wrap: anywhere;
 }
 
-.disclaimer {
-  padding: 18px 20px;
-  background: var(--yellow-dim);
-  border: 1px solid rgba(217, 119, 6, 0.3);
-  border-radius: var(--radius-md);
-  font-size: 0.88rem;
-  color: var(--text-secondary);
-  line-height: 1.7;
+@media (max-width: 560px) {
+  .contactRow {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s1);
+  }
 }

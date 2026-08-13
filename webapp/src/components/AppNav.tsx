@@ -19,26 +19,31 @@ export default function AppNav() {
   const { t } = useI18n();
 
   return (
-    <nav className={styles.nav}>
+    <nav className={styles.nav} aria-label={t('nav.label')}>
       <div className={styles.inner}>
         <Link href="/dashboard" className={styles.brand}>
-          <Logo size={30} />
-          <span className={styles.brandText} data-no-translate="">NeuronMotion</span>
+          <Logo size={17} />
         </Link>
-        <div className={styles.links}>
-          {NAV_ITEMS.map(item => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`${styles.link} ${pathname === item.href ? styles.linkActive : ''}`}
-            >
-              {t(item.key)}
-            </Link>
-          ))}
-        </div>
+
         <div className={styles.actions}>
           <LanguageToggle />
           <ThemeToggle size="sm" />
+        </div>
+
+        <div className={styles.links}>
+          {NAV_ITEMS.map(item => {
+            const active = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`${styles.link} ${active ? styles.linkActive : ''}`}
+                aria-current={active ? 'page' : undefined}
+              >
+                {t(item.key)}
+              </Link>
+            );
+          })}
         </div>
       </div>
     </nav>

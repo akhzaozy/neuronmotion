@@ -1,14 +1,11 @@
 'use client';
 import { useState } from 'react';
+import * as Dialog from '@radix-ui/react-dialog';
 import AppNav from '@/components/AppNav';
-import { HandIcon, BrainIcon, WalkIcon, PulseIcon, CalendarIcon, LockIcon } from '@/components/icons';
 import styles from './edukasi.module.css';
 
 interface Article {
   id: string;
-  // Ikon disimpan sebagai komponen, bukan karakter emoji, agar rupanya sama di
-  // setiap perangkat dan mewarisi warna serta ukuran dari tata letaknya.
-  icon: React.ComponentType<{ size?: number }>;
   tag: string;
   title: string;
   excerpt: string;
@@ -19,7 +16,6 @@ interface Article {
 const ARTICLES: Article[] = [
   {
     id: 'tremor',
-    icon: HandIcon,
     tag: 'Gejala',
     title: 'Apa Itu Tremor dan Kapan Perlu Diperiksa?',
     excerpt: 'Tidak semua getaran tangan berbahaya. Kenali beda tremor biasa dan yang perlu dievaluasi dokter.',
@@ -42,7 +38,6 @@ const ARTICLES: Article[] = [
   },
   {
     id: 'parkinson',
-    icon: BrainIcon,
     tag: 'Kondisi',
     title: 'Mengenali Tanda Awal Parkinson',
     excerpt: 'Parkinson tidak selalu dimulai dengan tremor. Ada tanda lain yang sering terlewat.',
@@ -65,7 +60,6 @@ const ARTICLES: Article[] = [
   },
   {
     id: 'gait',
-    icon: WalkIcon,
     tag: 'Biomarker',
     title: 'Kenapa Cara Berjalan Bisa Menunjukkan Kesehatan Saraf?',
     excerpt: 'Berjalan terlihat sederhana, padahal melibatkan koordinasi otak yang rumit.',
@@ -86,7 +80,6 @@ const ARTICLES: Article[] = [
   },
   {
     id: 'stroke',
-    icon: PulseIcon,
     tag: 'Kondisi',
     title: 'Rehabilitasi Pasca Stroke dan Pemantauan Mandiri',
     excerpt: 'Pemulihan stroke adalah proses panjang. Pemantauan berkala membantu melihat kemajuan.',
@@ -107,7 +100,6 @@ const ARTICLES: Article[] = [
   },
   {
     id: 'skrining-rutin',
-    icon: CalendarIcon,
     tag: 'Tips',
     title: 'Seberapa Sering Sebaiknya Melakukan Skrining?',
     excerpt: 'Terlalu sering bisa membuat cemas, terlalu jarang bisa melewatkan perubahan.',
@@ -129,7 +121,6 @@ const ARTICLES: Article[] = [
   },
   {
     id: 'privasi',
-    icon: LockIcon,
     tag: 'Privasi',
     title: 'Bagaimana Data Gerakan Anda Diproses?',
     excerpt: 'Video Anda tidak dikirim ke server. Ini penjelasan teknisnya secara sederhana.',
@@ -158,42 +149,74 @@ export default function EdukasiPage() {
   return (
     <div className={styles.page}>
       <AppNav />
-      <div className={styles.container}>
-        <div className={styles.header}>
-          <h1>Edukasi</h1>
-          <p>Bacaan singkat dengan bahasa sederhana untuk memahami hasil skrining dan kesehatan saraf Anda.</p>
-        </div>
 
-        <div className={styles.grid}>
-          {ARTICLES.map(article => (
-            <button key={article.id} className={styles.articleCard} onClick={() => setActive(article)}>
-              <span className={styles.articleIcon}><article.icon size={22} /></span>
-              <span className={styles.articleTag}>{article.tag}</span>
-              <span className={styles.articleTitle}>{article.title}</span>
-              <span className={styles.articleExcerpt}>{article.excerpt}</span>
-              <span className={styles.readTime}>{article.readTime}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {active && (
-        <div className={styles.overlay} onClick={() => setActive(null)}>
-          <div className={styles.readerCard} onClick={e => e.stopPropagation()}>
-            <div style={{ marginBottom: 10, color: 'var(--brand-text)' }}><active.icon size={30} /></div>
-            <h2 className={styles.readerTitle}>{active.title}</h2>
-            <p className={styles.readerMeta}>{active.tag} &bull; {active.readTime}</p>
-            <div className={styles.readerBody}>{active.body}</div>
-            <div className={styles.disclaimer}>
-              Artikel ini bersifat edukatif dan bukan pengganti nasihat medis. Untuk keputusan terkait
-              kondisi Anda, konsultasikan dengan dokter atau tenaga kesehatan.
+      <main className="sheet" id="main">
+        <div className={styles.pad}>
+          <header className="docHead">
+            <div className="docHead__meta">
+              <span>Pustaka Edukasi</span>
+              <span>{ARTICLES.length} artikel</span>
             </div>
-            <button className="btn btn-primary" style={{ width: '100%', marginTop: 20 }} onClick={() => setActive(null)}>
-              Tutup
-            </button>
-          </div>
+            <h1>Edukasi</h1>
+            <p className={styles.lead}>
+              Bacaan singkat dengan bahasa sederhana untuk memahami hasil skrining dan kesehatan saraf Anda.
+            </p>
+          </header>
+
+          {/* Daftar bacaan ditulis sebagai indeks dokumen: satu baris per artikel,
+              dipisah garis rambut, bukan kartu mengambang berjajar. */}
+          <section className={styles.index}>
+            <h2 className={styles.indexHead}>Daftar bacaan</h2>
+            <ul className={styles.list}>
+              {ARTICLES.map(article => (
+                <li key={article.id} className={styles.row}>
+                  <button
+                    type="button"
+                    className={styles.entry}
+                    onClick={() => setActive(article)}
+                    aria-haspopup="dialog"
+                  >
+                    <span className={`label ${styles.entryTag}`}>{article.tag}</span>
+                    <span className={styles.entryTitle}>{article.title}</span>
+                    <span className={styles.entryExcerpt}>{article.excerpt}</span>
+                    <span className={styles.entryTime}>{article.readTime}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
         </div>
-      )}
+      </main>
+
+      {/* Pembaca artikel memakai Radix supaya jebakan fokus, tombol Escape, dan
+          atribut aria ditangani dengan benar; tampilannya dari lembar dialog. */}
+      <Dialog.Root open={!!active} onOpenChange={o => !o && setActive(null)}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="dialogScrim" />
+          <Dialog.Content className="dialogSheet">
+            {active && (
+              <>
+                <p className={`label ${styles.readerMeta}`}>
+                  {active.tag} / {active.readTime}
+                </p>
+                <Dialog.Title className={styles.readerTitle}>{active.title}</Dialog.Title>
+                <Dialog.Description className={styles.readerLead}>{active.excerpt}</Dialog.Description>
+                <hr className="rule" />
+                <div className={styles.readerBody}>{active.body}</div>
+                <p className={styles.disclaimer}>
+                  Artikel ini bersifat edukatif dan bukan pengganti nasihat medis. Untuk keputusan terkait
+                  kondisi Anda, konsultasikan dengan dokter atau tenaga kesehatan.
+                </p>
+                <Dialog.Close asChild>
+                  <button type="button" className="btn btn--primary btn--lg btn--block">
+                    Tutup
+                  </button>
+                </Dialog.Close>
+              </>
+            )}
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </div>
   );
 }

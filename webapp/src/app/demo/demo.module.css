@@ -1,0 +1,90 @@
+.page {
+  min-height: 100vh;
+  background: var(--sheet);
+}
+
+.pad {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--s6) 0 var(--s9);
+}
+
+.homeLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+}
+
+.lead {
+  font-size: var(--t-lead);
+  color: var(--ink-secondary);
+  margin-top: var(--s3);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+}
+
+.status,
+.error {
+  padding: var(--s3);
+  font-weight: 600;
+}
+
+.error {
+  border-left: 3px solid var(--level-high);
+  background: var(--level-high-wash);
+  color: var(--level-high);
+}
+
+.scoreLine {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s3);
+  margin: 0;
+}
+
+.scoreValue {
+  font-size: var(--t-display);
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.scoreOf {
+  font-size: var(--t-lead);
+  color: var(--ink-muted);
+}
+
+.levelChip {
+  align-self: flex-start;
+  margin: 0;
+}
+
+.disclaimer {
+  padding: var(--s3) var(--s4);
+  background: var(--inset);
+  border-left: 3px solid var(--ink);
+  font-weight: 600;
+}
+
+.invite {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s3);
+  padding-top: var(--s5);
+  border-top: 2px solid var(--rule-heavy);
+}
+
+.invite h2 {
+  font-size: var(--t-head);
+}
+
+.footnote {
+  font-size: var(--t-record);
+  color: var(--ink-muted);
+}

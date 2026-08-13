@@ -1,357 +1,196 @@
 'use client';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { api, ModelAccuracy } from '@/lib/api';
 import Logo from '@/components/Logo';
 import { ThemeToggle } from '@/lib/theme';
 import { LanguageToggle, useI18n } from '@/lib/i18n';
+import { TEST_SEQUENCE } from '@/lib/tests';
 import styles from './landing.module.css';
 
-// SVG Icon medis minimalis, bukan AI/tech look
-const IconTremor = () => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v2"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/>
-    <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L8 15"/>
-  </svg>
-);
-const IconTapping = () => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-  </svg>
-);
-const IconGait = () => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="13" cy="4" r="2"/><path d="M10.5 8.5 8 19"/><path d="m13.5 8.5 2.5 4-3.5 4 3 4"/><path d="m7.5 12 2-1.5"/>
-  </svg>
-);
-const IconArmSwing = () => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="12" y1="20" x2="12" y2="24"/>
-  </svg>
-);
-const IconPosture = () => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="12" y1="2" x2="12" y2="22"/><path d="m17 5-5 5-5-5"/><path d="m17 19-5-5-5 5"/>
-  </svg>
-);
-const IconROM = () => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M5 12h14"/><path d="M12 5v14"/>
-    <circle cx="12" cy="12" r="9"/>
-  </svg>
-);
+const CONDITIONS = ['cond.parkinson', 'cond.essentialTremor', 'cond.postStroke', 'cond.ataxia'];
 
-const FEATURES = [
-  { Icon: IconTremor,   titleKey: 'bio.tremor',   descKey: 'bio.tremorDesc' },
-  { Icon: IconTapping,  titleKey: 'bio.tapping',  descKey: 'bio.tappingDesc' },
-  { Icon: IconGait,     titleKey: 'bio.gait',     descKey: 'bio.gaitDesc' },
-  { Icon: IconArmSwing, titleKey: 'bio.armSwing', descKey: 'bio.armSwingDesc' },
-  { Icon: IconPosture,  titleKey: 'bio.posture',  descKey: 'bio.postureDesc' },
-  { Icon: IconROM,      titleKey: 'bio.rom',      descKey: 'bio.romDesc' },
-];
-
-const IconBrain = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/>
-    <path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/>
-    <path d="M12 5v13"/>
-  </svg>
-);
-const IconHand = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v2"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/>
-    <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L8 15"/>
-  </svg>
-);
-const IconBalance = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 22V2"/><path d="M4 12h16"/><path d="m4 12 4-4"/><path d="m20 12-4 4"/>
-  </svg>
-);
-
-const CONDITIONS = [
-  { key: 'cond.parkinson',      color: '#ef4444', Icon: IconBrain },
-  { key: 'cond.essentialTremor', color: '#f59e0b', Icon: IconHand },
-  { key: 'cond.postStroke',     color: '#8b5cf6', Icon: IconBrain },
-  { key: 'cond.ataxia',         color: '#3b82f6', Icon: IconBalance },
-];
-
-const AnimatedBrainGraphic = () => (
-  <svg viewBox="0 0 300 300" style={{ maxWidth: '100%', maxHeight: '100%', filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.05))' }}>
-    {/* Brain Outline */}
-    <path 
-      d="M150 40 C90 40, 50 80, 50 140 C50 180, 70 210, 100 230 C120 245, 130 260, 130 280 L170 280 C170 260, 180 245, 200 230 C230 210, 250 180, 250 140 C250 80, 210 40, 150 40 Z" 
-      fill="none" 
-      stroke="var(--border)" 
-      strokeWidth="3" 
-      strokeDasharray="6 6"
-    />
-    {/* Internal Brain Paths */}
-    <path d="M 150 40 L 150 280" stroke="var(--brand-dim)" strokeWidth="4" />
-    <path d="M 90 90 Q 150 130 210 90" stroke="var(--brand)" strokeWidth="2" fill="none" className={styles.nervePulse} />
-    <path d="M 70 140 Q 150 170 230 140" stroke="var(--brand)" strokeWidth="2" fill="none" className={styles.nervePulse} style={{ animationDelay: '1s' }} />
-    <path d="M 90 200 Q 150 190 210 200" stroke="var(--brand)" strokeWidth="2" fill="none" className={styles.nervePulse} style={{ animationDelay: '2s' }} />
-    
-    {/* Pulses */}
-    <circle cx="0" cy="0" r="5" fill="var(--brand)">
-      <animateMotion path="M 90 90 Q 150 130 210 90" dur="3s" repeatCount="indefinite" />
-    </circle>
-    <circle cx="0" cy="0" r="5" fill="var(--brand)">
-      <animateMotion path="M 70 140 Q 150 170 230 140" dur="3s" begin="1.5s" repeatCount="indefinite" />
-    </circle>
-  </svg>
-);
-
-const AnimatedSpineGraphic = () => (
-  <svg viewBox="0 0 200 400" style={{ maxWidth: '100%', maxHeight: '100%', filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.05))' }}>
-    <line x1="100" y1="40" x2="100" y2="360" stroke="var(--border)" strokeWidth="12" strokeLinecap="round" />
-    <line x1="100" y1="40" x2="100" y2="360" stroke="var(--brand)" strokeWidth="4" strokeLinecap="round" strokeDasharray="10 10" className={styles.nervePulse} />
-    
-    {/* Nerve Roots */}
-    {[80, 130, 180, 230, 280, 330].map((y, i) => (
-      <g key={y}>
-        <path d={`M 100 ${y} Q 70 ${y+10} 40 ${y+20}`} stroke="var(--brand-light)" strokeWidth="2" fill="none" />
-        <path d={`M 100 ${y} Q 130 ${y+10} 160 ${y+20}`} stroke="var(--brand-light)" strokeWidth="2" fill="none" />
-        <circle cx="0" cy="0" r="3" fill="#ffffff" style={{ filter: 'drop-shadow(0 0 4px var(--brand))' }}>
-          <animateMotion path={`M 100 ${y} Q 70 ${y+10} 40 ${y+20}`} dur="2s" begin={`${i*0.3}s`} repeatCount="indefinite" />
-        </circle>
-        <circle cx="0" cy="0" r="3" fill="#ffffff" style={{ filter: 'drop-shadow(0 0 4px var(--brand))' }}>
-          <animateMotion path={`M 100 ${y} Q 130 ${y+10} 160 ${y+20}`} dur="2s" begin={`${i*0.3}s`} repeatCount="indefinite" />
-        </circle>
-      </g>
-    ))}
-  </svg>
-);
-
-const AnimatedNerveGraphic = () => (
-  <div style={{ position: 'relative', width: '100%', maxWidth: '460px', display: 'flex', justifyContent: 'center' }}>
-    <svg viewBox="0 0 400 250" style={{ maxWidth: '100%', maxHeight: '100%', filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.05))' }}>
-      <defs>
-        <linearGradient id="axonGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="var(--brand)" />
-          <stop offset="100%" stopColor="var(--brand-light)" />
-        </linearGradient>
-      </defs>
-      {/* Dendrites */}
-      <path d="M 120 120 Q 80 50 40 40" stroke="var(--brand)" strokeWidth="3" fill="none" strokeLinecap="round" />
-      <path d="M 120 120 Q 70 80 30 90" stroke="var(--brand)" strokeWidth="3" fill="none" strokeLinecap="round" />
-      <path d="M 120 120 Q 80 180 40 190" stroke="var(--brand)" strokeWidth="3" fill="none" strokeLinecap="round" />
-      <path d="M 120 120 Q 70 150 30 140" stroke="var(--brand)" strokeWidth="3" fill="none" strokeLinecap="round" />
-      
-      {/* Axon Terminals (Next Neuron) */}
-      <path d="M 320 120 Q 350 80 380 70" stroke="var(--brand-light)" strokeWidth="3" fill="none" strokeLinecap="round" />
-      <path d="M 320 120 Q 360 120 390 120" stroke="var(--brand-light)" strokeWidth="3" fill="none" strokeLinecap="round" />
-      <path d="M 320 120 Q 350 160 380 170" stroke="var(--brand-light)" strokeWidth="3" fill="none" strokeLinecap="round" />
-
-      {/* Synapses (Ends) */}
-      <circle cx="380" cy="70" r="4.5" fill="var(--brand)" className={styles.nervePulse} />
-      <circle cx="390" cy="120" r="4.5" fill="var(--brand)" className={styles.nervePulse} style={{ animationDelay: '0.4s' }} />
-      <circle cx="380" cy="170" r="4.5" fill="var(--brand)" className={styles.nervePulse} style={{ animationDelay: '0.8s' }} />
-
-      {/* Soma (Cell Body) */}
-      <circle cx="120" cy="120" r="22" fill="var(--brand-dim)" stroke="var(--brand)" strokeWidth="4" />
-      <circle cx="120" cy="120" r="7" fill="var(--brand)" />
-
-      {/* Main Axon */}
-      <line x1="142" y1="120" x2="320" y2="120" stroke="url(#axonGradient)" strokeWidth="6" strokeLinecap="round" />
-      
-      {/* Myelin Sheaths (Protective Layer) */}
-      <rect x="160" y="113" width="35" height="14" rx="6" fill="var(--border)" stroke="var(--border-light)" strokeWidth="2" />
-      <rect x="215" y="113" width="35" height="14" rx="6" fill="var(--border)" stroke="var(--border-light)" strokeWidth="2" />
-      <rect x="270" y="113" width="35" height="14" rx="6" fill="var(--border)" stroke="var(--border-light)" strokeWidth="2" />
-
-      {/* Animated Action Potentials (Signals) */}
-      <circle cx="0" cy="0" r="4" fill="#ffffff" style={{ filter: 'drop-shadow(0 0 4px var(--brand))' }}>
-        <animateMotion path="M 40 40 Q 80 50 120 120 L 320 120 Q 350 80 380 70" dur="2.5s" repeatCount="indefinite" />
-      </circle>
-      <circle cx="0" cy="0" r="4" fill="#ffffff" style={{ filter: 'drop-shadow(0 0 4px var(--brand))' }}>
-        <animateMotion path="M 40 190 Q 80 180 120 120 L 320 120 Q 350 160 380 170" dur="2.5s" begin="1.2s" repeatCount="indefinite" />
-      </circle>
-      <circle cx="0" cy="0" r="4" fill="#ffffff" style={{ filter: 'drop-shadow(0 0 4px var(--brand))' }}>
-        <animateMotion path="M 30 140 Q 70 150 120 120 L 320 120 Q 360 120 390 120" dur="2.5s" begin="0.6s" repeatCount="indefinite" />
-      </circle>
-    </svg>
-  </div>
-);
-
-const ANIMATIONS = [
-  <AnimatedNerveGraphic key="neuron" />,
-  <AnimatedBrainGraphic key="brain" />,
-  <AnimatedSpineGraphic key="spine" />
-];
-
+/**
+ * Halaman publik.
+ *
+ * Buktinya adalah dokumennya sendiri. Enam biomarker tidak disajikan sebagai
+ * kartu ikon, melainkan sebagai tabel pengukuran lengkap dengan durasi
+ * perekaman yang diambil dari mesin, karena itulah yang benar-benar dilakukan
+ * produk ini dan itulah yang tidak bisa disalin pesaing dengan menempel
+ * kalimat.
+ *
+ * Angka akurasi diambil dari backend, hasil validasi holdout sungguhan, dan
+ * selalu tampil bersama asal-usulnya. Tanpa itu ia jadi klaim, dan produk ini
+ * belum melewati validasi klinis.
+ */
 export default function LandingPage() {
-  const [modelIndex, setModelIndex] = useState(0);
-  const [modelInfo, setModelInfo] = useState<ModelAccuracy | null>(null);
   const { t, lang } = useI18n();
+  const [modelInfo, setModelInfo] = useState<ModelAccuracy | null>(null);
 
   useEffect(() => {
-    // Ambil akurasi model SUNGGUHAN (hasil validasi holdout di backend),
-    // bukan angka klaim statis, bisa gagal jika backend belum siap.
     api.getModelAccuracy().then(setModelInfo).catch(() => setModelInfo(null));
-  }, []);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setModelIndex(prev => (prev + 1) % ANIMATIONS.length);
-    }, 5000);
-    return () => clearInterval(timer);
   }, []);
 
   return (
     <div className={styles.page}>
-      {/* Navbar */}
-      <nav className={styles.nav}>
-        <div className={styles.navBrand}>
-          <Logo size={34} />
-          <span className={styles.navName} data-no-translate="">NeuronMotion</span>
-          <span className="badge badge-brand">Beta</span>
-        </div>
-        <div className={styles.navLinks}>
-          <LanguageToggle />
-          <ThemeToggle />
-          <Link href="/login" className="btn btn-outline btn-sm">{t('land.login')}</Link>
-          <Link href="/register" className="btn btn-primary btn-sm">{t('land.registerFree')}</Link>
-        </div>
-      </nav>
+      <a href="#main" className="skipToContent">
+        {t('nav.skipToContent')}
+      </a>
 
-      {/* Hero */}
-      <section className={styles.hero}>
-        <div className={styles.heroBg} />
-        <div className={styles.heroContent}>
-          <div className="badge badge-brand" style={{ marginBottom: 20 }}>
-            {t('land.badge')}
-          </div>
-          <h1 className={styles.heroTitle}>
-            {t('land.title1')}<br />
-            <span className={styles.gradientText}>{t('land.title2')}</span><br />
-            {t('land.title3')}
-          </h1>
-          <p className={styles.heroDesc}>
-            {t('land.desc')}
-          </p>
-          <div className={styles.heroCTA}>
-            <Link href="/register" className="btn btn-primary btn-lg">
-              {t('land.startFree')}
-            </Link>
-            <Link href="/login" className="btn btn-outline btn-lg">
-              {t('land.hasAccount')}
+      <header className={styles.masthead}>
+        <div className={styles.mastheadInner}>
+          <Logo size={18} />
+          <div className={styles.mastheadActions}>
+            <LanguageToggle />
+            <ThemeToggle size="sm" />
+            <Link href="/login" className="btn btn-sm">
+              {t('land.login')}
             </Link>
           </div>
-          <Link href="/demo" className={styles.demoCard}>
-            <span className={styles.demoIcon}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polygon points="5 3 19 12 5 21 5 3" />
-              </svg>
-            </span>
-            <span className={styles.demoText}>
-              <span className={styles.demoTitle}>{t('land.tryDemo')}</span>
-              <span className={styles.demoSub}>{t('land.tryDemoSub')}</span>
-            </span>
-            <span className={styles.demoArrow}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
-              </svg>
-            </span>
-          </Link>
-          <div className={styles.heroStats}>
-            {[
-              [modelInfo ? `${modelInfo.trainSize + modelInfo.testSize}+` : '...', t('land.statProfiles')],
-              ['6', t('land.statBiomarkers')],
-              [modelInfo ? `${modelInfo.accuracy}%` : '...', t('land.statAccuracy')],
-              ['Real-time', t('land.statRealtime')],
-            ].map(([val, label]) => (
-              <div key={label} className={styles.statItem}>
-                <span className={styles.statVal}>{val}</span>
-                <span className={styles.statLabel}>{label}</span>
-              </div>
-            ))}
-          </div>
-          <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 10 }}>
-            {t('land.accuracyNote')}
-          </p>
         </div>
-        <div className={styles.heroVisual} style={{ transition: 'opacity 0.5s', position: 'relative' }}>
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: modelIndex === 0 ? 1 : 0, transition: 'opacity 0.5s', pointerEvents: 'none' }}>
-            {ANIMATIONS[0]}
-          </div>
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: modelIndex === 1 ? 1 : 0, transition: 'opacity 0.5s', pointerEvents: 'none' }}>
-            {ANIMATIONS[1]}
-          </div>
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: modelIndex === 2 ? 1 : 0, transition: 'opacity 0.5s', pointerEvents: 'none' }}>
-            {ANIMATIONS[2]}
-          </div>
-          {/* Spacer to keep layout height */}
-          <div style={{ visibility: 'hidden' }}>{ANIMATIONS[0]}</div>
-        </div>
-      </section>
+      </header>
 
-      {/* Features */}
-      <section className={styles.section}>
-        <div className={styles.container}>
-          <div className={styles.sectionHeader}>
-            <h2>{t('land.featuresTitle')}</h2>
-            <p>{t('land.featuresDesc')}</p>
-          </div>
-          <div className={styles.featureGrid}>
-            {FEATURES.map(({ Icon, titleKey, descKey }) => (
-              <div key={titleKey} className={styles.featureCard}>
-                <div className={styles.featureIconWrap}>
-                  <Icon />
-                </div>
-                <h3>{t(titleKey)}</h3>
-                <p>{t(descKey)}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <main id="main">
+        {/* ── Tesis ───────────────────────────────────────────────────────── */}
+        <section className={styles.hero}>
+          <div className="sheet">
+            <h1 className={styles.heroTitle}>
+              {t('land.title1')} {t('land.title2')} {t('land.title3')}
+            </h1>
 
-      {/* Conditions */}
-      <section className={styles.section} style={{ paddingTop: 0 }}>
-        <div className={styles.container}>
-          <div className={styles.conditionBox}>
-            <div className={styles.sectionHeader}>
-              <h2>{t('land.conditionsTitle')}</h2>
-              <p>
-                {lang === 'en'
-                  ? `Classifier trained on ${modelInfo ? modelInfo.trainSize : '1,600+'} synthetic patient profiles (tested on ${modelInfo ? modelInfo.testSize : 400} held-out profiles) against MDS-UPDRS clinical standards`
-                  : `Model klasifikasi dilatih dengan ${modelInfo ? modelInfo.trainSize : '1.600+'} profil pasien sintetis (diuji pada ${modelInfo ? modelInfo.testSize : 400} profil terpisah) berdasarkan standar klinis MDS-UPDRS`}
-              </p>
+            <p className={styles.heroLead}>{t('land.desc')}</p>
+
+            <div className={styles.heroActions}>
+              <Link href="/demo" className="btn btn--primary btn--lg">
+                {t('land.tryDemo')}
+              </Link>
+              <Link href="/register" className="btn btn--lg">
+                {t('land.startFree')}
+              </Link>
             </div>
-            <div className={styles.conditionGrid}>
-              {CONDITIONS.map(c => (
-                <div key={c.key} className={styles.conditionChip} style={{ borderColor: c.color + '44', background: c.color + '15' }}>
-                  <div style={{ color: c.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <c.Icon />
-                  </div>
-                  <span style={{ color: c.color, fontWeight: 600 }}>{t(c.key)}</span>
-                </div>
+
+            <p className={styles.heroNote}>{t('land.tryDemoSub')}</p>
+          </div>
+        </section>
+
+        {/* ── Spesimen: apa yang sebenarnya diukur ────────────────────────── */}
+        <section className={styles.section}>
+          <div className="sheet">
+            <div className="docHead">
+              <div className="docHead__meta">
+                <span>{t('land.specimen')}</span>
+                <span>{TEST_SEQUENCE.length} {t('land.statBiomarkers')}</span>
+              </div>
+              <h2 className={styles.sectionTitle}>{t('land.featuresTitle')}</h2>
+              <p className={styles.sectionLead}>{t('land.featuresDesc')}</p>
+            </div>
+
+            <div className={styles.tableScroll}>
+              <table className="dataTable">
+                <thead>
+                  <tr>
+                    <th scope="col">{t('land.colTest')}</th>
+                    <th scope="col">{t('land.colMeasures')}</th>
+                    <th scope="col" className="num">{t('land.colDuration')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {TEST_SEQUENCE.map(spec => (
+                    <tr key={spec.type}>
+                      <th scope="row" className={styles.rowName}>{t(spec.nameKey)}</th>
+                      <td>{t(spec.descKey)}</td>
+                      <td className="num">{spec.duration} s</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Mekanisme ───────────────────────────────────────────────────── */}
+        <section className={styles.section}>
+          <div className="sheet">
+            <div className={styles.split}>
+              <h2 className={styles.sectionTitle}>{t('land.mechanismTitle')}</h2>
+              <div className={styles.splitBody}>
+                <p>{t('land.mechanismBody')}</p>
+                <p>{t('land.mechanismBody2')}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Provenans model ─────────────────────────────────────────────── */}
+        <section className={styles.section}>
+          <div className="sheet">
+            <div className="docHead">
+              <div className="docHead__meta">
+                <span>{t('land.provenance')}</span>
+              </div>
+              <h2 className={styles.sectionTitle}>{t('land.conditionsTitle')}</h2>
+            </div>
+
+            <div className={styles.tableScroll}>
+              <table className="dataTable">
+                <tbody>
+                  <tr>
+                    <th scope="row">{t('land.statProfiles')}</th>
+                    <td className="num">
+                      {modelInfo ? modelInfo.trainSize.toLocaleString(lang === 'en' ? 'en' : 'id') : '—'}
+                    </td>
+                  </tr>
+                  <tr>
+                    <th scope="row">{t('land.testProfiles')}</th>
+                    <td className="num">
+                      {modelInfo ? modelInfo.testSize.toLocaleString(lang === 'en' ? 'en' : 'id') : '—'}
+                    </td>
+                  </tr>
+                  <tr>
+                    <th scope="row">{t('land.statAccuracy')}</th>
+                    <td className="num">{modelInfo ? `${modelInfo.accuracy} %` : '—'}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <p className={styles.provenanceNote}>{t('land.accuracyNote')}</p>
+
+            <ul className={styles.conditionList}>
+              {CONDITIONS.map(k => (
+                <li key={k} className={styles.conditionRow}>
+                  {t(k)}
+                </li>
               ))}
+            </ul>
+          </div>
+        </section>
+
+        {/* ── Penutup ─────────────────────────────────────────────────────── */}
+        <section className={styles.closing}>
+          <div className="sheet">
+            <h2 className={styles.closingTitle}>{t('land.ctaTitle')}</h2>
+            <p className={styles.closingLead}>{t('land.ctaDesc')}</p>
+            <div className={styles.heroActions}>
+              <Link href="/register" className="btn btn--primary btn--lg">
+                {t('land.ctaButton')}
+              </Link>
+              <Link href="/login" className="btn btn--lg">
+                {t('land.hasAccount')}
+              </Link>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </main>
 
-      {/* CTA */}
-      <section className={styles.ctaSection}>
-        <div className={styles.ctaBox}>
-          <h2>{t('land.ctaTitle')}</h2>
-          <p>{t('land.ctaDesc')}</p>
-          <Link href="/register" className="btn btn-lg" style={{ background: '#fff', color: 'var(--brand)' }}>
-            {t('land.ctaButton')}
-          </Link>
-        </div>
-      </section>
-
-      {/* Footer */}
       <footer className={styles.footer}>
-        <p>{t('land.footerDisclaimer')}</p>
-        <p style={{ marginTop: 4, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-          {lang === 'en' ? 'Clinical ranges reference' : 'Rentang klinis mengacu pada'} MDS-UPDRS &bull; Hoehn &amp; Yahr
-          &bull; Zhang et al. 2017 ({lang === 'en' ? 'tremor' : 'tremor'}) &bull; Zanardi et al. 2021 (gait)
-          &bull; Lewek et al. 2010 ({lang === 'en' ? 'arm swing' : 'ayunan lengan'})
-        </p>
+        <div className="sheet">
+          <p className={styles.disclaimer}>{t('land.footerDisclaimer')}</p>
+          <p className={styles.references}>
+            {t('land.referenceLead')} MDS-UPDRS &middot; Hoehn &amp; Yahr &middot; Zhang dkk. 2017
+            &middot; Zanardi dkk. 2021 &middot; Lewek dkk. 2010
+          </p>
+        </div>
       </footer>
     </div>
   );

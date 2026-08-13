@@ -1,0 +1,28 @@
+.mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42em;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  color: var(--ink);
+}
+
+.strong {
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.light {
+  font-weight: 400;
+  color: var(--ink-secondary);
+}
+
+/* Garis aksen vertikal, satu-satunya bentuk non-huruf dalam tanda ini.
+   Ia rule cetak, bukan ikon. */
+.bar {
+  display: block;
+  width: 2px;
+  height: 0.92em;
+  background: var(--accent);
+}

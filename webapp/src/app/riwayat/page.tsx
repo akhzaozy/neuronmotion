@@ -7,7 +7,7 @@ import { api, Session } from '@/lib/api';
 import AppNav from '@/components/AppNav';
 import ReportTemplate from '@/components/ReportTemplate';
 import ReportPrintHost from '@/components/ReportPrintHost';
-import { ClipboardIcon, SparkleIcon } from '@/components/icons';
+import * as Dialog from '@radix-ui/react-dialog';
 import { useI18n, translateServerLabel, dateLocale, type Lang } from '@/lib/i18n';
 import styles from './riwayat.module.css';
 
@@ -37,6 +37,18 @@ const RISK_LABEL: Record<Lang, Record<string, string>> = {
 
 function riskLabel(category: string, lang: Lang) {
   return RISK_LABEL[lang][category] || category;
+}
+
+/**
+ * Kelas tingkat dari kategori risiko.
+ *
+ * Warna tidak pernah jadi penanda tunggal: kelas .level membawa label teks,
+ * bobot garis kiri yang berbeda per tingkat, dan warna sekaligus.
+ */
+function levelClass(category: string) {
+  return category === 'HIGH' ? 'level level--high'
+    : category === 'MEDIUM' ? 'level level--mid'
+    : 'level level--low';
 }
 
 function formatDate(ts: string, lang: Lang = 'id') {
@@ -297,9 +309,6 @@ export default function RiwayatPage() {
         {sessions.length === 0 ? (
           <div className={styles.card}>
             <div className={styles.emptyState}>
-              <div style={{ marginBottom: 14, color: 'var(--text-muted)', display: 'flex', justifyContent: 'center' }}>
-                <ClipboardIcon size={36} />
-              </div>
               <p style={{ marginBottom: 16 }}>{t('hist.noHistory')}</p>
               <Link href="/screening" className="btn btn-primary">{t('hist.startFirst')}</Link>
             </div>
@@ -387,13 +396,13 @@ export default function RiwayatPage() {
                         <td>{formatDate(s.timestamp, lang)}</td>
                         <td style={{ fontWeight: 700, color: RISK_TEXT[s.riskCategory] }}>{Math.round(s.compositeScore)}</td>
                         <td>
-                          <span className={styles.riskPill} style={{ background: `color-mix(in srgb, ${RISK_FILL[s.riskCategory]} 15%, transparent)`, color: RISK_TEXT[s.riskCategory] }}>
+                          <span className={levelClass(s.riskCategory)}>
                             {riskLabel(s.riskCategory, lang)}
                           </span>
                         </td>
                         <td>
                           {s.aiAnalysis?.available
-                            ? <span className={styles.aiPill}><SparkleIcon size={13} /> {t('hist.available')}</span>
+                            ? <span className={styles.aiPill}>{t('hist.available')}</span>
                             : <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>{t('hist.none')}</span>}
                         </td>
                         <td className={styles.noteCell}>
@@ -414,17 +423,24 @@ export default function RiwayatPage() {
         )}
       </div>
 
-      {detail && (
-        <div className={styles.detailPanel} onClick={() => setDetail(null)}>
-          <div className={styles.detailCard} onClick={e => e.stopPropagation()}>
-            <h2 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: 4 }}>{t('hist.sessionDetail')} #{detail.id}</h2>
+      {/* Panel detail memakai Radix Dialog, bukan div dengan klik di luar.
+          Bentuk lamanya tidak punya role dialog, tidak menjebak fokus, dan
+          tidak menanggapi Escape, sehingga menekan Tab dari dalamnya justru
+          berjalan ke halaman di belakangnya. */}
+      <Dialog.Root open={!!detail} onOpenChange={o => !o && setDetail(null)}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="dialogScrim" />
+          <Dialog.Content className="dialogSheet">
+            {detail && (
+              <>
+            <Dialog.Title style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: 4 }}>{t('hist.sessionDetail')} #{detail.id}</Dialog.Title>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', marginBottom: 16 }}>{formatDate(detail.timestamp, lang)}</p>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
               <span style={{ fontSize: '2.2rem', fontWeight: 800, color: RISK_TEXT[detail.riskCategory] }}>
                 {Math.round(detail.compositeScore)}
               </span>
-              <span className={styles.riskPill} style={{ background: `color-mix(in srgb, ${RISK_FILL[detail.riskCategory]} 15%, transparent)`, color: RISK_TEXT[detail.riskCategory] }}>
+              <span className={levelClass(detail.riskCategory)}>
                 {t('dash.riskPrefix')} {riskLabel(detail.riskCategory, lang)}
               </span>
             </div>
@@ -480,7 +496,7 @@ export default function RiwayatPage() {
             {detail.aiAnalysis?.available && (
               <div className={styles.aiBox}>
                 <div className={styles.aiHeader}>
-                  <span className={styles.aiTitle}><SparkleIcon size={16} /> {t('hist.aiCombined')}</span>
+                  <span className={styles.aiTitle}>{t('hist.aiCombined')}</span>
                   {detail.aiAnalysis.tingkatKeyakinan && (
                     <span className={styles.aiConfidence}>{t('hist.confidence')}: {detail.aiAnalysis.tingkatKeyakinan}</span>
                   )}
@@ -538,10 +554,14 @@ export default function RiwayatPage() {
               </div>
             )}
 
-            <button className="btn btn-primary" style={{ width: '100%' }} onClick={() => setDetail(null)}>{t('common.close')}</button>
-          </div>
-        </div>
-      )}
+            <Dialog.Close asChild>
+              <button className="btn btn--primary btn--lg btn--block">{t('common.close')}</button>
+            </Dialog.Close>
+              </>
+            )}
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
 
       {/* Laporan cetak memakai template khusus, bukan menyalin tampilan halaman */}
       <div data-report-host="">

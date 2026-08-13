@@ -38,6 +38,35 @@ const mono = localFont({
   display: 'swap',
 });
 
+/**
+ * Kontrak arah desain. Bertahan sampai markup produksi supaya keputusan
+ * visualnya bisa diaudit dari halaman yang sudah jadi, bukan hanya dari repo.
+ */
+const DIRECTION_CONTRACT = `<!--
+THESIS: Pengukuran tubuh disajikan sebagai dokumen klinis yang jujur. Menolak
+susunan bawaan kategori, yaitu kartu membulat, biru teal lembut, badge pil, dan
+ilustrasi ramah aplikasi telehealth.
+
+OWN-WORLD: Dokumentasi farmasi Swiss era Geigy. Ground kertas #f2f1ec, tinta
+near-black #17181c, satu aksen vermilion #c8402a sebagai struktur bukan alarm.
+Garis rambut dan grid asimetris menggantikan kartu dan bayangan. Nol ikon:
+hierarki dari bobot huruf, status dari label teks penuh. Angka tabular adalah
+materi utama.
+
+STORY: Pengunjung memahami bahwa alat ini mengukur dan bukan mendiagnosis,
+mempercayainya karena perhitungan terjadi di perangkatnya sendiri, lalu
+menyelesaikan satu tes gerakan dan membaca artinya.
+
+FIRST VIEWPORT: Kepala dokumen bergaris tebal, judul tes rata kiri, satu bidang
+pengukuran menempati dua pertiga layar. Aksi utama sebagai baris bergaris di
+bawah bidang, terbaca dari dua meter.
+
+FORM: Lembar Klinis Basel, kandidat 7 dari daftar grounded, seed 69d13ede.
+
+FINISH: unreviewed and undocumented is unfinished; this build ends with the
+finish review, the verdict, and DESIGN.md
+-->`;
+
 export const metadata: Metadata = {
   title: 'NeuronMotion - Skrining Gangguan Saraf',
   description: 'Sistem skrining gangguan saraf berbasis kamera dan computer vision real-time. Deteksi dini Parkinson, tremor, dan gangguan gait.',
@@ -53,6 +82,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: LANG_INIT_SCRIPT }} />
       </head>
       <body>
+        {/*
+          Kontrak arah desain ditulis sebagai komentar HTML sungguhan, bukan
+          komentar JSX. Komentar JSX dibuang compiler dan tidak pernah sampai
+          ke markup produksi, sehingga kontrak yang seharusnya bisa diaudit
+          justru hilang tepat di tempat ia perlu dibaca.
+        */}
+        <div hidden dangerouslySetInnerHTML={{ __html: DIRECTION_CONTRACT }} />
         <ThemeProvider>
           <I18nProvider>
           <AuthProvider>

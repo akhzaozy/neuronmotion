@@ -1,0 +1,132 @@
+/* Bantuan nakes. Berkas ini dibuat baru supaya halaman dokter tidak lagi
+   menumpang modul milik rute pasien; keduanya kini berdiri sendiri. */
+
+.page {
+  min-height: 100vh;
+  background: var(--sheet);
+}
+
+.pad {
+  padding: var(--s6) 0 var(--s9);
+}
+
+.lead {
+  margin-top: var(--s3);
+  font-size: var(--t-lead);
+  color: var(--ink-secondary);
+}
+
+.section {
+  margin-top: var(--s8);
+}
+
+.sectionTitle {
+  font-size: var(--t-head);
+  padding-bottom: var(--s3);
+  border-bottom: 2px solid var(--rule-heavy);
+}
+
+/* ── Panduan berlangkah ──────────────────────────────────────────────────── */
+
+.steps {
+  display: flex;
+  flex-direction: column;
+}
+
+.step {
+  display: grid;
+  grid-template-columns: var(--s7) minmax(0, 1fr);
+  gap: var(--s4);
+  padding: var(--s5) 0;
+  border-bottom: 1px solid var(--rule-hair);
+}
+
+@media (max-width: 560px) {
+  .step {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s2);
+  }
+}
+
+/* Nomor langkah adalah satu-satunya tempat aksen tampil di halaman ini, dan
+   ia penanda struktur, bukan peringatan. */
+.stepNum {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: var(--t-head);
+  font-weight: 500;
+  line-height: 1.1;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.stepTitle {
+  font-size: var(--t-lead);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.stepDesc {
+  margin-top: var(--s2);
+  color: var(--ink-secondary);
+}
+
+/* ── Pertanyaan yang sering diajukan ─────────────────────────────────────── */
+
+.faqItem {
+  border-bottom: 1px solid var(--rule-hair);
+}
+
+.faqQuestion {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: var(--touch-lg);
+  padding: var(--s3) 0 var(--s3) var(--s3);
+  text-align: left;
+  font-size: var(--t-body);
+  font-weight: 600;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  border-left: 3px solid transparent;
+  transition: border-color 0.14s ease-out, background-color 0.14s ease-out;
+}
+
+.faqQuestion:hover {
+  background: var(--inset);
+}
+
+/* Keadaan terbuka dibawa bobot huruf dan garis kiri aksen sekaligus, jadi ia
+   terbaca tanpa membedakan warna dan tanpa tanda panah. */
+.faqOpen {
+  font-weight: 700;
+  border-left-color: var(--accent);
+}
+
+.faqAnswer {
+  padding: 0 0 var(--s5) var(--s3);
+  color: var(--ink-secondary);
+}
+
+/* ── Kontak ──────────────────────────────────────────────────────────────── */
+
+.contactGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--s5);
+  margin-top: var(--s5);
+}
+
+.contactValue {
+  margin-top: var(--s2);
+  font-weight: 600;
+}
+
+.disclaimer {
+  margin-top: var(--s6);
+  padding: var(--s4);
+  background: var(--inset);
+  border-left: 3px solid var(--ink);
+  font-size: var(--t-record);
+  color: var(--ink-secondary);
+}

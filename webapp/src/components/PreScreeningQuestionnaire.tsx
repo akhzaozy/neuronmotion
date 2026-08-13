@@ -1,15 +1,10 @@
 'use client';
 import { useEffect, useState } from 'react';
+import * as RadioGroup from '@radix-ui/react-radio-group';
+import * as Checkbox from '@radix-ui/react-checkbox';
 import { api, QuestionnaireQuestion } from '@/lib/api';
+import { useI18n } from '@/lib/i18n';
 import styles from './PreScreeningQuestionnaire.module.css';
-import { SparkleIcon, CheckIcon } from './icons';
-
-const CATEGORY_LABEL: Record<string, string> = {
-  MOTORIK: 'Gejala Gerakan',
-  NON_MOTORIK: 'Gejala Non-Gerakan',
-  RIWAYAT: 'Riwayat Kesehatan',
-  TAMBAHAN: 'Keterangan Tambahan',
-};
 
 export type QuestionnaireAnswers = Record<string, string | string[]>;
 
@@ -18,9 +13,17 @@ interface Props {
   onSkip: () => void;
 }
 
+/**
+ * Kuesioner gejala sebelum tes gerakan.
+ *
+ * Radix menangani grup radio dan kotak centang, termasuk navigasi panah,
+ * pengumuman keadaan ke pembaca layar, dan hubungan label. Berkas ini hanya
+ * memberi tampilannya, dan tampilannya tidak memakai ikon: pilihan terpilih
+ * ditandai bidang tinta dan bobot huruf.
+ */
 export default function PreScreeningQuestionnaire({ onComplete, onSkip }: Props) {
+  const { t } = useI18n();
   const [questions, setQuestions] = useState<QuestionnaireQuestion[]>([]);
-  const [aiEnabled, setAiEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [started, setStarted] = useState(false);
   const [index, setIndex] = useState(0);
@@ -28,79 +31,89 @@ export default function PreScreeningQuestionnaire({ onComplete, onSkip }: Props)
 
   useEffect(() => {
     api.getQuestionnaire()
-      .then(res => {
-        setQuestions(res.questions);
-        setAiEnabled(res.aiEnabled);
-      })
+      .then(res => setQuestions(res.questions))
       .catch(() => setQuestions([]))
       .finally(() => setLoading(false));
   }, []);
 
+  const categoryLabel = (c: string) => t(`quest.cat.${c}`, c);
+
   if (loading) {
-    return <div className={styles.wrap}><div className={styles.card}><p>Memuat kuesioner...</p></div></div>;
+    return (
+      <p className={styles.status} role="status" aria-live="polite">
+        {t('quest.loading')}
+      </p>
+    );
   }
 
+  /* Kuesioner gagal dimuat tidak boleh menghalangi skrining. */
   if (questions.length === 0) {
-    // Kuesioner gagal dimuat: jangan menghalangi pengguna melakukan skrining.
     return (
-      <div className={styles.wrap}>
-        <div className={styles.introCard}>
-          <h2 className={styles.introTitle}>Kuesioner tidak dapat dimuat</h2>
-          <p className={styles.introText}>
-            Anda tetap dapat melanjutkan ke tes gerakan. Hasil skrining akan dihitung dari
-            pengukuran kamera saja.
-          </p>
-          <button className="btn btn-primary btn-lg" onClick={onSkip}>Lanjut ke Tes Gerakan</button>
-        </div>
-      </div>
+      <section className={styles.intro}>
+        <h1>{t('quest.unavailable')}</h1>
+        <p className={styles.introLead}>{t('quest.unavailableBody')}</p>
+        <button type="button" className="btn btn--primary btn--lg" onClick={onSkip}>
+          {t('quest.continueToTests')}
+        </button>
+      </section>
     );
   }
 
   if (!started) {
     return (
-      <div className={styles.wrap}>
-        <div className={styles.introCard}>
-          {aiEnabled && (
-            <div className={styles.aiBadge}>
-              <SparkleIcon size={15} /> Dianalisis bersama AI
-            </div>
-          )}
-          <h2 className={styles.introTitle}>Sebelum Tes Gerakan, Ceritakan Kondisi Anda</h2>
-          <p className={styles.introText}>
-            Kamera dapat mengukur bagaimana tubuh Anda bergerak, tetapi tidak dapat mengetahui apa
-            yang Anda rasakan sehari-hari. Beberapa tanda awal justru berupa keluhan yang hanya Anda
-            sendiri yang tahu, misalnya berkurangnya kemampuan membau atau perubahan tulisan tangan.
-          </p>
-          <ul className={styles.introList}>
-            <li>Ada {questions.length} pertanyaan singkat, sekitar 2 menit.</li>
-            <li>Jawab sejujurnya. Tidak ada jawaban benar atau salah.</li>
-            <li>Jawaban Anda akan digabungkan dengan hasil pengukuran kamera untuk memberi gambaran yang lebih utuh.</li>
-            <li>Anda dapat melewati kuesioner ini, tetapi hasil skrining akan kurang lengkap.</li>
-          </ul>
-          <div className={styles.navRow}>
-            <button className="btn btn-outline" onClick={onSkip}>Lewati Kuesioner</button>
-            <button className="btn btn-primary btn-lg" onClick={() => setStarted(true)}>Mulai Kuesioner</button>
+      <section className={styles.intro}>
+        <header className="docHead">
+          <div className="docHead__meta">
+            <span>{t('quest.kicker')}</span>
+            <span>
+              {t('quest.count').replace('{n}', String(questions.length))}
+            </span>
           </div>
+          <h1>{t('quest.introTitle')}</h1>
+        </header>
+
+        <p className={styles.introLead}>{t('quest.introLead')}</p>
+
+        <ul className={styles.introList}>
+          <li>{t('quest.point1').replace('{n}', String(questions.length))}</li>
+          <li>{t('quest.point2')}</li>
+          <li>{t('quest.point3')}</li>
+          <li>{t('quest.point4')}</li>
+        </ul>
+
+        <div className={styles.nav}>
+          <button
+            type="button"
+            className="btn btn--primary btn--lg"
+            onClick={() => setStarted(true)}
+          >
+            {t('quest.begin')}
+          </button>
+          <button type="button" className="btn btn--lg" onClick={onSkip}>
+            {t('quest.skip')}
+          </button>
         </div>
-      </div>
+      </section>
     );
   }
 
   const q = questions[index];
   const isLast = index === questions.length - 1;
   const currentAnswer = answers[q.id];
-  const isAnswered = q.type === 'text'
-    ? true
-    : Array.isArray(currentAnswer) ? currentAnswer.length > 0 : currentAnswer !== undefined;
 
-  const selectChoice = (value: string) => {
-    setAnswers(prev => ({ ...prev, [q.id]: value }));
-  };
+  // Pertanyaan teks bebas kini benar-benar opsional dan dinyatakan begitu,
+  // alih-alih diam-diam dianggap terjawab sementara tombol lanjut di tempat
+  // lain dinonaktifkan tanpa penjelasan.
+  const isAnswered =
+    q.type === 'text'
+      ? true
+      : Array.isArray(currentAnswer)
+        ? currentAnswer.length > 0
+        : currentAnswer !== undefined;
 
   const toggleMulti = (value: string) => {
     setAnswers(prev => {
       const existing = Array.isArray(prev[q.id]) ? (prev[q.id] as string[]) : [];
-      // "Tidak ada satu pun" bersifat eksklusif terhadap pilihan lain
       if (value === 'none') {
         return { ...prev, [q.id]: existing.includes('none') ? [] : ['none'] };
       }
@@ -112,87 +125,95 @@ export default function PreScreeningQuestionnaire({ onComplete, onSkip }: Props)
     });
   };
 
-  const goNext = () => {
-    if (isLast) {
-      onComplete(answers);
-    } else {
-      setIndex(i => i + 1);
-    }
-  };
-
   return (
-    <div className={styles.wrap}>
-      <div className={styles.progressHead}>
-        <span className={styles.progressLabel}>Pertanyaan {index + 1} dari {questions.length}</span>
-        <span className={styles.progressLabel}>{CATEGORY_LABEL[q.category] || q.category}</span>
-      </div>
-      <div className={styles.progressTrack}>
-        <div className={styles.progressFill} style={{ width: `${((index + 1) / questions.length) * 100}%` }} />
-      </div>
-
-      <div className={styles.card} key={q.id}>
-        <span className={styles.categoryTag}>{CATEGORY_LABEL[q.category] || q.category}</span>
-        <h3 className={styles.question}>{q.question}</h3>
+    <section className={styles.wrap}>
+      <header className="docHead">
+        <div className="docHead__meta">
+          <span>
+            {t('quest.progress')
+              .replace('{a}', String(index + 1))
+              .replace('{b}', String(questions.length))}
+          </span>
+          <span>{categoryLabel(q.category)}</span>
+        </div>
+        <h1 className={styles.question}>{q.question}</h1>
         {q.help && <p className={styles.help}>{q.help}</p>}
+      </header>
 
-        {q.type === 'text' ? (
+      {q.type === 'text' ? (
+        <>
+          <label className="label" htmlFor="freeText">
+            {t('quest.optional')}
+          </label>
           <textarea
-            className={styles.textarea}
-            aria-label={q.question}
+            id="freeText"
+            className="input"
             value={(currentAnswer as string) || ''}
             onChange={e => setAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
-            placeholder="Contoh: Getaran muncul terutama saat pagi hari dan berkurang setelah beraktivitas..."
+            placeholder={t('quest.placeholder')}
           />
-        ) : q.type === 'multi' ? (
-          <div className={styles.options}>
-            {q.options?.map(opt => {
-              const selected = Array.isArray(currentAnswer) && currentAnswer.includes(opt.value);
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  className={`${styles.option} ${selected ? styles.optionSelected : ''}`}
-                  onClick={() => toggleMulti(opt.value)}
+        </>
+      ) : q.type === 'multi' ? (
+        <div className={styles.options}>
+          {q.options?.map(opt => {
+            const selected = Array.isArray(currentAnswer) && currentAnswer.includes(opt.value);
+            return (
+              <label key={opt.value} className={styles.option} data-selected={selected ? '' : undefined}>
+                <Checkbox.Root
+                  className={styles.control}
+                  checked={selected}
+                  onCheckedChange={() => toggleMulti(opt.value)}
                 >
-                  <span className={`${styles.checkbox} ${selected ? styles.checkboxChecked : ''}`}>
-                    {selected ? <CheckIcon size={14} /> : null}
-                  </span>
-                  {opt.label}
-                </button>
-              );
-            })}
-          </div>
-        ) : (
-          <div className={styles.options}>
-            {q.options?.map(opt => {
-              const selected = currentAnswer === opt.value;
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  className={`${styles.option} ${selected ? styles.optionSelected : ''}`}
-                  onClick={() => selectChoice(opt.value)}
-                >
-                  <span className={styles.radio}>{selected && <span className={styles.radioDot} />}</span>
-                  {opt.label}
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-        <div className={styles.navRow}>
-          <button
-            className="btn btn-outline"
-            onClick={() => (index === 0 ? setStarted(false) : setIndex(i => i - 1))}
-          >
-            Kembali
-          </button>
-          <button className="btn btn-primary" onClick={goNext} disabled={!isAnswered}>
-            {isLast ? 'Selesai, Lanjut ke Tes Gerakan' : 'Lanjut'}
-          </button>
+                  <Checkbox.Indicator className={styles.controlMark} />
+                </Checkbox.Root>
+                <span>{opt.label}</span>
+              </label>
+            );
+          })}
         </div>
+      ) : (
+        <RadioGroup.Root
+          className={styles.options}
+          value={(currentAnswer as string) ?? ''}
+          onValueChange={v => setAnswers(prev => ({ ...prev, [q.id]: v }))}
+        >
+          {q.options?.map(opt => {
+            const selected = currentAnswer === opt.value;
+            return (
+              <label key={opt.value} className={styles.option} data-selected={selected ? '' : undefined}>
+                <RadioGroup.Item className={styles.control} value={opt.value}>
+                  <RadioGroup.Indicator className={styles.controlMark} />
+                </RadioGroup.Item>
+                <span>{opt.label}</span>
+              </label>
+            );
+          })}
+        </RadioGroup.Root>
+      )}
+
+      <div className={styles.nav}>
+        <button
+          type="button"
+          className="btn btn--lg"
+          onClick={() => (index === 0 ? setStarted(false) : setIndex(i => i - 1))}
+        >
+          {index === 0 ? t('quest.backToIntro') : t('quest.back')}
+        </button>
+        <button
+          type="button"
+          className="btn btn--primary btn--lg"
+          onClick={() => (isLast ? onComplete(answers) : setIndex(i => i + 1))}
+          disabled={!isAnswered}
+        >
+          {isLast ? t('quest.finish') : t('quest.next')}
+        </button>
       </div>
-    </div>
+
+      {!isAnswered && (
+        <p className={styles.hint} aria-live="polite">
+          {t('quest.needAnswer')}
+        </p>
+      )}
+    </section>
   );
 }

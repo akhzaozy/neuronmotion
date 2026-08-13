@@ -1,135 +1,108 @@
-.card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 24px;
-  margin-bottom: 32px;
+/* Sebaran wilayah. Dulu satu kartu berisi batang pil berwarna; sekarang tabel
+   pengukuran, karena isinya memang hitungan pasien per wilayah dan angka
+   adalah materi utama di lembar ini. */
+
+.block {
+  margin: var(--s8) 0;
 }
 
-.header {
+.head {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
   flex-wrap: wrap;
-  margin-bottom: 20px;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--s4);
+  padding-bottom: var(--s3);
+  border-bottom: 2px solid var(--rule-heavy);
 }
 
 .title {
-  font-size: 1.15rem;
-  font-weight: 800;
-  margin-bottom: 4px;
+  font-size: var(--t-head);
 }
 
 .subtitle {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  line-height: 1.55;
+  margin-top: var(--s2);
+  font-size: var(--t-record);
+  color: var(--ink-secondary);
+  max-width: 68ch;
 }
 
+/* Pemilih tingkat wilayah. Terpilih ditandai bidang tinta dan bobot 700,
+   bukan warna saja. */
 .tabs {
   display: flex;
-  gap: 4px;
-  padding: 4px;
-  background: var(--bg-primary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: var(--s2);
 }
 
 .tab {
-  min-height: 34px;
-  padding: 7px 14px;
-  border-radius: var(--radius-sm);
+  min-height: var(--touch);
+  padding: var(--s2) var(--s4);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: var(--t-record);
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
   background: transparent;
-  color: var(--text-secondary);
-  font-family: inherit;
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  transition: background-color 0.14s ease-out, border-color 0.14s ease-out,
+    color 0.14s ease-out;
 }
 
-.tab:hover { color: var(--text-primary); }
+.tab:hover {
+  background: var(--inset);
+  border-color: var(--rule-heavy);
+  color: var(--ink);
+}
 
 .tabActive {
-  background: var(--gradient-brand);
-  color: #fff;
-}
-
-.list {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.row {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.rowHead {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.rowName {
-  font-size: 0.92rem;
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--sheet);
   font-weight: 700;
 }
 
-.rowTotal {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  font-family: var(--font-mono), ui-monospace, Menlo, monospace;
+.tableScroll {
+  overflow-x: auto;
+  margin-top: var(--s4);
+}
+
+.name {
+  font-weight: 600;
   white-space: nowrap;
 }
 
-.barTrack {
+/* Batang proporsi. Ia pengulangan visual dari tiga kolom angka di kirinya,
+   jadi tidak ada informasi yang hanya dibawa warna. */
+.bar {
   display: flex;
-  height: 12px;
-  border-radius: 99px;
-  overflow: hidden;
-  min-width: 40px;
-  background: var(--bg-secondary);
+  min-width: 120px;
+  height: 8px;
+  background: var(--inset);
 }
 
-.segHigh { background: var(--red); }
-.segMed { background: var(--yellow); }
-.segLow { background: var(--green); }
-.segNone { background: var(--border-light); }
+.segHigh { background: var(--level-high); }
+.segMid { background: var(--level-mid); }
+.segLow { background: var(--level-low); }
 
-.rowMeta {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+.none {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: var(--t-record);
+  color: var(--ink-muted);
+  white-space: nowrap;
 }
 
-.tagHigh, .tagMed, .tagLow, .tagNone {
-  font-size: 0.72rem;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 99px;
-}
-
-.tagHigh { background: var(--red-dim); color: var(--red-text); }
-.tagMed { background: var(--yellow-dim); color: var(--yellow-text); }
-.tagLow { background: var(--green-dim); color: var(--green-text); }
-.tagNone { background: var(--bg-secondary); color: var(--text-muted); }
-
-.empty, .note {
-  font-size: 0.84rem;
-  color: var(--text-secondary);
-  line-height: 1.6;
+.empty {
+  padding: var(--s6) 0;
+  color: var(--ink-secondary);
 }
 
 .note {
-  margin-top: 18px;
-  padding-top: 14px;
-  border-top: 1px solid var(--border);
-  color: var(--text-muted);
-  font-size: 0.8rem;
+  margin-top: var(--s4);
+  padding-top: var(--s3);
+  border-top: 1px solid var(--rule-hair);
+  font-size: var(--t-record);
+  color: var(--ink-muted);
 }

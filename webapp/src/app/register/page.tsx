@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import Logo from '@/components/Logo';
-import { EyeIcon, EyeOffIcon, ArrowLeftIcon } from '@/components/icons';
+
 import { ThemeToggle } from '@/lib/theme';
 import { LanguageToggle, useI18n } from '@/lib/i18n';
 import LocationFields, { LocationValue } from '@/components/LocationFields';
@@ -63,35 +63,36 @@ export default function RegisterPage() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.bgElements}>
-        <div className={styles.circle1} />
-        <div className={styles.circle2} />
-      </div>
-
-      <Link href="/" className={styles.backHome}>
-        <ArrowLeftIcon />
-        {t('common.backHome')}
-      </Link>
-
-      <div style={{ position: 'absolute', top: 20, right: 20, zIndex: 2, display: 'flex', gap: 10, alignItems: 'center' }}>
-        <LanguageToggle />
-        <ThemeToggle size="sm" />
-      </div>
-
-      <div className={`${styles.authCard} glass`}>
-        <div className={styles.header}>
-          <Link href="/" className={styles.logo} aria-label={t('common.backHome')}>
-            <Logo />
-          </Link>
-          <h1 className={styles.title}>{t('auth.createAccount')}</h1>
-          <p className={styles.subtitle}>{lang === 'en' ? 'Start early detection today' : 'Mulai deteksi dini hari ini'}</p>
+      <header className={styles.bar}>
+        <Link href="/" className={styles.brand}>
+          <Logo size={16} />
+        </Link>
+        <div className={styles.barActions}>
+          <LanguageToggle />
+          <ThemeToggle size="sm" />
         </div>
+      </header>
 
-        {error && <div className={styles.errorBox}>{error}</div>}
+      <main className={styles.main} id="main">
+        <div className={styles.form}>
+          <div className="docHead">
+            <div className="docHead__meta">
+              <Link href="/" className={styles.backLink}>
+                {t('common.backHome')}
+              </Link>
+            </div>
+            <h1>{t('auth.createAccount')}</h1>
+          </div>
 
-        <form className={styles.form} onSubmit={handleSubmit}>
-          <div className={styles.formGroup}>
-            <label className={styles.label} htmlFor="reg-name">{t('auth.fullName')}</label>
+          {error && (
+            <p className={styles.error} role="alert">
+              {error}
+            </p>
+          )}
+
+          <form className={styles.fields} onSubmit={handleSubmit}>
+          <div className={styles.field}>
+            <label className="label" htmlFor="reg-name">{t('auth.fullName')}</label>
             <input
               id="reg-name"
               type="text"
@@ -102,8 +103,8 @@ export default function RegisterPage() {
               required
             />
           </div>
-          <div className={styles.formGroup}>
-            <label className={styles.label} htmlFor="reg-email">{t('auth.email')}</label>
+          <div className={styles.field}>
+            <label className="label" htmlFor="reg-email">{t('auth.email')}</label>
             <input
               id="reg-email"
               type="email"
@@ -114,43 +115,45 @@ export default function RegisterPage() {
               required
             />
           </div>
-          <div className={styles.formGroup}>
-            <label className={styles.label} htmlFor="reg-password">{t('auth.password')}</label>
-            <div className={styles.passwordWrap}>
-              <input
-                id="reg-password"
-                type={showPassword ? 'text' : 'password'}
-                className="input"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder={t('auth.passwordPlaceholder')}
-                required
-                minLength={6}
-                style={passwordTooShort ? { borderColor: 'var(--red)' } : undefined}
-              />
+          <div className={styles.field}>
+            <div className={styles.labelRow}>
+              <label className="label" htmlFor="reg-password">{t('auth.password')}</label>
               <button
                 type="button"
-                className={styles.togglePw}
+                className={styles.reveal}
                 onClick={() => setShowPassword(v => !v)}
-                aria-label={showPassword ? t('prof.hidePassword') : t('prof.showPassword')}
-                tabIndex={-1}
+                aria-pressed={showPassword}
               >
-                {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                {showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
               </button>
             </div>
+            <input
+              id="reg-password"
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="new-password"
+              className="input"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+              aria-invalid={passwordTooShort || undefined}
+              aria-describedby={passwordTooShort ? 'reg-password-error' : undefined}
+            />
             {passwordTooShort && (
-              <span style={{ fontSize: '0.78rem', color: 'var(--red-text)' }}>{t('auth.passwordTooShort')}</span>
+              <p id="reg-password-error" className={styles.error} role="alert">
+                {t('auth.passwordTooShort')}
+              </p>
             )}
           </div>
-          <div className={styles.formGroup}>
-            <label className={styles.label} htmlFor="reg-role">{lang === 'en' ? 'I am registering as:' : 'Saya mendaftar sebagai:'}</label>
+          <div className={styles.field}>
+            <label className="label" htmlFor="reg-role">{lang === 'en' ? 'I am registering as:' : 'Saya mendaftar sebagai:'}</label>
             <select id="reg-role" className="input" value={role} onChange={(e) => setRole(e.target.value)}>
               <option value="PATIENT">{t('auth.patient')}</option>
               <option value="DOCTOR">{t('auth.doctor')}</option>
             </select>
           </div>
-          <div className={styles.formGroup}>
-            <label className={styles.label} htmlFor="reg-gender">{t('auth.gender')}{lang === 'en' ? ' (optional)' : ' (opsional)'}</label>
+          <div className={styles.field}>
+            <label className="label" htmlFor="reg-gender">{t('auth.gender')}{lang === 'en' ? ' (optional)' : ' (opsional)'}</label>
             <select id="reg-gender" className="input" value={gender} onChange={(e) => setGender(e.target.value)}>
               <option value="">{t('auth.preferNotSay')}</option>
               <option value="M">{t('auth.male')}</option>
@@ -159,8 +162,8 @@ export default function RegisterPage() {
           </div>
 
           {!isDoctor && (
-            <div className={styles.formGroup}>
-              <label className={styles.label} htmlFor="reg-dob">{t('auth.dateOfBirth')}</label>
+            <div className={styles.field}>
+              <label className="label" htmlFor="reg-dob">{t('auth.dateOfBirth')}</label>
               <input
                 id="reg-dob"
                 type="date"
@@ -169,7 +172,7 @@ export default function RegisterPage() {
                 onChange={(e) => setDateOfBirth(e.target.value)}
                 max={new Date().toISOString().split('T')[0]}
               />
-              <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
+              <span className={styles.hint}>
                 {t('auth.dobHint')}
               </span>
             </div>
@@ -177,15 +180,15 @@ export default function RegisterPage() {
 
           {isDoctor && (
             <>
-              <div className={styles.formGroup}>
-                <label className={styles.label} htmlFor="reg-specialization">{t('prof.profession')}</label>
+              <div className={styles.field}>
+                <label className="label" htmlFor="reg-specialization">{t('prof.profession')}</label>
                 <select id="reg-specialization" className="input" value={specialization} onChange={(e) => setSpecialization(e.target.value)} required>
                   <option value="" disabled>{t('prof.selectProfession')}</option>
                   {SPECIALIZATIONS.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
-              <div className={styles.formGroup}>
-                <label className={styles.label} htmlFor="reg-institution">{t('prof.institutionLabel')}</label>
+              <div className={styles.field}>
+                <label className="label" htmlFor="reg-institution">{t('prof.institutionLabel')}</label>
                 <input
                   id="reg-institution"
                   type="text"
@@ -206,16 +209,23 @@ export default function RegisterPage() {
             hint={isDoctor ? t('loc.hintDoctor') : t('loc.hintPatient')}
           />
 
-          <button type="submit" className="btn btn-primary btn-lg" disabled={loading || passwordTooShort} style={{ marginTop: 10 }}>
-            {loading && <span className="btnSpinner" />}
-            {loading ? t('common.loading') : t('auth.registerNow')}
-          </button>
-        </form>
+            <button
+              type="submit"
+              className="btn btn--primary btn--lg btn--block"
+              disabled={loading || passwordTooShort}
+            >
+              {loading ? t('common.loading') : t('auth.registerNow')}
+            </button>
+          </form>
 
-        <div className={styles.footer}>
-          {t('auth.hasAccount')} <Link href="/login" className={styles.link}>{t('auth.loginHere')}</Link>
+          <p className={styles.footer}>
+            {t('auth.hasAccount')}{' '}
+            <Link href="/login" className={styles.link}>
+              {t('auth.loginHere')}
+            </Link>
+          </p>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

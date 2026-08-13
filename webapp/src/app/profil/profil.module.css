@@ -1,209 +1,167 @@
+/* Lembar profil.
+   Modus kerja: baris data yang bisa dipindai, bagian dipisah garis kepala dan
+   garis rambut. Tidak ada avatar bulat dan tidak ada kartu mengambang. */
+
 .page {
   min-height: 100vh;
-  background: var(--bg-primary);
+  background: var(--sheet);
 }
 
-.container {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 32px 5% 60px;
+.pad {
+  padding: var(--s6) 0 var(--s9);
+  max-width: 760px;
 }
 
-.profileHeader {
-  /* Diizinkan membungkus supaya isinya turun ke baris berikutnya di layar
-     sempit, bukan terdorong keluar layar lalu terpotong tanpa jejak oleh
-     overflow-x: hidden pada body. */
+.loading {
+  padding: var(--s8) 0;
+  color: var(--ink-secondary);
+}
+
+/* ── Pesan keadaan ──────────────────────────────────────────────────────────
+   Warna tidak berdiri sendiri: keduanya membawa garis kiri dengan bobot
+   berbeda dan bobot huruf yang naik. */
+
+.successMsg {
+  margin-bottom: var(--s5);
+  padding: var(--s3) var(--s4);
+  background: var(--level-low-wash);
+  border-left: 2px solid var(--level-low);
+  color: var(--level-low);
+  font-weight: 600;
+}
+
+.errorMsg {
+  margin-bottom: var(--s5);
+  padding: var(--s3) var(--s4);
+  background: var(--level-high-wash);
+  border-left: 6px solid var(--level-high);
+  color: var(--level-high);
+  font-weight: 600;
+}
+
+/* ── Bagian ─────────────────────────────────────────────────────────────── */
+
+.section {
+  margin-top: var(--s7);
+}
+
+.sectionHead {
+  display: flex;
   flex-wrap: wrap;
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  margin-bottom: 28px;
-}
-
-.avatar {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: var(--gradient-brand);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.7rem;
-  font-weight: 800;
-  flex-shrink: 0;
-}
-
-.profileName {
-  font-size: 1.4rem;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-}
-
-.profileRole {
-  font-size: 0.88rem;
-  color: var(--text-secondary);
-  margin-top: 2px;
-}
-
-.profileEmail {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  margin-top: 2px;
-}
-
-.card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 24px;
-  margin-bottom: 20px;
-}
-
-.cardHeader {
-  /* Diizinkan membungkus supaya isinya turun ke baris berikutnya di layar
-     sempit, bukan terdorong keluar layar lalu terpotong tanpa jejak oleh
-     overflow-x: hidden pada body. */
-  flex-wrap: wrap;
-  display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 18px;
+  gap: var(--s4);
+  padding-bottom: var(--s3);
+  border-bottom: 2px solid var(--rule-heavy);
+  margin-bottom: var(--s4);
 }
 
-.cardTitle {
-  font-size: 1.05rem;
-  font-weight: 700;
+.sectionTitle {
+  font-size: var(--t-head);
+}
+
+.note {
+  max-width: 68ch;
+  color: var(--ink-secondary);
+}
+
+/* ── Baris keterangan ───────────────────────────────────────────────────── */
+
+.infoList {
+  display: block;
 }
 
 .infoRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--border);
-  font-size: 0.92rem;
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: var(--s4);
+  align-items: baseline;
+  padding: var(--s3) 0;
+  border-bottom: 1px solid var(--rule-hair);
 }
 
 .infoRow:last-child {
-  border-bottom: none;
+  border-bottom: 0;
 }
 
 .infoLabel {
-  color: var(--text-secondary);
+  margin: 0;
 }
 
 .infoValue {
+  margin: 0;
   font-weight: 600;
-  text-align: right;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 560px) {
+  .infoRow {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s1);
+  }
+}
+
+/* ── Formulir ───────────────────────────────────────────────────────────── */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s5);
 }
 
 .formGroup {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-bottom: 14px;
+  gap: var(--s2);
 }
 
-.label {
-  font-size: 0.85rem;
+.labelRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s3);
+}
+
+.reveal {
+  min-height: var(--touch);
+  padding: 0 var(--s2);
+  font-size: var(--t-record);
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--ink-secondary);
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+.reveal:hover {
+  color: var(--accent);
 }
 
 .actionRow {
   display: flex;
-  gap: 10px;
   flex-wrap: wrap;
-  margin-top: 6px;
+  gap: var(--s3);
+  margin-top: var(--s4);
 }
 
-.dangerZone {
-  border-color: rgba(220, 38, 38, 0.3);
+/* ── Keluar ─────────────────────────────────────────────────────────────── */
+
+.logoutRow {
+  margin-top: var(--s7);
+  padding-top: var(--s5);
+  border-top: 1px solid var(--rule-hair);
 }
 
-.dangerNote {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  line-height: 1.6;
-  margin-bottom: 16px;
-}
-
-/* Tombol keluar.
-   Sebelumnya merah pekat selebar kartu, membuatnya tampak lebih genting
-   daripada tombol hapus akun tepat di atasnya, padahal keluar adalah tindakan
-   biasa yang bisa dibatalkan dengan masuk kembali. Warna merah dikembalikan
-   kepada tindakan yang memang merusak. */
-.logoutBtn {
-  width: 100%;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  color: var(--text-secondary);
-  font-weight: 600;
-}
-
-.logoutBtn:hover {
-  background: var(--bg-card-hover);
-  border-color: var(--border-light);
-  color: var(--text-primary);
-}
-
-.logoutBtn:hover {
-  background: #b91c1c;
-}
-
-.successMsg {
-  background: var(--green-dim);
-  border: 1px solid rgba(5, 150, 105, 0.3);
-  color: var(--green-text);
-  padding: 10px 14px;
-  border-radius: var(--radius-md);
-  font-size: 0.85rem;
-  margin-bottom: 14px;
-}
-
-.errorMsg {
-  background: var(--red-dim);
-  border: 1px solid rgba(220, 38, 38, 0.3);
-  color: var(--red-text);
-  padding: 10px 14px;
-  border-radius: var(--radius-md);
-  font-size: 0.85rem;
-  margin-bottom: 14px;
-}
-
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: var(--overlay-bg);
-  backdrop-filter: blur(8px);
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
-.confirmCard {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  padding: 28px;
-  width: 100%;
-  max-width: 440px;
-}
+/* ── Dialog konfirmasi ──────────────────────────────────────────────────── */
 
 .confirmTitle {
-  font-size: 1.15rem;
-  font-weight: 800;
-  margin-bottom: 10px;
+  font-size: var(--t-head);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
 }
 
 .confirmText {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  line-height: 1.7;
-  margin-bottom: 20px;
+  margin-top: var(--s3);
+  color: var(--ink-secondary);
 }

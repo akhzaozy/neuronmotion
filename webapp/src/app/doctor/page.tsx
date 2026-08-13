@@ -2,20 +2,24 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { api, PatientDetail, Session } from '@/lib/api';
+import { api, PatientDetail } from '@/lib/api';
 import DoctorNav from '@/components/DoctorNav';
 import GeoBreakdown from '@/components/GeoBreakdown';
-import { ClipboardIcon, RefreshIcon } from '@/components/icons';
 import { useI18n, translateServerLabel, dateLocale } from '@/lib/i18n';
 import styles from './doctor.module.css';
 
 const POLL_INTERVAL_MS = 30_000; // 30 detik
 
+/** Memetakan kategori risiko server ke kelas tingkat pada globals.css. */
+function levelOf(risk?: string) {
+  return risk === 'HIGH' ? 'high' : risk === 'MEDIUM' ? 'mid' : 'low';
+}
+
 export default function DoctorPortal() {
   const router = useRouter();
   const { user, token, logout, isLoading } = useAuth();
   const { t, lang } = useI18n();
-  
+
   const [dashboard, setDashboard] = useState<any>(null);
   const [patients, setPatients] = useState<any[]>([]);
   const [activePatient, setActivePatient] = useState<PatientDetail | null>(null);
@@ -139,37 +143,19 @@ export default function DoctorPortal() {
     return (
       <div className={styles.page}>
         <DoctorNav />
-        <div className={styles.container}>
-          <div className={styles.statsGrid}>
-            {[0, 1, 2, 3].map(i => (
-              <div key={i} className={styles.statCard}>
-                <div className="skeleton" style={{ height: 16, width: '70%', marginBottom: 16 }}>.</div>
-                <div className="skeleton" style={{ height: 32, width: '40%' }}>.</div>
+        <main className="sheet" id="main">
+          <div className={styles.pad}>
+            <header className="docHead">
+              <div className="docHead__meta">
+                <span>{t('doc.portalTitle')}</span>
               </div>
-            ))}
+              <h1>{t('doc.loadingPortal')}</h1>
+            </header>
+            <p className={styles.loading} role="status" aria-live="polite">
+              {t('doc.loadingPatients')}
+            </p>
           </div>
-          <div className={styles.contentGrid}>
-            <div className={styles.patientList}>
-              <div className={styles.listHeader}>{t('doc.loadingPatients')}</div>
-              <div className={styles.listBody}>
-                {[0, 1, 2, 3, 4].map(i => (
-                  <div key={i} className={styles.patientItem}>
-                    <div style={{ flex: 1 }}>
-                      <div className="skeleton" style={{ height: 14, width: '60%', marginBottom: 6 }}>.</div>
-                      <div className="skeleton" style={{ height: 12, width: '40%' }}>.</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className={styles.detailView}>
-              <div className={styles.emptyState}>
-                <div className={styles.emptyStateIcon}><ClipboardIcon size={34} /></div>
-                <h3>{t('doc.loadingPortal')}</h3>
-              </div>
-            </div>
-          </div>
-        </div>
+        </main>
       </div>
     );
   }
@@ -178,249 +164,301 @@ export default function DoctorPortal() {
     ? patients.filter(p => p.name.toLowerCase().includes(search.trim().toLowerCase()))
     : patients;
 
+  const session = activePatient?.sessions[activeSessionIndex];
+
   return (
     <div className={styles.page}>
       <DoctorNav />
-      <div className={styles.container}>
-        <div className={styles.header}>
-          <div>
-            <h1>{t('doc.portalTitle')}</h1>
-            <p>
-              {t('doc.welcome')}, <span data-no-translate="">{user?.name}</span>,{' '}
-              {user?.specialization || t('doc.specialist')}
-              {user?.institution ? <span data-no-translate="">{` • ${user.institution}`}</span> : ''}
-            </p>
-            {lastUpdated && (
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 4 }}>
-                {t('doc.updatedAt')}: {lastUpdated.toLocaleTimeString(dateLocale(lang))} · {t('doc.autoEvery30')}
-              </p>
-            )}
-          </div>
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <button
-              className="btn btn-outline btn-sm"
-              onClick={() => refreshData(user, token, activePatientId)}
-              disabled={isRefreshing}
-              title={t('doc.refreshNow')}
-            >
-              {isRefreshing ? t('doc.refreshing') : <><RefreshIcon size={15} /> {t('doc.refresh')}</>}
-            </button>
-            <button className="btn btn-outline" onClick={() => { logout(); router.push('/login'); }}>
-              {t('common.logout')}
-            </button>
-          </div>
-        </div>
 
-        <div className={styles.statsGrid}>
-          <div className={styles.statCard}>
-            <div className={styles.statTitle}>{t('doc.totalPatients')}</div>
-            <div className={styles.statValue} style={{ color: 'var(--brand-text)' }}>{dashboard.totalPatients}</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statTitle}>{t('doc.highRisk')}</div>
-            <div className={styles.statValue} style={{ color: 'var(--red-text)' }}>{dashboard.riskBreakdown?.HIGH || 0}</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statTitle}>{t('doc.mediumRisk')}</div>
-            <div className={styles.statValue} style={{ color: 'var(--yellow-text)' }}>{dashboard.riskBreakdown?.MEDIUM || 0}</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statTitle}>{t('doc.earlyParkinson')}</div>
-            <div className={styles.statValue} style={{ color: 'var(--purple-text)' }}>{dashboard.conditionBreakdown?.PARKINSON_EARLY || 0}</div>
-          </div>
-        </div>
-
-        <GeoBreakdown data={dashboard.geoBreakdown} />
-
-        <div className={styles.contentGrid}>
-          {/* Patient List */}
-          <div className={styles.patientList}>
-            <div className={styles.listHeader}>
-              <span>{t('doc.patientList')} ({filteredPatients.length}{search ? ` / ${patients.length}` : ''})</span>
+      <main className="sheet" id="main">
+        <div className={styles.pad}>
+          <header className="docHead">
+            <div className="docHead__meta">
+              <span>{t('doc.portalTitle')}</span>
+              <span data-no-translate="">{user?.name}</span>
+              <span>{user?.specialization || t('doc.specialist')}</span>
+              {user?.institution && <span data-no-translate="">{user.institution}</span>}
             </div>
-            <div className={styles.linkBox}>
-              <div className={styles.linkTitle}>{t('link.title')}</div>
-              <p className={styles.linkDesc}>{t('link.desc')}</p>
-              <div className={styles.linkRow}>
-                <input
-                  className={styles.linkInput}
-                  type="text"
-                  aria-label={t('link.title')}
-                  placeholder={t('link.placeholder')}
-                  value={linkCode}
-                  maxLength={12}
-                  onChange={e => setLinkCode(e.target.value.toUpperCase())}
-                  onKeyDown={e => { if (e.key === 'Enter') linkByCode(); }}
-                />
+            <div className={styles.headRow}>
+              <div>
+                <h1>{t('doc.portalTitle')}</h1>
+                <p className={styles.lead}>
+                  {t('doc.welcome')}, <span data-no-translate="">{user?.name}</span>
+                </p>
+                {lastUpdated && (
+                  <p className={styles.stamp}>
+                    {t('doc.updatedAt')}: {lastUpdated.toLocaleTimeString(dateLocale(lang))} · {t('doc.autoEvery30')}
+                  </p>
+                )}
+              </div>
+              <div className={styles.headActions}>
                 <button
-                  className="btn btn-primary btn-sm"
-                  onClick={linkByCode}
-                  disabled={linking || !linkCode.trim()}
+                  className="btn"
+                  onClick={() => refreshData(user, token, activePatientId)}
+                  disabled={isRefreshing}
+                  title={t('doc.refreshNow')}
                 >
-                  {linking ? t('link.linking') : t('link.submit')}
+                  {isRefreshing ? t('doc.refreshing') : t('doc.refresh')}
+                </button>
+                <button className="btn" onClick={() => { logout(); router.push('/login'); }}>
+                  {t('common.logout')}
                 </button>
               </div>
-              {linkMsg && (
-                <p className={linkMsg.ok ? styles.linkMsgOk : styles.linkMsgErr} data-no-translate="">
-                  {linkMsg.text}
-                </p>
-              )}
             </div>
+          </header>
 
-            <div className={styles.searchBox}>
-              <input
-                className={styles.searchInput}
-                type="text"
-                aria-label={t('doc.searchPatient')}
-                placeholder={t('doc.searchPatient')}
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-              />
+          {/* Ringkasan angka. Warna tidak dipakai di sini: labelnya yang
+              membedakan, dan angkanya yang memimpin. */}
+          <section className={styles.stats}>
+            <div className={styles.stat}>
+              <output className={styles.statValue}>{dashboard.totalPatients}</output>
+              <span className={`label ${styles.statLabel}`}>{t('doc.totalPatients')}</span>
             </div>
-            <div className={styles.listBody}>
-              {filteredPatients.map(p => (
-                <div 
-                  key={p.id} 
-                  className={`${styles.patientItem} ${activePatient?.id === p.id ? styles.active : ''}`}
-                  onClick={() => loadPatientDetail(p.id)}
-                >
-                  <div>
-                    <div className={styles.patientName} data-no-translate="">{p.name}</div>
-                    <div className={styles.patientInfo}>
-                      {t('doc.age')}: {p.age || '?'} {t('doc.yearsShort')} • {t('doc.scoreShort')}: {p.lastSession ? Math.round(p.lastSession.compositeScore) : '-'}
-                    </div>
-                  </div>
-                  {p.lastSession && (
-                    <div className={`${styles.riskIndicator} ${styles[p.lastSession.riskCategory]}`} title={`${t('dash.riskPrefix')} ${p.lastSession.riskCategory}`} />
-                  )}
+            <div className={styles.stat}>
+              <output className={styles.statValue}>{dashboard.riskBreakdown?.HIGH || 0}</output>
+              <span className={`label ${styles.statLabel}`}>{t('doc.highRisk')}</span>
+            </div>
+            <div className={styles.stat}>
+              <output className={styles.statValue}>{dashboard.riskBreakdown?.MEDIUM || 0}</output>
+              <span className={`label ${styles.statLabel}`}>{t('doc.mediumRisk')}</span>
+            </div>
+            <div className={styles.stat}>
+              <output className={styles.statValue}>{dashboard.conditionBreakdown?.PARKINSON_EARLY || 0}</output>
+              <span className={`label ${styles.statLabel}`}>{t('doc.earlyParkinson')}</span>
+            </div>
+          </section>
+
+          <GeoBreakdown data={dashboard.geoBreakdown} />
+
+          <div className={styles.layout}>
+            {/* ── Indeks pasien ──────────────────────────────────────────── */}
+            <section className={styles.index}>
+              <div className={styles.indexHead}>
+                <h2 className={styles.indexTitle}>{t('doc.patientList')}</h2>
+                <span className={styles.count}>
+                  {filteredPatients.length}{search ? ` / ${patients.length}` : ''}
+                </span>
+              </div>
+
+              <div className={styles.linkBox}>
+                <h3 className="label">{t('link.title')}</h3>
+                <p className={styles.linkDesc}>{t('link.desc')}</p>
+                <div className={styles.linkRow}>
+                  <input
+                    className={`input ${styles.linkInput}`}
+                    type="text"
+                    aria-label={t('link.title')}
+                    placeholder={t('link.placeholder')}
+                    value={linkCode}
+                    maxLength={12}
+                    onChange={e => setLinkCode(e.target.value.toUpperCase())}
+                    onKeyDown={e => { if (e.key === 'Enter') linkByCode(); }}
+                  />
+                  <button
+                    className="btn btn--primary"
+                    onClick={linkByCode}
+                    disabled={linking || !linkCode.trim()}
+                  >
+                    {linking ? t('link.linking') : t('link.submit')}
+                  </button>
                 </div>
-              ))}
-              {patients.length === 0 && <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-secondary)' }}>{t('doc.noPatients')}</div>}
-              {patients.length > 0 && filteredPatients.length === 0 && (
-                <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-secondary)' }}>{t('doc.noMatch')} &ldquo;{search}&rdquo;.</div>
-              )}
-            </div>
-          </div>
+                {linkMsg && (
+                  <p
+                    className={linkMsg.ok ? styles.linkMsgOk : styles.linkMsgErr}
+                    role="status"
+                    data-no-translate=""
+                  >
+                    {linkMsg.text}
+                  </p>
+                )}
+              </div>
 
-          {/* Detail View */}
-          <div className={styles.detailView}>
-            {activePatient ? (
-              <>
-                <div className={styles.detailHeader}>
-                  <div>
-                    <h2 className={styles.detailTitle} data-no-translate="">{activePatient.name}</h2>
-                    <div style={{ color: 'var(--text-secondary)' }}><span data-no-translate="">{activePatient.email}</span> • {t('doc.age')} {activePatient.age || '?'} {t('common.years')} • {activePatient.gender === 'M' ? t('prof.male') : activePatient.gender === 'F' ? t('prof.female') : t('doc.unknown')}</div>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <button
-                      className="btn btn-outline btn-sm"
-                      onClick={() => unlinkPatient(activePatient.id)}
-                    >
-                      {t('link.unlink')}
-                    </button>
-                  {activePatient.sessions[activeSessionIndex] && (
-                    <div className={`badge ${
-                      activePatient.sessions[activeSessionIndex].riskCategory === 'HIGH' ? 'badge-red' : 
-                      activePatient.sessions[activeSessionIndex].riskCategory === 'MEDIUM' ? 'badge-yellow' : 'badge-green'
-                    }`} style={{ fontSize: '1rem', padding: '8px 16px' }}>
-                      {t('dash.riskPrefix')} {activePatient.sessions[activeSessionIndex].riskCategory} ({t('doc.scoreShort')}: {Math.round(activePatient.sessions[activeSessionIndex].compositeScore)})
+              <div className={styles.searchBox}>
+                <input
+                  className="input"
+                  type="text"
+                  aria-label={t('doc.searchPatient')}
+                  placeholder={t('doc.searchPatient')}
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                />
+              </div>
+
+              <div className={styles.listBody}>
+                {filteredPatients.map(p => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    className={`${styles.patientItem} ${activePatient?.id === p.id ? styles.active : ''}`}
+                    aria-current={activePatient?.id === p.id ? 'true' : undefined}
+                    onClick={() => loadPatientDetail(p.id)}
+                  >
+                    <span>
+                      <span className={styles.patientName} data-no-translate="">{p.name}</span>
+                      <span className={styles.patientInfo}>
+                        {t('doc.age')}: {p.age || '?'} {t('doc.yearsShort')} · {t('doc.scoreShort')}: {p.lastSession ? Math.round(p.lastSession.compositeScore) : '-'}
+                      </span>
+                    </span>
+                    {p.lastSession && (
+                      <span className={`level level--${levelOf(p.lastSession.riskCategory)}`}>
+                        {p.lastSession.riskCategory === 'HIGH'
+                          ? t('risk.high')
+                          : p.lastSession.riskCategory === 'MEDIUM'
+                            ? t('risk.medium')
+                            : t('risk.low')}
+                      </span>
+                    )}
+                  </button>
+                ))}
+                {patients.length === 0 && <p className={styles.listEmpty}>{t('doc.noPatients')}</p>}
+                {patients.length > 0 && filteredPatients.length === 0 && (
+                  <p className={styles.listEmpty}>{t('doc.noMatch')} &ldquo;{search}&rdquo;.</p>
+                )}
+              </div>
+            </section>
+
+            {/* ── Isi pemeriksaan ────────────────────────────────────────── */}
+            <section className={styles.detail}>
+              {activePatient ? (
+                <>
+                  <div className={styles.detailHead}>
+                    <div>
+                      <h2 className={styles.detailTitle} data-no-translate="">{activePatient.name}</h2>
+                      <p className={styles.detailMeta}>
+                        <span data-no-translate="">{activePatient.email}</span> · {t('doc.age')} {activePatient.age || '?'} {t('common.years')} · {activePatient.gender === 'M' ? t('prof.male') : activePatient.gender === 'F' ? t('prof.female') : t('doc.unknown')}
+                      </p>
                     </div>
-                  )}
-                  </div>
-                </div>
-
-                {activePatient.sessions[activeSessionIndex] ? (
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                      <h3>{t('doc.screeningSession')}: {new Date(activePatient.sessions[activeSessionIndex].timestamp).toLocaleDateString(dateLocale(lang))}</h3>
-                      {activePatient.sessions.length > 1 && (
-                        <select
-                          className="input"
-                          aria-label={t('doc.screeningSession')}
-                          style={{ width: 'auto', padding: '4px 8px' }}
-                          value={activeSessionIndex}
-                          onChange={e => {
-                            const idx = Number(e.target.value);
-                            setActiveSessionIndex(idx);
-                            setNoteText(activePatient.sessions[idx]?.doctorNote || '');
-                          }}
-                        >
-                          {activePatient.sessions.map((s, idx) => (
-                            <option key={s.id} value={idx}>
-                              {new Date(s.timestamp).toLocaleString(dateLocale(lang))} - {t('doc.scoreShort')} {Math.round(s.compositeScore)}
-                            </option>
-                          ))}
-                        </select>
+                    <div className={styles.detailActions}>
+                      <button className="btn" onClick={() => unlinkPatient(activePatient.id)}>
+                        {t('link.unlink')}
+                      </button>
+                      {session && (
+                        <p className={`level level--${levelOf(session.riskCategory)}`}>
+                          {t('dash.riskPrefix')}{' '}
+                          {session.riskCategory === 'HIGH'
+                            ? t('risk.high')
+                            : session.riskCategory === 'MEDIUM'
+                              ? t('risk.medium')
+                              : t('risk.low')}
+                          {' · '}
+                          {t('doc.scoreShort')} {Math.round(session.compositeScore)}
+                        </p>
                       )}
                     </div>
-                    
-                    {activePatient.sessions[activeSessionIndex].mlPrediction?.predictedLabel && (
-                      <div style={{ background: 'var(--bg-secondary)', padding: 16, borderRadius: 8, marginBottom: 24, borderLeft: '4px solid var(--purple)' }}>
-                        <h4 style={{ color: 'var(--purple-text)', marginBottom: 4, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('doc.clinicalClassification')}</h4>
-                        <p style={{ fontWeight: 600 }}>{translateServerLabel(activePatient.sessions[activeSessionIndex].mlPrediction.predictedLabel, lang)}</p>
-                        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: 4 }}>
-                          {t('doc.confidence')}: {activePatient.sessions[activeSessionIndex].mlPrediction.confidence || '?'}%
-                        </p>
-                      </div>
-                    )}
+                  </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 32 }}>
-                      <div style={{ background: 'var(--bg-secondary)', padding: 16, borderRadius: 8 }}>
-                        <h4 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: 8 }}>Tremor Amplitude</h4>
-                        <div style={{ fontSize: '1.2rem', fontWeight: 700 }}>
-                          {(activePatient.sessions[activeSessionIndex].tremorResult as any)?.amplitudeMillimeter || '-'} mm
+                  {session ? (
+                    <div className={styles.section}>
+                      <div className={styles.sectionHead}>
+                        <h3 className={styles.sectionTitle}>
+                          {t('doc.screeningSession')}:{' '}
+                          <time dateTime={String(session.timestamp)}>
+                            {new Date(session.timestamp).toLocaleDateString(dateLocale(lang))}
+                          </time>
+                        </h3>
+                        {activePatient.sessions.length > 1 && (
+                          <select
+                            className={`input ${styles.sessionSelect}`}
+                            aria-label={t('doc.screeningSession')}
+                            value={activeSessionIndex}
+                            onChange={e => {
+                              const idx = Number(e.target.value);
+                              setActiveSessionIndex(idx);
+                              setNoteText(activePatient.sessions[idx]?.doctorNote || '');
+                            }}
+                          >
+                            {activePatient.sessions.map((s, idx) => (
+                              <option key={s.id} value={idx}>
+                                {new Date(s.timestamp).toLocaleString(dateLocale(lang))} - {t('doc.scoreShort')} {Math.round(s.compositeScore)}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                      </div>
+
+                      {session.mlPrediction?.predictedLabel && (
+                        <div className={styles.classification}>
+                          <h4 className="label">{t('doc.clinicalClassification')}</h4>
+                          <p className={styles.classificationValue}>
+                            {translateServerLabel(session.mlPrediction.predictedLabel, lang)}
+                          </p>
+                          <p className={styles.classificationSub}>
+                            {t('doc.confidence')}: {session.mlPrediction.confidence || '?'}%
+                          </p>
+                        </div>
+                      )}
+
+                      <div className={styles.section}>
+                        <div className={styles.tableScroll}>
+                          <table className="dataTable">
+                            <thead>
+                              <tr>
+                                <th scope="col">{t('hist.biomarker')}</th>
+                                <th scope="col" className="num">{t('demo.measured')}</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <th scope="row">Tremor Amplitude</th>
+                                <td className="num">
+                                  {(session.tremorResult as any)?.amplitudeMillimeter || '-'} mm
+                                </td>
+                              </tr>
+                              <tr>
+                                <th scope="row">Finger Tapping Rate</th>
+                                <td className="num">
+                                  {(session.fingerTappingResult as any)?.tapRatePerSecond || '-'} tap/s
+                                </td>
+                              </tr>
+                              <tr>
+                                <th scope="row">Gait Symmetry</th>
+                                <td className="num">
+                                  {(session.gaitResult as any)?.symmetryPercent || '-'}%
+                                </td>
+                              </tr>
+                              <tr>
+                                <th scope="row">Postural Sway Area</th>
+                                <td className="num">
+                                  {(session.posturalResult as any)?.swayAreaCm2 || '-'} cm²
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
                         </div>
                       </div>
-                      <div style={{ background: 'var(--bg-secondary)', padding: 16, borderRadius: 8 }}>
-                        <h4 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: 8 }}>Finger Tapping Rate</h4>
-                        <div style={{ fontSize: '1.2rem', fontWeight: 700 }}>
-                          {(activePatient.sessions[activeSessionIndex].fingerTappingResult as any)?.tapRatePerSecond || '-'} tap/s
+
+                      <div className={styles.noteSection}>
+                        <h3 className={styles.sectionTitle}>{t('doc.clinicalNote')}</h3>
+                        <div className={styles.noteField}>
+                          <textarea
+                            className="input"
+                            aria-label={t('doc.clinicalNote')}
+                            value={noteText}
+                            onChange={e => setNoteText(e.target.value)}
+                            placeholder={t('doc.notePlaceholder')}
+                          />
                         </div>
-                      </div>
-                      <div style={{ background: 'var(--bg-secondary)', padding: 16, borderRadius: 8 }}>
-                        <h4 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: 8 }}>Gait Symmetry</h4>
-                        <div style={{ fontSize: '1.2rem', fontWeight: 700 }}>
-                          {(activePatient.sessions[activeSessionIndex].gaitResult as any)?.symmetryPercent || '-'}%
-                        </div>
-                      </div>
-                      <div style={{ background: 'var(--bg-secondary)', padding: 16, borderRadius: 8 }}>
-                        <h4 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: 8 }}>Postural Sway Area</h4>
-                        <div style={{ fontSize: '1.2rem', fontWeight: 700 }}>
-                          {(activePatient.sessions[activeSessionIndex].posturalResult as any)?.swayAreaCm2 || '-'} cm²
-                        </div>
+                        <button className="btn btn--primary btn--lg" onClick={saveNote} disabled={isSavingNote}>
+                          {isSavingNote ? t('doc.saving') : t('doc.saveNote')}
+                        </button>
                       </div>
                     </div>
-
-                    <div className={styles.noteSection}>
-                      <h3 style={{ marginBottom: 16 }}>{t('doc.clinicalNote')}</h3>
-                      <textarea
-                        className="input"
-                        aria-label={t('doc.clinicalNote')}
-                        value={noteText}
-                        onChange={e => setNoteText(e.target.value)}
-                        placeholder={t('doc.notePlaceholder')}
-                      />
-                      <button className="btn btn-primary" onClick={saveNote} disabled={isSavingNote}>
-                        {isSavingNote ? t('doc.saving') : t('doc.saveNote')}
-                      </button>
+                  ) : (
+                    <div className={styles.emptyState}>
+                      <p>{t('doc.noSessions')}</p>
                     </div>
-                  </div>
-                ) : (
-                  <div className={styles.emptyState}>
-                    <p>{t('doc.noSessions')}</p>
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className={styles.emptyState}>
-                <div className={styles.emptyStateIcon}><ClipboardIcon size={34} /></div>
-                <h3>{t('doc.selectPatient')}</h3>
-                <p>{t('doc.selectPatientHint')}</p>
-              </div>
-            )}
+                  )}
+                </>
+              ) : (
+                <div className={styles.emptyState}>
+                  <h2>{t('doc.selectPatient')}</h2>
+                  <p>{t('doc.selectPatientHint')}</p>
+                </div>
+              )}
+            </section>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

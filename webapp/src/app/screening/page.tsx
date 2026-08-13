@@ -1,159 +1,197 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import * as Dialog from '@radix-ui/react-dialog';
 import { useAuth } from '@/lib/auth';
 import { api, ScreeningResult } from '@/lib/api';
-import { useBiomarkerCapture, TestType } from '@/hooks/useBiomarkerCapture';
+import { useBiomarkerCapture } from '@/hooks/useBiomarkerCapture';
+import { TEST_SEQUENCE, TOTAL_CAPTURE_SECONDS, ScreeningTest } from '@/lib/tests';
+import { useI18n } from '@/lib/i18n';
 import CameraView from '@/components/CameraView';
 import AppNav from '@/components/AppNav';
+import ScreeningInstruction from '@/components/ScreeningInstruction';
 import PreScreeningQuestionnaire, { QuestionnaireAnswers } from '@/components/PreScreeningQuestionnaire';
-import {
-  HandIcon, TapIcon, WalkIcon, ArmSwingIcon, PostureIcon, KneeIcon,
-  ClipboardIcon, CheckCircleIcon, ClockIcon, SparkleIcon,
-} from '@/components/icons';
 import styles from './screening.module.css';
 
-interface TestStep {
-  type: TestType;
-  name: string;
-  desc: string;
-  // Ikon berupa komponen agar bentuknya sama di setiap perangkat, tidak seperti
-  // emoji yang digambar ulang oleh masing-masing sistem operasi.
-  icon: React.ComponentType<{ size?: number }>;
-}
+/**
+ * Kunci penyimpanan sesi.
+ *
+ * Rekaman yang sudah selesai dan jawaban kuesioner disimpan di sessionStorage.
+ * Tanpa ini, satu panggilan masuk, satu layar terkunci, atau satu perjalanan ke
+ * halaman login menghapus tujuh menit tes fisik yang dikerjakan sendirian oleh
+ * orang dengan gangguan gerak.
+ */
+const STORE_KEY = 'nm.screening.session.v1';
 
-const TEST_SEQUENCE: TestStep[] = [
-  { type: 'tremor', name: 'Tremor', desc: 'Angkat tangan kanan Anda sejajar dada dan tahan dalam keadaan rileks. Kamera akan mengukur frekuensi dan amplitudo getaran.', icon: HandIcon },
-  { type: 'fingerTapping', name: 'Finger Tapping', desc: 'Angkat tangan Anda. Buka ibu jari dan telunjuk selebar mungkin, lalu ketuk keduanya secepat dan selebar mungkin berulang kali.', icon: TapIcon },
-  { type: 'gait', name: 'Pola Jalan (Gait)', desc: 'Mundur 2-3 meter agar seluruh tubuh terlihat. Berjalanlah lurus mendekati kamera dengan langkah biasa.', icon: WalkIcon },
-  { type: 'armSwing', name: 'Ayunan Lengan', desc: 'Berjalanlah di tempat atau bolak-balik dengan mengayunkan lengan secara natural.', icon: ArmSwingIcon },
-  { type: 'posture', name: 'Keseimbangan', desc: 'Berdiri tegak dengan kaki rapat dan tangan di samping badan. Tahan posisi tersebut.', icon: PostureIcon },
-  { type: 'rom', name: 'ROM Lutut', desc: 'Berdiri menyamping, angkat satu lutut setinggi mungkin, lalu luruskan perlahan.', icon: KneeIcon },
-];
+interface StoredSession {
+  completed: Record<string, unknown>;
+  questionnaire: QuestionnaireAnswers | null;
+  phase: 'questionnaire' | 'tests';
+  step: number;
+}
 
 export default function ScreeningPage() {
   const router = useRouter();
-  const { user, token } = useAuth();
-  
+  const { user, token, isLoading: authLoading } = useAuth();
+  const { t } = useI18n();
+
   const {
-    videoRef, canvasRef, cameraReady, poseReady, error,
-    activeTest, isCapturing, liveMetrics, countdown, capturedData, detectionWarning, lightingWarning,
+    videoRef, canvasRef, cameraReady, poseReady,
+    activeTest, isCapturing, liveMetrics, countdown, capturedData,
+    detectionWarning, lightingWarning, fault, rejection, clearRejection,
     startCamera, startCapture, stopCapture,
   } = useBiomarkerCapture();
 
+  const [restored, setRestored] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const [completedTests, setCompletedTests] = useState<Record<string, any>>({});
+  const [completedTests, setCompletedTests] = useState<Record<string, unknown>>({});
+  const [questionnaire, setQuestionnaire] = useState<QuestionnaireAnswers | null>(null);
+  const [phase, setPhase] = useState<'questionnaire' | 'tests'>('questionnaire');
+  const [showIntro, setShowIntro] = useState(false);
+  const [instructionFor, setInstructionFor] = useState<ScreeningTest | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState<ScreeningResult | null>(null);
-  const [showInstruction, setShowInstruction] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(true);
-  // Alur: onboarding -> kuesioner gejala -> tes gerakan -> hasil gabungan
-  const [phase, setPhase] = useState<'questionnaire' | 'tests'>('questionnaire');
-  const [questionnaire, setQuestionnaire] = useState<QuestionnaireAnswers | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // Auto-save captured data when a test finishes
+  const currentTest = TEST_SEQUENCE[currentStep];
+  const doneCount = TEST_SEQUENCE.filter(s => completedTests[s.type]).length;
+  const hasWork = doneCount > 0 || !!questionnaire;
+
+  /* ── Gerbang masuk ────────────────────────────────────────────────────────
+     Autentikasi diperiksa saat halaman dimuat, bukan saat mengirim. Versi
+     sebelumnya menaruh dinding login di langkah terakhir dan membuang keenam
+     rekaman ketika pengguna ternyata belum masuk. */
   useEffect(() => {
-    if (capturedData && capturedData.testType) {
+    if (authLoading) return;
+    if (!user || !token) router.replace('/login?next=/screening');
+  }, [authLoading, user, token, router]);
+
+  /* ── Pulihkan sesi ────────────────────────────────────────────────────── */
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(STORE_KEY);
+      if (raw) {
+        const s = JSON.parse(raw) as StoredSession;
+        setCompletedTests(s.completed ?? {});
+        setQuestionnaire(s.questionnaire ?? null);
+        setPhase(s.phase ?? 'questionnaire');
+        setCurrentStep(Math.min(s.step ?? 0, TEST_SEQUENCE.length - 1));
+      } else {
+        setShowIntro(true);
+      }
+    } catch {
+      setShowIntro(true);
+    }
+    setRestored(true);
+  }, []);
+
+  /* ── Simpan sesi ──────────────────────────────────────────────────────── */
+  useEffect(() => {
+    if (!restored) return;
+    try {
+      const payload: StoredSession = {
+        completed: completedTests,
+        questionnaire,
+        phase,
+        step: currentStep,
+      };
+      sessionStorage.setItem(STORE_KEY, JSON.stringify(payload));
+    } catch {
+      /* Penyimpanan penuh atau diblokir. Alur tetap berjalan tanpa pemulihan. */
+    }
+  }, [restored, completedTests, questionnaire, phase, currentStep]);
+
+  /* Peringatan sebelum menutup tab selagi ada rekaman yang belum dikirim. */
+  useEffect(() => {
+    if (!hasWork || result) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [hasWork, result]);
+
+  /* Simpan hasil rekaman yang lolos quality gate. */
+  useEffect(() => {
+    if (capturedData?.testType) {
       setCompletedTests(prev => ({
         ...prev,
-        [capturedData.testType as string]: capturedData.payload
+        [capturedData.testType as string]: capturedData.payload,
       }));
     }
   }, [capturedData]);
 
-  const handleNext = () => {
-    if (currentStep < TEST_SEQUENCE.length - 1) {
-      setCurrentStep(s => s + 1);
-      setShowInstruction(false); // reset instruksi untuk tes berikutnya
-    } else {
-      submitScreening();
-    }
-  };
+  const beginTest = useCallback((type: ScreeningTest) => {
+    const index = TEST_SEQUENCE.findIndex(s => s.type === type);
+    if (index >= 0) setCurrentStep(index);
+    setInstructionFor(type);
+  }, []);
 
-  // Dipanggil saat user klik "Mulai Rekam"
-  const handleStartRequest = () => {
-    setShowInstruction(true);
-  };
+  const runCapture = useCallback(() => {
+    const type = instructionFor;
+    setInstructionFor(null);
+    if (type) startCapture(type);
+  }, [instructionFor, startCapture]);
 
-  // Dipanggil setelah instruksi countdown selesai
-  const handleInstructionDone = () => {
-    setShowInstruction(false);
-    startCapture(currentTest.type);
-  };
-
-  // Dipanggil saat user klik "Lewati"
-  const handleInstructionSkip = () => {
-    setShowInstruction(false);
-    startCapture(currentTest.type);
-  };
+  const skipCurrentTest = useCallback(() => {
+    setInstructionFor(null);
+    setCurrentStep(s => Math.min(s + 1, TEST_SEQUENCE.length - 1));
+  }, []);
 
   const submitScreening = async () => {
-    if (!user || !token) {
-      alert('Anda harus login terlebih dahulu');
-      router.push('/login');
-      return;
-    }
-    
+    if (!user || !token) return;
     setIsSubmitting(true);
+    setSubmitError(null);
     try {
-      // payload matches full-screening API
-      const payload = {
-        tremor: completedTests['tremor'],
-        fingerTapping: completedTests['fingerTapping'],
-        gait: completedTests['gait'],
-        armSwing: completedTests['armSwing'],
-        posturalStability: completedTests['posture'],
-        rom: completedTests['rom'],
-        // Jawaban kuesioner dikirim bersama biomarker agar server bisa menyusun
-        // analisis gabungan gejala subjektif + pengukuran objektif.
-        questionnaire: questionnaire || undefined,
-      };
-      
-      const res = await api.fullScreening(user.id, payload, token);
+      const res = await api.fullScreening(
+        user.id,
+        {
+          tremor: completedTests.tremor,
+          fingerTapping: completedTests.fingerTapping,
+          gait: completedTests.gait,
+          armSwing: completedTests.armSwing,
+          posturalStability: completedTests.posture,
+          rom: completedTests.rom,
+          questionnaire: questionnaire || undefined,
+        },
+        token,
+      );
       setResult(res);
-    } catch (e: any) {
-      alert('Gagal mengirim data: ' + e.message);
+      try { sessionStorage.removeItem(STORE_KEY); } catch {}
+    } catch (e) {
+      setSubmitError((e as Error).message);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const currentTest = TEST_SEQUENCE[currentStep];
+  const riskLevel = useMemo(() => {
+    const c = result?.composite.riskCategory;
+    if (c === 'HIGH') return 'high' as const;
+    if (c === 'MEDIUM') return 'mid' as const;
+    return 'low' as const;
+  }, [result]);
 
-  // Fase 1: kuesioner gejala subjektif sebelum tes gerakan
+  if (authLoading || !user) return null;
+
+  /* ── Fase kuesioner ───────────────────────────────────────────────────── */
   if (phase === 'questionnaire' && !result) {
     return (
       <div className={styles.page}>
         <AppNav />
-        {showOnboarding && (
-          <div className={styles.resultPanel}>
-            <div className={styles.resultCard} style={{ textAlign: 'left', maxWidth: 520 }}>
-              <h2 style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
-                <ClipboardIcon size={22} /> Sebelum Mulai Skrining
-              </h2>
-              <p style={{ color: 'var(--text-secondary)', marginBottom: 16, lineHeight: 1.6 }}>
-                Ini adalah self-test yang Anda lakukan sendiri di depan kamera, tanpa didampingi tenaga
-                medis secara langsung. Mohon perhatikan hal berikut sebelum mulai:
-              </p>
-              <ul style={{ color: 'var(--text-secondary)', lineHeight: 1.9, marginBottom: 24, paddingLeft: 20 }}>
-                <li>Anda akan mengisi <strong>kuesioner gejala singkat</strong> lebih dulu, lalu menjalani <strong>6 tes gerakan</strong> (± 5-7 menit total).</li>
-                <li>Gunakan ruangan dengan <strong>pencahayaan cukup</strong> dan ruang gerak yang cukup, terutama untuk tes berjalan.</li>
-                <li>Ikuti bagian tubuh yang diminta di setiap tes. Sistem akan menampilkan peringatan jika bagian tubuh tidak terdeteksi jelas di kamera.</li>
-                <li>Hasil skrining ini <strong>bukan diagnosis medis</strong>, hanya alat bantu deteksi dini. Jika hasil menunjukkan risiko sedang/tinggi, konsultasikan ke dokter.</li>
-                <li>Jika memungkinkan, lakukan didampingi keluarga atau tenaga kesehatan agar lebih mudah memahami instruksi dan hasilnya.</li>
-              </ul>
-              <button className="btn btn-primary btn-lg" style={{ width: '100%' }} onClick={() => setShowOnboarding(false)}>
-                Saya Mengerti, Mulai Skrining
-              </button>
-            </div>
+        <main className="sheet" id="main">
+          <div className={styles.pad}>
+            <PreScreeningQuestionnaire
+              onComplete={answers => {
+                setQuestionnaire(answers);
+                setPhase('tests');
+              }}
+              onSkip={() => setPhase('tests')}
+            />
           </div>
-        )}
-        <div style={{ padding: '32px 5% 60px' }}>
-          <PreScreeningQuestionnaire
-            onComplete={answers => { setQuestionnaire(answers); setPhase('tests'); }}
-            onSkip={() => setPhase('tests')}
-          />
-        </div>
+        </main>
+        <IntroDialog open={showIntro} onClose={() => setShowIntro(false)} />
       </div>
     );
   }
@@ -161,225 +199,339 @@ export default function ScreeningPage() {
   return (
     <div className={styles.page}>
       <AppNav />
-      <div className={styles.container}>
-        <div className={styles.header}>
-          <h1>Skrining Klinis NeuronMotion</h1>
-          <p>Ikuti instruksi di layar untuk melakukan tes biomarker motorik.</p>
-          <div className={styles.progressRow}>
-            <span className={styles.progressLabel}>Langkah {currentStep + 1} dari {TEST_SEQUENCE.length}</span>
-            <div className={styles.progressTrack}>
-              <div
-                className={styles.progressFill}
-                style={{ width: `${((currentStep + (completedTests[currentTest.type as string] ? 1 : 0)) / TEST_SEQUENCE.length) * 100}%` }}
-              />
+
+      <main className="sheet" id="main">
+        <div className={styles.pad}>
+          <header className="docHead">
+            <div className="docHead__meta">
+              <span>{t('res.title')}</span>
+              <span>
+                {t('scr.stepOf')
+                  .replace('{a}', String(currentStep + 1))
+                  .replace('{b}', String(TEST_SEQUENCE.length))}
+              </span>
+              <span>
+                {doneCount}/{TEST_SEQUENCE.length} {t('scr.done')}
+              </span>
             </div>
-          </div>
-        </div>
+            <h1>{t(currentTest.nameKey)}</h1>
+            <p className={styles.lead}>{t(currentTest.descKey)}</p>
+          </header>
 
-        <div className={styles.mainColumn}>
-          <div className={styles.instructions}>
-            <h4><currentTest.icon size={19} /> Instruksi {currentTest.name}</h4>
-            <p>{currentTest.desc}</p>
-          </div>
-
-          <CameraView 
-            videoRef={videoRef}
-            canvasRef={canvasRef}
-            cameraReady={cameraReady}
-            poseReady={poseReady}
-            isCapturing={isCapturing}
-            activeTest={activeTest}
-            liveMetrics={liveMetrics}
-            countdown={countdown}
-            error={error}
-            detectionWarning={detectionWarning}
-            lightingWarning={lightingWarning}
-            onStart={startCamera}
-            onStartCapture={handleInstructionDone}
-            showInstruction={showInstruction}
-            instructionTestType={currentTest.type as TestType}
-            onInstructionDone={handleInstructionDone}
-            onInstructionSkip={handleInstructionSkip}
-          />
-
-          {cameraReady && poseReady && (
-            <div className={styles.controls}>
-              {!isCapturing ? (
-                <button 
-                  className="btn btn-primary btn-lg" 
-                  onClick={handleStartRequest}
-                  disabled={showInstruction}
-                >
-                  Mulai Rekam &bull; {currentTest.name}
-                </button>
+          <div className={styles.layout}>
+            <div className={styles.captureColumn}>
+              {instructionFor ? (
+                <ScreeningInstruction
+                  test={currentTest}
+                  onStart={runCapture}
+                  onSkipTest={skipCurrentTest}
+                  onCancel={() => setInstructionFor(null)}
+                />
               ) : (
-                <button 
-                  className="btn btn-danger btn-lg" 
-                  onClick={stopCapture}
-                >
-                  Hentikan Rekaman
-                </button>
+                <CameraView
+                  videoRef={videoRef}
+                  canvasRef={canvasRef}
+                  cameraReady={cameraReady}
+                  poseReady={poseReady}
+                  isCapturing={isCapturing}
+                  activeTest={activeTest}
+                  test={currentTest}
+                  liveMetrics={liveMetrics}
+                  countdown={countdown}
+                  fault={fault}
+                  detectionWarning={detectionWarning}
+                  lightingWarning={lightingWarning}
+                  onStart={startCamera}
+                  onStop={stopCapture}
+                />
               )}
-              
-              {completedTests[currentTest.type as string] && !isCapturing && (
-                <button 
-                  className="btn btn-outline btn-lg"
-                  onClick={handleNext}
-                  style={{ background: 'var(--green-dim)', borderColor: 'var(--green)' }}
-                >
-                  {currentStep === TEST_SEQUENCE.length - 1 ? 'Kirim Hasil Skrining' : 'Lanjut ke Tes Berikutnya'}
-                </button>
-              )}
-            </div>
-          )}
-        </div>
 
-        <div className={styles.sideColumn}>
-          <div className={styles.stepCard}>
-            <h3 className={styles.stepTitle}>Urutan Tes</h3>
-            <div className={styles.stepList}>
-              {TEST_SEQUENCE.map((test, i) => {
-                const isDone = !!completedTests[test.type as string];
-                const isActive = currentStep === i;
-                return (
-                  <div key={test.type} className={`${styles.stepItem} ${isActive ? styles.active : ''} ${isDone ? styles.done : ''}`}>
-                    <span className={styles.stepLabel}><test.icon size={17} /> {test.name}</span>
-                    <span className={styles.stepState}>
-                      {isDone ? <CheckCircleIcon size={17} /> : isActive ? <ClockIcon size={17} /> : null}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </div>
+              {cameraReady && poseReady && !isCapturing && !instructionFor && (
+                <div className={styles.controls}>
+                  <button
+                    type="button"
+                    className="btn btn--primary btn--lg"
+                    onClick={() => beginTest(currentTest.type)}
+                  >
+                    {completedTests[currentTest.type] ? t('scr.retake') : t('scr.beginTest')}
+                  </button>
 
-      {/* Result Modal */}
-      {isSubmitting && (
-        <div className={styles.resultPanel}>
-          <div className={styles.resultCard}>
-            <h2 style={{ marginBottom: 20 }}>Menganalisis Data...</h2>
-            <p style={{ color: 'var(--text-secondary)' }}>
-              {questionnaire
-                ? 'Menggabungkan hasil pengukuran gerakan dengan keluhan yang Anda laporkan. Proses ini bisa memakan beberapa detik.'
-                : 'Memproses hasil pengukuran motorik, mohon tunggu sebentar.'}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {result && (
-        <div className={styles.resultPanel}>
-          <div className={styles.resultCard} style={{ maxWidth: 620, textAlign: 'left' }}>
-            <div style={{ textAlign: 'center' }}>
-              <div
-                className={styles.scoreCircle}
-                style={{
-                  borderColor: result.composite.riskCategory === 'HIGH' ? 'var(--red)' :
-                               result.composite.riskCategory === 'MEDIUM' ? 'var(--yellow)' : 'var(--green)',
-                  color: result.composite.riskCategory === 'HIGH' ? 'var(--red-text)' :
-                         result.composite.riskCategory === 'MEDIUM' ? 'var(--yellow)' : 'var(--green)'
-                }}
-              >
-                {Math.round(result.composite.compositeScore)}
-              </div>
-
-              <h2 style={{ fontSize: '1.8rem', marginBottom: 8 }}>{result.composite.riskLabel}</h2>
-
-              {result.composite.mlClassification?.predictedLabel && (
-                <div className="badge badge-brand" style={{ marginBottom: 16, fontSize: '0.95rem', padding: '6px 16px' }}>
-                  {result.composite.mlClassification.predictedLabel}
-                </div>
-              )}
-            </div>
-
-            {/* Perbandingan dua sumber data: keluhan subjektif vs pengukuran objektif */}
-            {result.questionnaireResult && (
-              <div className={styles.sourceGrid}>
-                <div className={styles.sourceBox}>
-                  <div className={styles.sourceLabel}>Skor Gejala (Kuesioner)</div>
-                  <div className={styles.sourceValue}>{Math.round(result.questionnaireResult.score)}</div>
-                </div>
-                <div className={styles.sourceBox}>
-                  <div className={styles.sourceLabel}>Skor Pengukuran (Kamera)</div>
-                  <div className={styles.sourceValue}>{Math.round(result.composite.compositeScore)}</div>
-                </div>
-              </div>
-            )}
-
-            {/* Analisis gabungan dari AI */}
-            {result.aiAnalysis?.available && (
-              <div className={styles.aiBox}>
-                <div className={styles.aiHeader}>
-                  <span className={styles.aiTitle}><SparkleIcon size={16} /> Analisis Gabungan AI</span>
-                  {result.aiAnalysis.tingkatKeyakinan && (
-                    <span className={styles.aiConfidence}>
-                      Keyakinan: {result.aiAnalysis.tingkatKeyakinan}
-                    </span>
+                  {doneCount > 0 && (
+                    <button
+                      type="button"
+                      className="btn btn--lg"
+                      onClick={
+                        currentStep === TEST_SEQUENCE.length - 1
+                          ? submitScreening
+                          : () => setCurrentStep(s => s + 1)
+                      }
+                    >
+                      {currentStep === TEST_SEQUENCE.length - 1 ? t('scr.submit') : t('scr.next')}
+                    </button>
                   )}
                 </div>
+              )}
 
-                <p className={styles.aiSummary}>{result.aiAnalysis.ringkasan}</p>
-
-                {result.aiAnalysis.korelasiGejala && result.aiAnalysis.korelasiGejala.length > 0 && (
-                  <div style={{ marginBottom: 14 }}>
-                    <h4 className={styles.aiSubTitle}>Kaitan keluhan dengan hasil ukur</h4>
-                    {result.aiAnalysis.korelasiGejala.map((k, i) => (
-                      <div key={i} className={styles.correlationItem}>
-                        <span className={k.konsisten ? styles.dotOk : styles.dotWarn} />
-                        <div>
-                          <div className={styles.correlationSymptom}>{k.gejala}</div>
-                          <div className={styles.correlationFinding}>{k.temuanPengukuran}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {result.aiAnalysis.saranTindakLanjut && result.aiAnalysis.saranTindakLanjut.length > 0 && (
-                  <div>
-                    <h4 className={styles.aiSubTitle}>Saran tindak lanjut</h4>
-                    <ul className={styles.aiList}>
-                      {result.aiAnalysis.saranTindakLanjut.map((s, i) => <li key={i}>{s}</li>)}
-                    </ul>
-                  </div>
-                )}
-
-                {result.aiAnalysis.perluPerhatianSegera && (
-                  <div className={styles.urgentNote}>
-                    Kombinasi tanda yang Anda laporkan sebaiknya diperiksa tenaga medis dalam waktu dekat.
-                  </div>
-                )}
-
-                <p className={styles.aiDisclaimer}>
-                  Ringkasan ini disusun AI untuk membantu Anda memahami hasil. Skor risiko tetap dihitung
-                  oleh mesin analisis terpisah dan tidak diubah oleh AI. Ini bukan diagnosis medis.
+              {submitError && (
+                <p className={styles.submitError} role="alert">
+                  {submitError}
                 </p>
-              </div>
-            )}
-
-            {result.aiAnalysis && !result.aiAnalysis.available && (
-              <div className={styles.aiFallback}>{result.aiAnalysis.error}</div>
-            )}
-
-            {!result.aiAnalysis && (
-              <p style={{ color: 'var(--text-secondary)', marginBottom: 24, lineHeight: 1.6 }}>
-                {result.composite.recommendations[0]}
-              </p>
-            )}
-
-            <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 20 }}>
-              <button className="btn btn-outline" onClick={() => router.push('/riwayat')}>
-                Lihat Riwayat
-              </button>
-              <button className="btn btn-primary" onClick={() => router.push('/dashboard')}>
-                Kembali ke Dashboard
-              </button>
+              )}
             </div>
+
+            {/* Indeks tes. Setiap baris bisa dibuka ulang, jadi rekaman yang
+                terlanjur buruk tidak lagi permanen ikut ke dalam skor. */}
+            <nav className={styles.index} aria-label={t('scr.sequence')}>
+              <h2 className="label">{t('scr.sequence')}</h2>
+              <ol className={styles.indexList}>
+                {TEST_SEQUENCE.map((spec, i) => {
+                  const done = !!completedTests[spec.type];
+                  const active = i === currentStep;
+                  return (
+                    <li key={spec.type}>
+                      <button
+                        type="button"
+                        className={styles.indexRow}
+                        data-active={active ? '' : undefined}
+                        data-done={done ? '' : undefined}
+                        onClick={() => setCurrentStep(i)}
+                        aria-current={active ? 'step' : undefined}
+                        disabled={isCapturing}
+                      >
+                        <span className={styles.indexNum}>{String(i + 1).padStart(2, '0')}</span>
+                        <span className={styles.indexName}>{t(spec.nameKey)}</span>
+                        <span className={styles.indexState}>
+                          {done ? t('scr.done') : active ? t('scr.current') : t('scr.pending')}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ol>
+            </nav>
+          </div>
+        </div>
+      </main>
+
+      <IntroDialog open={showIntro} onClose={() => setShowIntro(false)} />
+
+      {/* Rekaman ditolak quality gate. Panel, bukan window.alert. */}
+      <Dialog.Root open={!!rejection} onOpenChange={o => !o && clearRejection()}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="dialogScrim" />
+          <Dialog.Content className="dialogSheet">
+            <Dialog.Title className={styles.dialogTitle}>
+              {rejection?.reason === 'bodyPartMissing'
+                ? t('scr.reject.bodyPart.title')
+                : t('scr.reject.tooFew.title')}
+            </Dialog.Title>
+            <Dialog.Description className={styles.dialogBody}>
+              {rejection?.reason === 'bodyPartMissing'
+                ? t(`test.${rejection.testType}.step1`)
+                : t('scr.reject.tooFew.body')}
+            </Dialog.Description>
+            <button
+              type="button"
+              className="btn btn--primary btn--lg btn--block"
+              onClick={() => {
+                clearRejection();
+                beginTest(currentTest.type);
+              }}
+            >
+              {t('scr.retake')}
+            </button>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+
+      {isSubmitting && (
+        <div className={styles.submitting} role="status" aria-live="polite">
+          <div className={styles.submittingInner}>
+            <h2>{t('scr.analysing')}</h2>
+            <p>{t('scr.analysingBody')}</p>
           </div>
         </div>
       )}
+
+      {/* ── Hasil ─────────────────────────────────────────────────────────── */}
+      <Dialog.Root open={!!result}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="dialogScrim" />
+          <Dialog.Content className="dialogSheet" onEscapeKeyDown={e => e.preventDefault()}>
+            {result && (
+              <article className={styles.result}>
+                <Dialog.Title className={styles.resultKicker}>{t('res.title')}</Dialog.Title>
+
+                <p className={styles.scoreLine}>
+                  <span className={styles.scoreValue}>
+                    {Math.round(result.composite.compositeScore)}
+                  </span>
+                  <span className={styles.scoreOf}>{t('res.scoreOf')}</span>
+                </p>
+
+                <p className={`level level--${riskLevel} ${styles.levelChip}`}>
+                  {result.composite.riskLabel}
+                </p>
+
+                <p className={styles.scaleNote}>{t('res.scaleNote')}</p>
+
+                {/* Disclaimer tidak lagi bersarang di dalam cabang mana pun.
+                    Sebelumnya ia hidup di dalam blok analisis AI, sehingga
+                    ketika layanan AI mati pengguna melihat angka merah dan
+                    nama kondisi tanpa satu pun peringatan. */}
+                <p className={styles.disclaimer}>{t('res.notDiagnosis')}</p>
+
+                <hr className="rule" />
+
+                {result.questionnaireResult && (
+                  <table className="dataTable">
+                    <tbody>
+                      <tr>
+                        <td>{t('res.symptomScore')}</td>
+                        <td className="num">{Math.round(result.questionnaireResult.score)}</td>
+                      </tr>
+                      <tr>
+                        <td>{t('res.compositeScore')}</td>
+                        <td className="num">{Math.round(result.composite.compositeScore)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                )}
+
+                {riskLevel === 'low' && (
+                  <section className={styles.block}>
+                    <h3>{t('res.lowTitle')}</h3>
+                    <p>{t('res.lowBody')}</p>
+                  </section>
+                )}
+
+                {/* Dugaan model ditandai eksperimental secara eksplisit, karena
+                    klasifikasi ML belum tervalidasi klinis. */}
+                {result.composite.mlClassification?.predictedLabel && (
+                  <section className={styles.experimental}>
+                    <h3 className={styles.experimentalHead}>{t('res.experimental')}</h3>
+                    <p className={styles.experimentalLabel}>
+                      {result.composite.mlClassification.predictedLabel}
+                    </p>
+                    <p className={styles.experimentalBody}>{t('res.experimentalBody')}</p>
+                  </section>
+                )}
+
+                {result.aiAnalysis?.available && (
+                  <section className={styles.block}>
+                    <p>{result.aiAnalysis.ringkasan}</p>
+
+                    {!!result.aiAnalysis.korelasiGejala?.length && (
+                      <>
+                        <h3>{t('res.correlation')}</h3>
+                        <table className="dataTable">
+                          <tbody>
+                            {result.aiAnalysis.korelasiGejala.map((k, i) => (
+                              <tr key={i}>
+                                <td>
+                                  <strong>{k.gejala}</strong>
+                                  <br />
+                                  {k.temuanPengukuran}
+                                </td>
+                                <td className={styles.consistency}>
+                                  {k.konsisten ? t('res.consistent') : t('res.inconsistent')}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </>
+                    )}
+
+                    {!!result.aiAnalysis.saranTindakLanjut?.length && (
+                      <>
+                        <h3>{t('res.followUp')}</h3>
+                        <ul className={styles.list}>
+                          {result.aiAnalysis.saranTindakLanjut.map((s, i) => (
+                            <li key={i}>{s}</li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
+
+                    {result.aiAnalysis.perluPerhatianSegera && (
+                      <p className={styles.urgent}>{t('res.urgent')}</p>
+                    )}
+
+                    <p className={styles.aiNote}>{t('res.aiNote')}</p>
+                  </section>
+                )}
+
+                {!result.aiAnalysis?.available && result.composite.recommendations?.[0] && (
+                  <section className={styles.block}>
+                    <p>{result.composite.recommendations[0]}</p>
+                  </section>
+                )}
+
+                <div className={styles.resultActions}>
+                  <button
+                    type="button"
+                    className="btn btn--primary btn--lg"
+                    onClick={() => router.push('/riwayat')}
+                  >
+                    {t('res.saveForDoctor')}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn--lg"
+                    onClick={() => router.push('/bantuan')}
+                  >
+                    {t('res.needHelp')}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn--lg"
+                    onClick={() => router.push('/dashboard')}
+                  >
+                    {t('res.backToDashboard')}
+                  </button>
+                </div>
+              </article>
+            )}
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </div>
+  );
+}
+
+/** Lembar pembuka. Empat hal yang harus disiapkan, bukan lima poin berklausa. */
+function IntroDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useI18n();
+  const rows: [string, string][] = [
+    ['intro.room', 'intro.roomBody'],
+    ['intro.device', 'intro.deviceBody'],
+    ['intro.time', 'intro.timeBody'],
+    ['intro.privacy', 'intro.privacyBody'],
+  ];
+
+  return (
+    <Dialog.Root open={open} onOpenChange={o => !o && onClose()}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="dialogScrim" />
+        <Dialog.Content className="dialogSheet">
+          <Dialog.Title className={styles.dialogTitle}>{t('intro.title')}</Dialog.Title>
+          <Dialog.Description className={styles.dialogBody}>{t('intro.lead')}</Dialog.Description>
+
+          <dl className={styles.introList}>
+            {rows.map(([k, body]) => (
+              <div key={k} className={styles.introRow}>
+                <dt className="label">{t(k)}</dt>
+                <dd>{t(body).replace('{s}', String(TOTAL_CAPTURE_SECONDS))}</dd>
+              </div>
+            ))}
+          </dl>
+
+          <button type="button" className="btn btn--primary btn--lg btn--block" onClick={onClose}>
+            {t('intro.begin')}
+          </button>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }
