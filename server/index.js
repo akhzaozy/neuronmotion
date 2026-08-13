@@ -8,6 +8,7 @@ import patientRoutes from './routes/patients.js';
 import doctorRoutes from './routes/doctor.js';
 import adminRoutes from './routes/admin.js';
 import chatRoutes from './routes/chat.js';
+import geoRoutes from './routes/geo.js';
 import { isGeminiConfigured } from './services/gemini.js';
 
 dotenv.config();
@@ -25,6 +26,7 @@ app.use('/api/patients', patientRoutes);
 app.use('/api/doctor',   doctorRoutes);
 app.use('/api/admin',    adminRoutes);
 app.use('/api/chat',     chatRoutes);
+app.use('/api/geo',      geoRoutes);
 
 // Mount at root (for production Nginx which strips /api)
 app.use('/auth',     authRoutes);
@@ -33,6 +35,7 @@ app.use('/patients', patientRoutes);
 app.use('/doctor',   doctorRoutes);
 app.use('/admin',    adminRoutes);
 app.use('/chat',     chatRoutes);
+app.use('/geo',      geoRoutes);
 
 // Health dipasang di kedua path, sama seperti route lain, karena nginx di produksi
 // memotong awalan /api sehingga permintaan ke /api/health tiba di sini sebagai /health.
@@ -53,6 +56,7 @@ app.get(['/api/health', '/health'], (req, res) => {
       admin:    ['/api/admin/stats', '/api/admin/conditions', '/api/admin/training-data',
                  '/api/admin/doctors'],
       chat:     ['/api/chat', '/api/chat/status'],
+      geo:      ['/api/geo/cities?country=Indonesia'],
     },
   });
 });
