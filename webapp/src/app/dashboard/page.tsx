@@ -5,11 +5,17 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { api, Session } from '@/lib/api';
 import AppNav from '@/components/AppNav';
+import { useI18n } from '@/lib/i18n';
 import LiveChat from '@/components/LiveChat';
 import styles from './dashboard.module.css';
 
-function getGreeting() {
+function getGreeting(lang: string) {
   const h = new Date().getHours();
+  if (lang === 'en') {
+    if (h < 11) return 'Good morning';
+    if (h < 18) return 'Good afternoon';
+    return 'Good evening';
+  }
   if (h < 11) return 'Selamat pagi';
   if (h < 15) return 'Selamat siang';
   if (h < 19) return 'Selamat sore';
@@ -59,6 +65,7 @@ function Sparkline({ points }: { points: { score: number; risk: string }[] }) {
 export default function DashboardPage() {
   const router = useRouter();
   const { user, token, logout, isLoading } = useAuth();
+  const { t, lang } = useI18n();
   
   const [summary, setSummary] = useState<any>(null);
   const [history, setHistory] = useState<Session[]>([]);
@@ -110,8 +117,8 @@ export default function DashboardPage() {
       <div className={styles.container}>
         <div className={styles.header}>
           <div>
-            <h1>{getGreeting()}, {user?.name?.split(' ')[0]} 👋</h1>
-            <p>Pantau perkembangan kesehatan motorik Anda secara berkala.</p>
+            <h1>{getGreeting(lang)}, {user?.name?.split(' ')[0]} 👋</h1>
+            <p>{lang === 'en' ? 'Track your motor health over time.' : 'Pantau perkembangan kesehatan motorik Anda secara berkala.'}</p>
           </div>
           <div className={styles.userCard}>
             <div className={styles.avatar}>{user?.name.charAt(0)}</div>
@@ -125,7 +132,7 @@ export default function DashboardPage() {
         <div className={styles.grid}>
           {/* Main Score Card */}
           <div className={styles.card}>
-            <h3 className={styles.cardTitle}>Skor Risiko Terkini</h3>
+            <h3 className={styles.cardTitle}>{t('dash.latestScore')}</h3>
             {summary?.latestScore !== undefined ? (
               <>
                 <div
@@ -154,26 +161,26 @@ export default function DashboardPage() {
             ) : (
               <div style={{ textAlign: 'center', padding: '12px 0' }}>
                 <div style={{ fontSize: '2.4rem', marginBottom: 8, opacity: 0.6 }}>🧠</div>
-                <p style={{ color: 'var(--text-secondary)' }}>Belum ada data. Lakukan skrining pertama Anda.</p>
+                <p style={{ color: 'var(--text-secondary)' }}>{t('dash.noData')}</p>
               </div>
             )}
           </div>
 
           {/* Quick Start Card */}
           <div className={styles.ctaBox}>
-            <h3 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Mulai Tes Skrining</h3>
+            <h3 style={{ fontSize: '1.5rem', fontWeight: 800 }}>{t('dash.startScreening')}</h3>
             <p style={{ fontSize: '0.9rem', opacity: 0.9 }}>Lakukan skrining berkala menggunakan kamera perangkat Anda.</p>
             <Link href="/screening" className="btn" style={{ background: '#fff', color: 'var(--brand)', width: '100%' }}>
-              Mulai Skrining Sekarang →
+              {t('dash.startNow')}
             </Link>
           </div>
         </div>
 
         {/* History */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Riwayat Terkini</h2>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>{t('dash.recentHistory')}</h2>
           {history.length > 0 && (
-            <Link href="/riwayat" className="btn btn-outline btn-sm">Lihat Semua Riwayat</Link>
+            <Link href="/riwayat" className="btn btn-outline btn-sm">{t('dash.viewAll')}</Link>
           )}
         </div>
         <div className={styles.historyList}>
@@ -202,13 +209,13 @@ export default function DashboardPage() {
               )}
               {session.doctorNote && (
                 <div style={{ fontSize: '0.82rem', background: 'var(--bg-secondary)', borderLeft: '3px solid var(--brand)', padding: '8px 12px', borderRadius: 4 }}>
-                  <strong style={{ color: 'var(--brand-light)' }}>Catatan Dokter:</strong> {session.doctorNote}
+                  <strong style={{ color: 'var(--brand-light)' }}>{t('hist.doctorNote')}:</strong> {session.doctorNote}
                 </div>
               )}
             </div>
           )) : (
             <div style={{ textAlign: 'center', padding: 40, background: 'var(--bg-card)', borderRadius: 12, border: '1px solid var(--border)' }}>
-              Belum ada riwayat pemeriksaan.
+              {lang === 'en' ? 'No examination history yet.' : 'Belum ada riwayat pemeriksaan.'}
             </div>
           )}
         </div>

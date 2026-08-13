@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { AuthProvider } from '@/lib/auth';
 import { ThemeProvider, THEME_INIT_SCRIPT } from '@/lib/theme';
+import { I18nProvider, LANG_INIT_SCRIPT } from '@/lib/i18n';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -15,12 +16,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         {/* Terapkan tema sebelum paint pertama agar tidak ada kedipan warna */}
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: LANG_INIT_SCRIPT }} />
       </head>
       <body>
         <ThemeProvider>
+          <I18nProvider>
           <AuthProvider>
             {children}
           </AuthProvider>
+          </I18nProvider>
         </ThemeProvider>
       </body>
     </html>

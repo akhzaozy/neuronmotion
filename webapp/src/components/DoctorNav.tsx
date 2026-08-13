@@ -3,17 +3,19 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Logo from './Logo';
 import { ThemeToggle } from '@/lib/theme';
+import { LanguageToggle, useI18n } from '@/lib/i18n';
 import styles from './AppNav.module.css';
 
 const NAV_ITEMS = [
-  { href: '/doctor', label: 'Dashboard' },
-  { href: '/doctor/edukasi', label: 'Edukasi' },
-  { href: '/doctor/bantuan', label: 'Bantuan' },
-  { href: '/doctor/profil', label: 'Profil' },
+  { href: '/doctor', key: 'nav.dashboard' },
+  { href: '/doctor/edukasi', key: 'nav.edukasi' },
+  { href: '/doctor/bantuan', key: 'nav.bantuan' },
+  { href: '/doctor/profil', key: 'nav.profil' },
 ];
 
 export default function DoctorNav() {
   const pathname = usePathname();
+  const { t } = useI18n();
 
   return (
     <nav className={styles.nav}>
@@ -36,12 +38,13 @@ export default function DoctorNav() {
                   ? styles.linkActive : ''
               }`}
             >
-              {item.label}
+              {t(item.key)}
             </Link>
           ))}
         </div>
         <div className={styles.actions}>
-          <span className={styles.roleBadge}>Portal Nakes</span>
+          <span className={styles.roleBadge}>{t('nav.portalNakes')}</span>
+          <LanguageToggle />
           <ThemeToggle size="sm" />
         </div>
       </div>
