@@ -1,18 +1,29 @@
 <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="56" height="56" rx="16" fill="url(#nm-icon-gradient)" />
+  <!--
+    Favicon Lembar Klinis Basel.
+
+    Tanda nama produk ini adalah kata, bukan gambar, jadi faviconnya memakai
+    potongan dari kata itu: huruf N dan garis aksen vertikal yang sama dengan
+    yang memisahkan NEURON dan MOTION pada tanda penuhnya.
+
+    Hurufnya digambar sebagai path, bukan elemen text, supaya bentuknya tidak
+    bergantung pada font yang kebetulan tersedia di mesin pembaca.
+
+    Sudutnya nyaris siku karena dunia visual ini adalah lembar dokumen, dan
+    lembar cetak tidak punya sudut membulat.
+  -->
+  <rect width="56" height="56" rx="2" fill="#17181c" />
+
+  <!-- Huruf N, tinta kertas di atas ground tinta -->
   <path
-    d="M11 30h7l4-11 6 20 4-14 4 5h9"
-    stroke="#fff"
-    stroke-width="3"
-    stroke-linecap="round"
-    stroke-linejoin="round"
+    d="M15 40V16l14 20V16"
+    stroke="#f2f1ec"
+    stroke-width="5.5"
+    stroke-linecap="square"
+    stroke-linejoin="miter"
     fill="none"
   />
-  <circle cx="28" cy="39" r="2.4" fill="#fff" />
-  <defs>
-    <linearGradient id="nm-icon-gradient" x1="0" y1="0" x2="56" y2="56" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#2563eb" />
-      <stop offset="1" stop-color="#0284c7" />
-    </linearGradient>
-  </defs>
+
+  <!-- Garis aksen vermilion, kutipan dari tanda nama penuh -->
+  <rect x="37" y="16" width="4" height="24" fill="#c8402a" />
 </svg>
