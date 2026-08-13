@@ -92,6 +92,22 @@
   position: relative;
   z-index: 1;
   animation: fadeInUp 0.8s ease-out 0.2s both;
+  /* Seluruh isi visual ini diposisikan absolut agar bisa saling menyilang saat
+     berganti animasi. Karena itu kotaknya tidak punya tinggi sendiri, dan tanpa
+     tinggi minimum ia menciut menjadi nol lalu gambarnya tumpang tindih dengan
+     teks statistik di tata letak bertumpuk. */
+  min-height: 420px;
+}
+
+/* Ketiga ilustrasi hero memiliki perbandingan sisi berbeda, salah satunya
+   200x400 yang menjulang. Bila lebarnya dipaksa penuh, tingginya menjadi dua
+   kali lebar kotak dan gambar itu meluber ke luar lalu menimpa teks di
+   sekitarnya. Membatasi tinggi membuat ketiganya menyesuaikan diri. */
+.heroVisual svg {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
 }
 
 /* Nerve Animation Styles */
@@ -330,6 +346,7 @@
     width: 100%;
     max-width: 280px;
     margin: 24px auto 0;
+    min-height: 280px;
   }
   .heroContent { max-width: 100%; }
 }

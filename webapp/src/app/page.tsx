@@ -77,7 +77,7 @@ const CONDITIONS = [
 ];
 
 const AnimatedBrainGraphic = () => (
-  <svg viewBox="0 0 300 300" style={{ width: '100%', height: 'auto', filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.05))' }}>
+  <svg viewBox="0 0 300 300" style={{ maxWidth: '100%', maxHeight: '100%', filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.05))' }}>
     {/* Brain Outline */}
     <path 
       d="M150 40 C90 40, 50 80, 50 140 C50 180, 70 210, 100 230 C120 245, 130 260, 130 280 L170 280 C170 260, 180 245, 200 230 C230 210, 250 180, 250 140 C250 80, 210 40, 150 40 Z" 
@@ -103,7 +103,7 @@ const AnimatedBrainGraphic = () => (
 );
 
 const AnimatedSpineGraphic = () => (
-  <svg viewBox="0 0 200 400" style={{ width: '100%', height: 'auto', filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.05))' }}>
+  <svg viewBox="0 0 200 400" style={{ maxWidth: '100%', maxHeight: '100%', filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.05))' }}>
     <line x1="100" y1="40" x2="100" y2="360" stroke="var(--border)" strokeWidth="12" strokeLinecap="round" />
     <line x1="100" y1="40" x2="100" y2="360" stroke="var(--brand)" strokeWidth="4" strokeLinecap="round" strokeDasharray="10 10" className={styles.nervePulse} />
     
@@ -125,7 +125,7 @@ const AnimatedSpineGraphic = () => (
 
 const AnimatedNerveGraphic = () => (
   <div style={{ position: 'relative', width: '100%', maxWidth: '460px', display: 'flex', justifyContent: 'center' }}>
-    <svg viewBox="0 0 400 250" style={{ width: '100%', height: 'auto', filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.05))' }}>
+    <svg viewBox="0 0 400 250" style={{ maxWidth: '100%', maxHeight: '100%', filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.05))' }}>
       <defs>
         <linearGradient id="axonGradient" x1="0%" y1="0%" x2="100%" y2="0%">
           <stop offset="0%" stopColor="var(--brand)" />

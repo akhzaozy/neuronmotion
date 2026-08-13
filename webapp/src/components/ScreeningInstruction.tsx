@@ -212,7 +212,7 @@ export default function ScreeningInstruction({ testType, onReady, onSkip }: Prop
         {/* Countdown / Start, "Lewati" hanya muncul setelah countdown berjalan (pola "skip iklan") */}
         {!started ? (
           <button className="btn btn-primary" style={{ width: '100%' }} onClick={startCountdown}>
-            {t('scr.readyStart')}
+            {t('scr.ready')}
           </button>
         ) : (
           <div className={styles.countdownWrap}>
@@ -224,7 +224,7 @@ export default function ScreeningInstruction({ testType, onReady, onSkip }: Prop
                 {countdown > 0 ? `${t('ins.startingIn')} ${countdown} ${t('ins.seconds')}` : t('ins.go')}
               </p>
               <button className={styles.skipLink} onClick={onSkip}>
-                {t('ins.skip')}
+                {t('scr.skip')}
               </button>
             </div>
           </div>

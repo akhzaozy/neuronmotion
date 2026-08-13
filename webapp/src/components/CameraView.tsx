@@ -93,7 +93,7 @@ export default function CameraView({
               <p className={styles.loadingTitle}>Memuat sistem pengukuran...</p>
               <p className={styles.loadingHint}>
                 Mengunduh model estimasi pose dari server.<br />
-                Proses ini memakan 10–30 detik tergantung koneksi.
+                Proses ini memakan 10 sampai 30 detik tergantung koneksi.
               </p>
             </div>
           </div>

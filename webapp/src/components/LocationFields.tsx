@@ -31,21 +31,27 @@ export default function LocationFields({ value, onChange, required = false, titl
   const states = value.country ? (STATES_BY_COUNTRY[value.country] || []) : [];
 
   /**
-   * Daftar kota diambil sesuai negara terpilih, bukan dibundel, karena datanya
-   * mencakup lebih dari 140 ribu kota di seluruh dunia dan akan memberatkan
-   * pemuatan awal bila ikut dikirim ke peramban.
+   * Daftar kota diambil sesuai negara dan provinsi terpilih, bukan dibundel,
+   * karena datanya mencakup lebih dari 150 ribu kota di seluruh dunia dan akan
+   * memberatkan pemuatan awal bila ikut dikirim ke peramban.
+   *
+   * Provinsi ikut dikirim supaya kota yang ditawarkan benar-benar berada di
+   * provinsi itu. Sebelumnya seluruh kota di satu negara ditampilkan, sehingga
+   * pengguna bisa memilih provinsi Jawa Timur dengan kota Medan.
    */
   useEffect(() => {
-    if (!value.countryName) { setCities([]); return; }
+    if (!value.country) { setCities([]); return; }
     let cancelled = false;
     setLoadingCities(true);
-    fetch(`${API_BASE}/api/geo/cities?country=${encodeURIComponent(value.countryName)}`)
+    const params = new URLSearchParams({ country: value.country });
+    if (value.state) params.set('state', value.state);
+    fetch(`${API_BASE}/api/geo/cities?${params}`)
       .then(r => r.json())
       .then(d => { if (!cancelled) setCities(d.cities || []); })
       .catch(() => { if (!cancelled) setCities([]); })
       .finally(() => { if (!cancelled) setLoadingCities(false); });
     return () => { cancelled = true; };
-  }, [value.countryName]);
+  }, [value.country, value.state]);
 
   function selectCountry(code: string) {
     const c = getCountry(code);
@@ -95,7 +101,8 @@ export default function LocationFields({ value, onChange, required = false, titl
             <select
               className="input"
               value={value.state || ''}
-              onChange={e => onChange({ ...value, state: e.target.value || undefined })}
+              // Kota dikosongkan karena tidak lagi tentu berada di provinsi baru
+              onChange={e => onChange({ ...value, state: e.target.value || undefined, city: undefined })}
               disabled={!value.country}
             >
               <option value="">{value.country ? t('loc.selectState') : t('loc.selectCountryFirst')}</option>
@@ -108,7 +115,7 @@ export default function LocationFields({ value, onChange, required = false, titl
               type="text"
               className="input"
               value={value.state || ''}
-              onChange={e => onChange({ ...value, state: e.target.value || undefined })}
+              onChange={e => onChange({ ...value, state: e.target.value || undefined, city: undefined })}
               placeholder={value.country ? (lang === 'en' ? 'Type a state' : 'Ketik provinsi') : t('loc.selectCountryFirst')}
               disabled={!value.country}
             />

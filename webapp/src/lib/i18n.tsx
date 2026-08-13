@@ -131,7 +131,6 @@ const DICT: Record<string, { id: string; en: string }> = {
   'ins.startingIn': { id: 'Memulai dalam', en: 'Starting in' },
   'ins.seconds': { id: 'detik...', en: 'seconds...' },
   'ins.go': { id: 'Mulai!', en: 'Go!' },
-  'ins.skip': { id: 'Lewati', en: 'Skip' },
 
   // Umum
   'common.save': { id: 'Simpan', en: 'Save' },
