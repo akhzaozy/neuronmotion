@@ -18,24 +18,24 @@ Status setiap baris:
 
 ## ✅ Parameter dengan sumber terverifikasi
 
-### 1. Frekuensi tremor Parkinson (3–7 Hz) dan tumpang tindihnya dengan Essential Tremor
+### 1. Frekuensi tremor Parkinson (3 sampai 7 Hz) dan tumpang tindihnya dengan Essential Tremor
 
 > Zhang J. dkk. (2017). *Differential Diagnosis of Parkinson Disease, Essential Tremor, and Enhanced
 > Physiological Tremor with the Tremor Analysis of EMG*. Parkinson's Disease (Hindawi/Wiley).
 > <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5573102/>
 
-Frekuensi tremor PD 4–6 Hz, dan frekuensi ET juga berada pada rentang tersebut, sehingga sulit
+Frekuensi tremor PD 4 sampai 6 Hz, dan frekuensi ET juga berada pada rentang tersebut, sehingga sulit
 dibedakan hanya melalui frekuensi tremor saat istirahat. **Menjadi dasar** dibuatnya tumpang tindih
 antara kelas `PARKINSON_*` dan `ESSENTIAL_TREMOR` pada dataset ini.
 
-### 2. Frekuensi tremor fisiologis orang sehat (6–12 Hz)
+### 2. Frekuensi tremor fisiologis orang sehat (6 sampai 12 Hz)
 
 > Scholarpedia, artikel *Tremor*. <http://www.scholarpedia.org/article/Tremor>
 > Smaga S. (1999). *Classification of Tremor and Update on Treatment*. American Family Physician.
 > <https://www.aafp.org/pubs/afp/issues/1999/0315/p1565.html>
 
-Tremor fisiologis normal adalah tremor postural beramplitudo rendah dengan frekuensi modal 8–12 Hz.
-**Memperbaiki** versi awal dataset yang keliru memodelkan orang sehat pada 0–2 Hz.
+Tremor fisiologis normal adalah tremor postural beramplitudo rendah dengan frekuensi modal 8 sampai 12 Hz.
+**Memperbaiki** versi awal dataset yang keliru memodelkan orang sehat pada 0 sampai 2 Hz.
 
 ### 3. Pembeda utama sehat vs patologis adalah amplitudo, bukan frekuensi
 
@@ -55,9 +55,9 @@ Meta-analisis menemukan cadence pada PD sekitar **1,75 langkah/menit lebih tingg
 kelompok sehat; yang benar-benar memendek adalah **panjang langkah**. **Menjadi dasar koreksi**
 rentang cadence PD, yang pada versi sebelumnya keliru dimodelkan jauh lebih rendah dari orang sehat.
 
-### 5. Cadence normatif lansia sehat (95–120 langkah/menit)
+### 5. Cadence normatif lansia sehat (95 sampai 120 langkah/menit)
 
-> Tudor-Locke C. dkk. *CADENCE-Adults study*, kelompok usia 61–85 tahun.
+> Tudor-Locke C. dkk. *CADENCE-Adults study*, kelompok usia 61 sampai 85 tahun.
 > <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8461976/>
 
 Ambang cadence 100, 110, dan 120 langkah/menit berkaitan dengan intensitas 3, 4, dan 5 MET pada
@@ -115,7 +115,7 @@ penilaian, bukan hanya kecepatan.
 > Hoehn & Yahr. <https://www.movementdisorders.org/MDS/MDS-Rating-Scales.htm>
 
 MDS-UPDRS menjadi acuan domain penilaian motorik dan non-motorik. Skala Hoehn & Yahr dipakai untuk
-memisahkan kelas `PARKINSON_EARLY` (tahap 1–2) dan `PARKINSON_ADVANCED` (tahap 3–4).
+memisahkan kelas `PARKINSON_EARLY` (tahap 1 sampai 2) dan `PARKINSON_ADVANCED` (tahap 3 sampai 4).
 
 ### 12. Domain gejala non-motorik pada kuesioner pra-skrining
 

@@ -198,3 +198,67 @@ textarea.input {
   margin-bottom: 16px;
   opacity: 0.5;
 }
+
+/* Kotak penautan pasien.
+   Ditempatkan tepat di atas daftar karena panel dokter yang baru mendaftar
+   selalu kosong, sehingga tindakan pertama yang masuk akal adalah menautkan
+   pasien, bukan mencari di daftar yang belum berisi apa pun. */
+.linkBox {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--brand-dim);
+}
+
+.linkTitle {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.linkDesc {
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.linkRow {
+  display: flex;
+  gap: 8px;
+}
+
+.linkInput {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 0.88rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
+/* Huruf besar hanya berlaku untuk kode yang diketik, bukan untuk teks contoh,
+   supaya contohnya tidak terbaca seperti sedang berteriak. */
+.linkInput::placeholder {
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.linkMsgOk {
+  margin-top: 8px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--green-text);
+}
+
+.linkMsgErr {
+  margin-top: 8px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--red-text);
+}

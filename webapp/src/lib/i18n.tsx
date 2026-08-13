@@ -237,6 +237,37 @@ const DICT: Record<string, { id: string; en: string }> = {
   'bio.kneeRom': { id: 'ROM Lutut', en: 'Knee ROM' },
   'unit.tapsPerSec': { id: 'ketukan/dtk', en: 'taps/sec' },
   'unit.perSec': { id: '/dtk', en: '/sec' },
+  'share.title': { id: 'Bagikan ke Tenaga Kesehatan', en: 'Share With a Clinician' },
+  'share.desc': {
+    id: 'Berikan kode ini kepada dokter atau perawat yang Anda percayai. Setelah kode dimasukkan, mereka dapat melihat hasil skrining Anda dan menuliskan catatan klinis.',
+    en: 'Give this code to a doctor or nurse you trust. Once they enter it, they can see your screening results and add clinical notes.',
+  },
+  'share.copy': { id: 'Salin kode', en: 'Copy code' },
+  'share.copied': { id: 'Kode disalin', en: 'Code copied' },
+  'share.reset': { id: 'Ganti kode', en: 'Reset code' },
+  'share.resetHint': {
+    id: 'Mengganti kode akan membuat kode lama tidak berlaku. Tenaga kesehatan yang sudah tertaut tetap tertaut.',
+    en: 'Resetting invalidates the old code. Clinicians already linked stay linked.',
+  },
+  'share.confirmReset': {
+    id: 'Ganti kode berbagi? Kode lama tidak akan berlaku lagi.',
+    en: 'Reset your share code? The old code will stop working.',
+  },
+  'share.loading': { id: 'Menyiapkan kode...', en: 'Preparing code...' },
+
+  'link.title': { id: 'Tautkan Pasien', en: 'Link a Patient' },
+  'link.desc': {
+    id: 'Masukkan kode berbagi yang ditunjukkan pasien dari halaman Riwayat miliknya.',
+    en: 'Enter the share code the patient shows you from their History page.',
+  },
+  'link.placeholder': { id: 'Contoh: A7K2M9QX', en: 'e.g. A7K2M9QX' },
+  'link.submit': { id: 'Tautkan', en: 'Link' },
+  'link.linking': { id: 'Menautkan...', en: 'Linking...' },
+  'link.unlink': { id: 'Lepaskan tautan', en: 'Unlink' },
+  'link.confirmUnlink': {
+    id: 'Lepaskan tautan pasien ini? Datanya tidak akan muncul lagi di panel Anda.',
+    en: 'Unlink this patient? Their data will no longer appear in your portal.',
+  },
   'hist.title': { id: 'Riwayat Pemeriksaan', en: 'Examination History' },
   'hist.downloadPdf': { id: 'Unduh PDF', en: 'Download PDF' },
   'hist.exportCsv': { id: 'Ekspor CSV', en: 'Export CSV' },

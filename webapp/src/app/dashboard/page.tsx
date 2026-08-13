@@ -81,7 +81,7 @@ export default function DashboardPage() {
     async function loadData() {
       try {
         const [sumRes, histRes] = await Promise.all([
-          api.getPatientSummary(user!.id),
+          api.getPatientSummary(user!.id, token!),
           api.getHistory(user!.id, token!)
         ]);
         setSummary(sumRes);

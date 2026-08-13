@@ -1,8 +1,8 @@
-# NeuronMotion — Sistem Skrining Gangguan Saraf Berbasis Computer Vision
+# NeuronMotion, Sistem Skrining Gangguan Saraf Berbasis Computer Vision
 
 Mockup UI (desain) sudah ada di project ini:
-- `NeuronMotion - Landing.dc.html` — halaman publik
-- `NeuronMotion - Skrining.dc.html` — alur skrining (pilih tes → rekam → hasil biomarker → skor risiko → riwayat)
+- `NeuronMotion - Landing.dc.html` adalah halaman publik
+- `NeuronMotion - Skrining.dc.html` berisi alur skrining (pilih tes → rekam → hasil biomarker → skor risiko → riwayat)
 
 Dokumen ini adalah panduan membangun **sistem produksi**-nya secara penuh.
 
@@ -48,7 +48,7 @@ Web app yang mendeteksi body keypoints dari kamera standar (webcam/HP), mengekst
 - **Kamera**: `getUserMedia()` di browser, target 30fps, resolusi 640×480 cukup untuk landmark.
 - **Ekstraksi biomarker** (contoh formula, per file `biomarkers/*.ts`):
   - *Tremor*: FFT pada posisi pergelangan tangan saat diam → dominant frequency (Hz) + amplitude.
-  - *Finger tapping*: jarak ibu jari–telunjuk dari waktu ke waktu → deteksi puncak (peak counting) → tap rate & decrement (kelelahan gerak).
+  - *Finger tapping*: jarak ibu jari ke telunjuk dari waktu ke waktu → deteksi puncak (peak counting) → tap rate & decrement (kelelahan gerak).
   - *Gait*: jarak antar pergelangan kaki dari waktu ke waktu → cadence, stride length (perlu kalibrasi jarak kamera), symmetry index.
   - *Arm swing*: sudut bahu-siku-pergelangan selama siklus jalan → amplitudo per sisi → asymmetry %.
   - *Range of motion*: sudut maksimum antar 3 landmark sendi (bahu/siku/lutut) selama gerakan terarah.
@@ -64,15 +64,15 @@ Web app yang mendeteksi body keypoints dari kamera standar (webcam/HP), mengekst
 - **Tahap awal (rule-based)**: threshold per biomarker berbasis literatur klinis (mis. tremor >4Hz "berisiko"), dikombinasikan jadi skor komposit (weighted sum atau skor tertimbang per kondisi target: Parkinson, stroke, cerebellar disorder, etc.).
 - **Tahap lanjut (ML)**: model klasifikasi (Random Forest/XGBoost) dilatih pada data biomarker berlabel (bekerja sama dengan RS/klinik untuk dataset), output kategori Rendah/Sedang/Tinggi + confidence score.
 - **Rekomendasi tindak lanjut**: mapping rule dari kombinasi biomarker → teks rekomendasi (rujukan spesialis saraf, link ke panduan latihan rehabilitasi per biomarker bermasalah).
-- **Validasi klinis**: WAJIB sebelum diklaim sebagai alat skrining — lakukan uji sensitivitas/spesifisitas dengan tenaga medis mitra sebelum go-live publik. Sertakan disclaimer "bukan alat diagnosis, hanya screening awal".
+- **Validasi klinis**: WAJIB sebelum diklaim sebagai alat skrining. Lakukan uji sensitivitas/spesifisitas dengan tenaga medis mitra sebelum go-live publik. Sertakan disclaimer "bukan alat diagnosis, hanya screening awal".
 
 ### 3.4 Riwayat Pemeriksaan (req #4)
 - **Data model**: `User`, `Session` (timestamp, biomarker raw values, risk score, recommendation), `Note` (opsional dari nakes).
-- **Fitur**: grafik tren skor per waktu, tabel riwayat, perbandingan antar sesi (delta biomarker) — sudah dimockup di step 5 halaman skrining.
+- **Fitur**: grafik tren skor per waktu, tabel riwayat, perbandingan antar sesi (delta biomarker), sudah dimockup di step 5 halaman skrining.
 - **Reminder**: notifikasi email/WA untuk jadwal skrining berkala (pasien rehab/Parkinson).
 
 ### 3.5 Edukasi Tidak Langsung (req #5)
-- Setiap hasil biomarker disertai penjelasan singkat ("apa artinya", rentang normal, sumber referensi) — transparansi mendorong awareness tanpa perlu halaman edukasi terpisah.
+- Setiap hasil biomarker disertai penjelasan singkat ("apa artinya", rentang normal, sumber referensi), karena transparansi mendorong awareness tanpa perlu halaman edukasi terpisah.
 - Konten statis edukasi (gejala awal Parkinson/stroke) sebagai bagian dari landing page (sudah ada).
 
 ### 3.6 Portal Tenaga Kesehatan (req #6)
@@ -97,7 +97,7 @@ Web app yang mendeteksi body keypoints dari kamera standar (webcam/HP), mengekst
 
 - Proses video **di perangkat pengguna**; jangan unggah video mentah ke server kecuali user memberi consent eksplisit (mis. untuk review dokter).
 - Enkripsi data biomarker & skor saat transit (TLS) dan at rest.
-- Kepatuhan regulasi data kesehatan lokal (mis. UU PDP Indonesia) — consent form eksplisit, hak hapus data.
+- Kepatuhan regulasi data kesehatan lokal (mis. UU PDP Indonesia), consent form eksplisit, hak hapus data.
 - Akses nakes ke data pasien harus berbasis consent/relasi resmi (bukan akses bebas semua pasien).
 
 ## 6. Roadmap Bertahap
@@ -123,4 +123,4 @@ Proyek **NeuronMotion** adalah inisiatif dari **Last Dance Teams** yang berdedik
 
 ---
 
-**Created by Last Dance Team** — Terus berinovasi untuk kesehatan yang lebih baik! 🚀
+**Created by Last Dance Team**. Terus berinovasi untuk kesehatan yang lebih baik! 🚀

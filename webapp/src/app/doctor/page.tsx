@@ -25,6 +25,9 @@ export default function DoctorPortal() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeSessionIndex, setActiveSessionIndex] = useState(0);
   const [search, setSearch] = useState('');
+  const [linkCode, setLinkCode] = useState('');
+  const [linking, setLinking] = useState(false);
+  const [linkMsg, setLinkMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const refreshData = useCallback(async (currentUser: typeof user, currentToken: string | null, currentPatientId: number | null) => {
@@ -83,6 +86,38 @@ export default function DoctorPortal() {
       setNoteText(detail.sessions[0]?.doctorNote || '');
     } catch (e) {
       alert(t('doc.loadDetailFailed'));
+    }
+  };
+
+  const linkByCode = async () => {
+    const code = linkCode.trim();
+    if (!code || linking) return;
+    setLinking(true);
+    setLinkMsg(null);
+    try {
+      const res = await api.linkPatientByCode(code, token!);
+      setLinkMsg({ ok: true, text: res.message });
+      setLinkCode('');
+      await refreshData(user, token, activePatientId);
+    } catch (e: any) {
+      setLinkMsg({ ok: false, text: e.message });
+    } finally {
+      setLinking(false);
+    }
+  };
+
+  const unlinkPatient = async (patientId: number) => {
+    if (!window.confirm(t('link.confirmUnlink'))) return;
+    try {
+      await api.unlinkPatient(patientId, token!);
+      // Detail yang sedang terbuka ikut ditutup karena datanya tidak lagi boleh tampil
+      if (activePatientId === patientId) {
+        setActivePatient(null);
+        setActivePatientId(null);
+      }
+      await refreshData(user, token, null);
+    } catch (e: any) {
+      alert(e.message);
     }
   };
 
@@ -202,6 +237,35 @@ export default function DoctorPortal() {
             <div className={styles.listHeader}>
               <span>{t('doc.patientList')} ({filteredPatients.length}{search ? ` / ${patients.length}` : ''})</span>
             </div>
+            <div className={styles.linkBox}>
+              <div className={styles.linkTitle}>{t('link.title')}</div>
+              <p className={styles.linkDesc}>{t('link.desc')}</p>
+              <div className={styles.linkRow}>
+                <input
+                  className={styles.linkInput}
+                  type="text"
+                  aria-label={t('link.title')}
+                  placeholder={t('link.placeholder')}
+                  value={linkCode}
+                  maxLength={12}
+                  onChange={e => setLinkCode(e.target.value.toUpperCase())}
+                  onKeyDown={e => { if (e.key === 'Enter') linkByCode(); }}
+                />
+                <button
+                  className="btn btn-primary btn-sm"
+                  onClick={linkByCode}
+                  disabled={linking || !linkCode.trim()}
+                >
+                  {linking ? t('link.linking') : t('link.submit')}
+                </button>
+              </div>
+              {linkMsg && (
+                <p className={linkMsg.ok ? styles.linkMsgOk : styles.linkMsgErr} data-no-translate="">
+                  {linkMsg.text}
+                </p>
+              )}
+            </div>
+
             <div className={styles.searchBox}>
               <input
                 className={styles.searchInput}
@@ -246,6 +310,13 @@ export default function DoctorPortal() {
                     <h2 className={styles.detailTitle} data-no-translate="">{activePatient.name}</h2>
                     <div style={{ color: 'var(--text-secondary)' }}><span data-no-translate="">{activePatient.email}</span> • {t('doc.age')} {activePatient.age || '?'} {t('common.years')} • {activePatient.gender === 'M' ? t('prof.male') : activePatient.gender === 'F' ? t('prof.female') : t('doc.unknown')}</div>
                   </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <button
+                      className="btn btn-outline btn-sm"
+                      onClick={() => unlinkPatient(activePatient.id)}
+                    >
+                      {t('link.unlink')}
+                    </button>
                   {activePatient.sessions[activeSessionIndex] && (
                     <div className={`badge ${
                       activePatient.sessions[activeSessionIndex].riskCategory === 'HIGH' ? 'badge-red' : 
@@ -254,6 +325,7 @@ export default function DoctorPortal() {
                       {t('dash.riskPrefix')} {activePatient.sessions[activeSessionIndex].riskCategory} ({t('doc.scoreShort')}: {Math.round(activePatient.sessions[activeSessionIndex].compositeScore)})
                     </div>
                   )}
+                  </div>
                 </div>
 
                 {activePatient.sessions[activeSessionIndex] ? (

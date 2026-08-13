@@ -184,21 +184,21 @@ Sistem terdiri dari tiga komponen utama:
 
 ### 6.1 Frontend
 
-- `src/App.jsx` — entry point UI dan navigasi views.
-- `src/components/Dashboard.jsx` — dashboard visual utama.
-- `src/components/CameraView.jsx` — tampilan toggle ke modul kamera.
-- `src/components/CameraCheckpoint.jsx` — UI simulasi AI Vision.
-- `src/useSafetyStream.js` — logika WebSocket dan state data.
+- `src/App.jsx`: entry point UI dan navigasi views.
+- `src/components/Dashboard.jsx`: dashboard visual utama.
+- `src/components/CameraView.jsx`: tampilan toggle ke modul kamera.
+- `src/components/CameraCheckpoint.jsx`: UI simulasi AI Vision.
+- `src/useSafetyStream.js`: logika WebSocket dan state data.
 
 ### 6.2 Backend
 
-- `server/index.js` — server Express + WebSocket.
-- `server/data.js` — generator data dummy, zone, pekerja, dan event.
+- `server/index.js`: server Express + WebSocket.
+- `server/data.js`: generator data dummy, zone, pekerja, dan event.
 
 ### 6.3 AI Vision
 
-- `main.py` — server Python untuk deteksi video dan status.
-- `best.pt`, `smoking_model.pt` — model deteksi.
+- `main.py`: server Python untuk deteksi video dan status.
+- `best.pt`, `smoking_model.pt`: model deteksi.
 
 ## 7. Alur Operasional untuk Pengguna
 

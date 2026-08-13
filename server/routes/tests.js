@@ -11,6 +11,7 @@ import {
 } from '../services/biomarkers.js';
 import { getClassifier } from '../data/clinicalData.js';
 import { requireAuth } from '../middleware/auth.js';
+import { canAccessPatient, canAccessSession } from '../middleware/access.js';
 import { getPublicQuestionnaire, scoreQuestionnaire } from '../data/questionnaire.js';
 import { generateCombinedAnalysis, isGeminiConfigured } from '../services/gemini.js';
 
@@ -84,11 +85,22 @@ router.post('/questionnaire/score', (req, res) => {
  * Menerima data dari semua tes, menghitung semua biomarker, skor komposit,
  * dan menyimpan ke database sebagai satu sesi pemeriksaan.
  */
-router.post('/full-screening', async (req, res) => {
+/**
+ * POST /api/tests/full-screening
+ *
+ * Nomor pasien diambil dari token, bukan dari badan permintaan, agar hasil
+ * skrining tidak dapat disisipkan ke rekam orang lain. Nilai pada badan
+ * permintaan tetap diterima untuk kompatibilitas, tetapi harus cocok.
+ */
+router.post('/full-screening', requireAuth, async (req, res) => {
   try {
-    const { patientId, tremor, fingerTapping, gait, armSwing, rom, posturalStability, questionnaire } = req.body;
+    const { tremor, fingerTapping, gait, armSwing, rom, posturalStability, questionnaire } = req.body;
 
-    if (!patientId) return res.status(400).json({ error: 'patientId wajib diisi' });
+    const patientId = req.user.userId;
+    const claimed = req.body?.patientId;
+    if (claimed !== undefined && parseInt(claimed) !== patientId && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Hasil skrining hanya dapat disimpan ke akun sendiri' });
+    }
 
     // Ambil usia pasien agar rentang normal gait & ROM disesuaikan per kelompok usia
     // (proposal: "dibandingkan dengan rentang normal untuk kelompok usia pengguna").
@@ -206,7 +218,7 @@ router.post('/full-screening', async (req, res) => {
 // ── Ambil Hasil Skrining ──────────────────────────────────────────────────────
 
 /** GET /api/tests/history/:patientId, riwayat lengkap dengan breakdown */
-router.get('/history/:patientId', async (req, res) => {
+router.get('/history/:patientId', requireAuth, canAccessPatient, async (req, res) => {
   try {
     const sessions = await prisma.session.findMany({
       where: { patientId: parseInt(req.params.patientId) },
@@ -238,7 +250,7 @@ router.get('/history/:patientId', async (req, res) => {
 });
 
 /** GET /api/tests/session/:sessionId, detail satu sesi */
-router.get('/session/:sessionId', async (req, res) => {
+router.get('/session/:sessionId', requireAuth, canAccessSession, async (req, res) => {
   try {
     const session = await prisma.session.findUnique({ where: { id: parseInt(req.params.sessionId) } });
     if (!session) return res.status(404).json({ error: 'Sesi tidak ditemukan' });

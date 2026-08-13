@@ -129,10 +129,18 @@ export default function RiwayatPage() {
   const [compareB, setCompareB] = useState<number | null>(null);
   const [printing, setPrinting] = useState(false);
   const [detail, setDetail] = useState<Session | null>(null);
+  const [shareCode, setShareCode] = useState<string | null>(null);
+  const [codeCopied, setCodeCopied] = useState(false);
 
   useEffect(() => {
     if (isLoading) return;
     if (!user || user.role !== 'PATIENT') { router.push('/login'); return; }
+
+    // Kode berbagi dibuatkan saat pertama diminta, jadi pemanggilannya
+    // sekaligus menjadi penyiapan untuk pasien yang belum pernah punya.
+    api.getShareCode(user.id, token!)
+      .then(res => setShareCode(res.shareCode))
+      .catch(() => setShareCode(null));
 
     api.getHistory(user.id, token!)
       .then(res => {
@@ -149,6 +157,28 @@ export default function RiwayatPage() {
 
   const sessionA = useMemo(() => sessions.find(s => s.id === compareA) || null, [sessions, compareA]);
   const sessionB = useMemo(() => sessions.find(s => s.id === compareB) || null, [sessions, compareB]);
+
+  const copyShareCode = async () => {
+    if (!shareCode) return;
+    try {
+      await navigator.clipboard.writeText(shareCode);
+      setCodeCopied(true);
+      setTimeout(() => setCodeCopied(false), 2000);
+    } catch {
+      // Penyalinan otomatis bisa ditolak peramban. Kodenya tetap terlihat dan
+      // dapat disorot manual, jadi kegagalan ini tidak perlu mengganggu.
+    }
+  };
+
+  const resetShareCode = async () => {
+    if (!user || !window.confirm(t('share.confirmReset'))) return;
+    try {
+      const res = await api.resetShareCode(user.id, token!);
+      setShareCode(res.shareCode);
+    } catch {
+      // Kode lama tetap berlaku bila penggantian gagal
+    }
+  };
 
   const exportCSV = () => {
     // Seluruh kolom diikutsertakan agar berkas dapat langsung diolah ulang,
@@ -237,6 +267,30 @@ export default function RiwayatPage() {
               <button className="btn btn-outline btn-sm" onClick={exportCSV}>{t('hist.exportCsv')}</button>
             </div>
           )}
+        </div>
+
+        {/* Kode berbagi. Tanpa ini pasien tidak punya cara memberi akses kepada
+            tenaga kesehatan, dan panel dokter yang baru mendaftar selalu kosong. */}
+        <div className={styles.card}>
+          <h2 className={styles.cardTitle}>{t('share.title')}</h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.6 }}>
+            {t('share.desc')}
+          </p>
+          <div className={styles.shareRow}>
+            <code className={styles.shareCode} data-no-translate="">
+              {shareCode || '········'}
+            </code>
+            <button className="btn btn-outline btn-sm" onClick={copyShareCode} disabled={!shareCode}>
+              {t('share.copy')}
+            </button>
+            <button className="btn btn-outline btn-sm" onClick={resetShareCode} disabled={!shareCode}>
+              {t('share.reset')}
+            </button>
+            {codeCopied && <span className={styles.shareOk}>{t('share.copied')}</span>}
+          </div>
+          <p className={styles.shareHint}>
+            {shareCode ? t('share.resetHint') : t('share.loading')}
+          </p>
         </div>
 
         {sessions.length === 0 ? (

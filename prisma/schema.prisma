@@ -24,6 +24,10 @@ model User {
   state       String?   // provinsi atau negara bagian
   region      String?   // kawasan yang lebih luas, dapat mencakup beberapa provinsi
   city        String?
+  // Kode berbagi milik pasien. Ditunjukkan pasien kepada tenaga kesehatan yang
+  // ia percayai, lalu dimasukkan dokter untuk menautkan diri. Penautan sengaja
+  // berangkat dari kode agar akses hanya terjadi atas kehendak pasien.
+  shareCode   String?   @unique
   // Doctor-specific
   licenseNumber String?
   specialization String?

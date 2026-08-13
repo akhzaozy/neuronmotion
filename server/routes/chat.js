@@ -1,4 +1,6 @@
 import express from 'express';
+import { requireAuth } from '../middleware/auth.js';
+import { requireRole } from '../middleware/access.js';
 import {
   chatWithAssistant,
   isGeminiConfigured,
@@ -20,7 +22,9 @@ router.get('/status', (req, res) => {
  * terlihat sebagai 503 generik dan penyebabnya harus dicari lewat log.
  * Tidak pernah menampilkan API key, hanya panjangnya.
  */
-router.get('/diagnose', async (req, res) => {
+// Memicu satu panggilan nyata ke Gemini setiap kali dibuka, jadi hanya untuk
+// administrator agar tidak dapat dipakai menghabiskan kuota dari luar.
+router.get('/diagnose', requireAuth, requireRole('ADMIN'), async (req, res) => {
   const config = getGeminiConfigInfo();
   const modelCheck = await verifyGeminiSetup();
 

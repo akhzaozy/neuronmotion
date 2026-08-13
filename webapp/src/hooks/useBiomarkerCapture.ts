@@ -60,7 +60,7 @@ const POSE_CONNECTIONS = [
   [25, 27], [26, 28], [27, 29], [28, 30], [29, 31], [30, 32],
 ];
 
-// Threshold jarak (normalized 0–1) untuk menentukan jari "CLOSED" (tersentuh)
+// Threshold jarak (normalized 0 sampai 1) untuk menentukan jari "CLOSED" (tersentuh)
 const TAP_CLOSED_THRESHOLD = 0.05;
 // Jari harus terbuka > threshold ini agar bisa dihitung sebagai tap baru
 const TAP_OPEN_THRESHOLD = 0.08;
@@ -292,7 +292,7 @@ export function useBiomarkerCapture() {
           for (let i = 0; i < data.length; i += 4) {
             sum += 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
           }
-          const avgBrightness = sum / (data.length / 4); // 0 (hitam) – 255 (putih)
+          const avgBrightness = sum / (data.length / 4); // 0 (hitam) sampai 255 (putih)
           if (avgBrightness < 45) {
             setLightingWarning('Ruangan terlalu gelap. Cari pencahayaan lebih terang agar deteksi lebih akurat.');
           } else if (avgBrightness > 225) {

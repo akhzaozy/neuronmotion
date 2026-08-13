@@ -3,14 +3,15 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "NeuronMotion — Sistem Skrining Gangguan Saraf Berbasis Computer Vision",
+  "description": "NeuronMotion, Sistem Skrining Gangguan Saraf Berbasis Computer Vision",
   "scripts": {
     "web:dev": "npm run dev --prefix webapp",
     "web:build": "npm run build --prefix webapp",
     "server": "node --env-file=.env server/index.js",
     "server:dev": "nodemon --env-file=.env server/index.js",
     "dev:all": "concurrently -n SERVER,WEB -c blue,green \"npm:server:dev\" \"npm:web:dev\"",
-    "seed": "node --env-file=.env prisma/seed.js"
+    "seed": "node --env-file=.env prisma/seed.js",
+    "lint:dash": "node scripts/check-em-dash.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

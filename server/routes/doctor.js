@@ -1,8 +1,31 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
+import { requireAuth } from '../middleware/auth.js';
+import { requireRole, canAccessSession } from '../middleware/access.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
+
+/**
+ * Seluruh jalur di berkas ini menyentuh rekam pasien, jadi tidak ada satu pun
+ * yang boleh terbuka. Sebelumnya semuanya dapat dipanggil tanpa token, dan
+ * nomor dokter diambil dari permintaan sehingga siapa pun bisa membaca panel
+ * dokter mana saja hanya dengan menebak nomornya.
+ */
+router.use(requireAuth, requireRole('DOCTOR', 'ADMIN'));
+
+/**
+ * Nomor dokter selalu diambil dari token, bukan dari kueri atau badan
+ * permintaan. Administrator tetap boleh menyebut dokter lain secara eksplisit
+ * karena memang berwenang meninjau seluruh panel.
+ */
+function resolveDoctorId(req, requested) {
+  if (req.user.role === 'ADMIN' && requested) {
+    const id = Number.parseInt(requested, 10);
+    if (Number.isInteger(id)) return id;
+  }
+  return req.user.userId;
+}
 
 /**
  * Menyusun sebaran wilayah pasien beserta kategori risiko terakhirnya.
@@ -55,14 +78,13 @@ async function buildGeoBreakdown(patientIds) {
   };
 }
 
-/** GET /api/doctor/patients, Daftar pasien dokter */
+/** GET /api/doctor/patients, daftar pasien yang tertaut ke dokter ini. */
 router.get('/patients', async (req, res) => {
   try {
-    const { doctorId } = req.query;
-    if (!doctorId) return res.status(400).json({ error: 'doctorId diperlukan' });
+    const doctorId = resolveDoctorId(req, req.query.doctorId);
 
     const links = await prisma.doctorPatient.findMany({
-      where: { doctorId: parseInt(doctorId), status: 'ACTIVE' },
+      where: { doctorId, status: 'ACTIVE' },
       include: {
         patient: {
           select: {
@@ -96,30 +118,82 @@ router.get('/patients', async (req, res) => {
   }
 });
 
-/** POST /api/doctor/link, Hubungkan dokter ke pasien */
-router.post('/link', async (req, res) => {
+/**
+ * POST /api/doctor/link-by-code
+ * Body: { code }
+ *
+ * Menautkan pasien ke dokter yang sedang masuk berdasarkan kode berbagi yang
+ * ditunjukkan pasien dari halaman Riwayat atau laporan PDF miliknya.
+ *
+ * Penautan sengaja berangkat dari kode, bukan dari nomor pasien. Dengan nomor,
+ * dokter mana pun dapat menautkan dirinya ke pasien mana pun tanpa
+ * sepengetahuan orang tersebut; dengan kode, akses hanya terjadi bila pasien
+ * memang menyerahkannya.
+ */
+router.post('/link-by-code', async (req, res) => {
   try {
-    const { doctorId, patientId } = req.body;
-    const link = await prisma.doctorPatient.upsert({
-      where: { doctorId_patientId: { doctorId: parseInt(doctorId), patientId: parseInt(patientId) } },
-      update: { status: 'ACTIVE' },
-      create: { doctorId: parseInt(doctorId), patientId: parseInt(patientId) },
+    const code = String(req.body?.code || '').trim().toUpperCase().replace(/[\s-]/g, '');
+    if (code.length < 6) {
+      return res.status(400).json({ error: 'Kode berbagi tidak valid' });
+    }
+
+    const patient = await prisma.user.findFirst({
+      where: { shareCode: code, role: 'PATIENT' },
+      select: { id: true, name: true },
     });
-    res.json({ message: 'Pasien berhasil dihubungkan', link });
+    if (!patient) {
+      return res.status(404).json({ error: 'Kode tidak dikenali. Pastikan pasien menyalinnya dengan benar.' });
+    }
+
+    const doctorId = req.user.userId;
+    await prisma.doctorPatient.upsert({
+      where: { doctorId_patientId: { doctorId, patientId: patient.id } },
+      update: { status: 'ACTIVE' },
+      create: { doctorId, patientId: patient.id },
+    });
+
+    res.json({ message: `${patient.name} berhasil ditautkan`, patient });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('Link by code error:', e.message);
+    res.status(500).json({ error: 'Gagal menautkan pasien' });
   }
 });
 
-/** PUT /api/doctor/sessions/:sessionId/note, Tambah catatan nakes */
-router.put('/sessions/:sessionId/note', async (req, res) => {
+/**
+ * DELETE /api/doctor/patients/:patientId
+ * Melepaskan tautan, sehingga data pasien tidak lagi muncul di panel dokter.
+ */
+router.delete('/patients/:patientId', async (req, res) => {
   try {
-    const { doctorId, note, followUpDate } = req.body;
+    const patientId = Number.parseInt(req.params.patientId, 10);
+    if (!Number.isInteger(patientId)) {
+      return res.status(400).json({ error: 'Nomor pasien tidak valid' });
+    }
+    await prisma.doctorPatient.updateMany({
+      where: { doctorId: req.user.userId, patientId },
+      data: { status: 'INACTIVE' },
+    });
+    res.json({ message: 'Tautan pasien dilepaskan' });
+  } catch (e) {
+    res.status(500).json({ error: 'Gagal melepaskan tautan' });
+  }
+});
+
+/**
+ * PUT /api/doctor/sessions/:sessionId/note, menambahkan catatan klinis.
+ *
+ * canAccessSession memastikan dokter memang tertaut ke pasien pemilik sesi
+ * tersebut. Tanpa itu, catatan bisa dituliskan ke sesi pasien mana pun hanya
+ * dengan menebak nomor sesinya.
+ */
+router.put('/sessions/:sessionId/note', canAccessSession, async (req, res) => {
+  try {
+    const { note, followUpDate } = req.body;
     const session = await prisma.session.update({
       where: { id: parseInt(req.params.sessionId) },
       data: {
         doctorNote: note,
-        doctorId: doctorId ? parseInt(doctorId) : undefined,
+        doctorId: req.user.userId,
         followUpDate: followUpDate ? new Date(followUpDate) : undefined,
       },
     });
@@ -129,10 +203,10 @@ router.put('/sessions/:sessionId/note', async (req, res) => {
   }
 });
 
-/** GET /api/doctor/dashboard/:doctorId, Statistik dashboard dokter */
+/** GET /api/doctor/dashboard/:doctorId, statistik panel dokter. */
 router.get('/dashboard/:doctorId', async (req, res) => {
   try {
-    const doctorId = parseInt(req.params.doctorId);
+    const doctorId = resolveDoctorId(req, req.params.doctorId);
 
     const links = await prisma.doctorPatient.findMany({
       where: { doctorId, status: 'ACTIVE' },

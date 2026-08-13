@@ -346,3 +346,40 @@
   color: var(--text-secondary);
   line-height: 1.65;
 }
+
+/* Kartu kode berbagi.
+   Kodenya ditampilkan besar dan berspasi lebar karena sering dibacakan atau
+   disalin manual di depan tenaga kesehatan, bukan hanya ditekan sekali. */
+.shareRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.shareCode {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  border: 1px dashed var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 12px 18px;
+  user-select: all;
+}
+
+.shareHint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 10px;
+  line-height: 1.5;
+}
+
+.shareOk {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--green-text);
+}

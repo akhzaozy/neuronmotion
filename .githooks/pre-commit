@@ -1,0 +1,8 @@
+#!/bin/sh
+# Menolak em dash dan en dash sebelum commit.
+# Aktifkan sekali dengan: git config core.hooksPath .githooks
+node scripts/check-em-dash.mjs || {
+  echo ""
+  echo "Commit dibatalkan: perbaiki tanda di atas lebih dulu."
+  exit 1
+}

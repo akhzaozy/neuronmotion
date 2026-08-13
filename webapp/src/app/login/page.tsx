@@ -31,7 +31,7 @@ export default function LoginPage() {
       const userRole = data.user.role;
 
       // Validasi tab yang dipilih cocok dengan role akun di database.
-      // Hanya berlaku untuk PATIENT & DOCTOR — role lain (misal ADMIN) tidak
+      // Hanya berlaku untuk PATIENT & DOCTOR. Role lain (misal ADMIN) tidak
       // termasuk dalam pilihan tab, jadi langsung tampilkan pesan informatif.
       if (userRole !== 'PATIENT' && userRole !== 'DOCTOR') {
         setError(lang === 'en'
@@ -57,7 +57,7 @@ export default function LoginPage() {
       } else if (userRole === 'PATIENT') {
         router.push('/dashboard');
       } else {
-        // Fallback aman — jangan biarkan route ke halaman yang tidak ada
+        // Fallback aman, jangan biarkan route ke halaman yang tidak ada
         router.push('/login');
       }
     } catch (err: any) {

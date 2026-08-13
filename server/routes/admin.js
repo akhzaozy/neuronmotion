@@ -1,6 +1,8 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { CONDITION_PROFILES, generateTrainingDataset, getModelInfo } from '../data/clinicalData.js';
+import { requireAuth } from '../middleware/auth.js';
+import { requireRole } from '../middleware/access.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -11,7 +13,15 @@ router.get('/model-accuracy', (req, res) => {
 });
 
 /** GET /api/admin/stats, Statistik sistem keseluruhan */
-router.get('/stats', async (req, res) => {
+/**
+ * Jalur di bawah ini memuat cacah pasien nyata, daftar dokter beserta nomor
+ * izin praktik, dan pasangan dokter-pasien. Semuanya sebelumnya terbuka tanpa
+ * token, jadi kini dibatasi untuk administrator.
+ *
+ * /model-accuracy sengaja tetap terbuka karena angkanya ditampilkan di halaman
+ * depan dan tidak memuat data siapa pun, hanya hasil validasi model.
+ */
+router.get('/stats', requireAuth, requireRole('ADMIN'), async (req, res) => {
   try {
     const [totalPatients, totalDoctors, totalSessions, riskBreakdown, recentSessions] = await Promise.all([
       prisma.user.count({ where: { role: 'PATIENT' } }),
@@ -45,13 +55,13 @@ router.get('/stats', async (req, res) => {
 });
 
 /** GET /api/admin/conditions, Referensi kondisi klinis */
-router.get('/conditions', async (req, res) => {
+router.get('/conditions', requireAuth, requireRole('ADMIN'), async (req, res) => {
   const conditions = await prisma.condition.findMany();
   res.json(conditions.map(c => ({ ...c, biomarkerThresholds: JSON.parse(c.biomarkerThresholds) })));
 });
 
 /** GET /api/admin/training-data, Preview data training */
-router.get('/training-data', (req, res) => {
+router.get('/training-data', requireAuth, requireRole('ADMIN'), (req, res) => {
   const { count = 10 } = req.query;
   const dataset = generateTrainingDataset(Math.min(parseInt(count), 50));
   res.json({
@@ -65,7 +75,7 @@ router.get('/training-data', (req, res) => {
 });
 
 /** GET /api/admin/doctors, Daftar dokter */
-router.get('/doctors', async (req, res) => {
+router.get('/doctors', requireAuth, requireRole('ADMIN'), async (req, res) => {
   try {
     const doctors = await prisma.user.findMany({
       where: { role: 'DOCTOR' },

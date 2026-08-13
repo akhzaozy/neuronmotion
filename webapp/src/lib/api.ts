@@ -66,8 +66,8 @@ export const api = {
   getHistory: (patientId: number, token?: string) =>
     request<{ sessions: Session[] }>('GET', `/api/tests/history/${patientId}`, undefined, token),
 
-  getSession: (sessionId: number) =>
-    request('GET', `/api/tests/session/${sessionId}`),
+  getSession: (sessionId: number, token?: string) =>
+    request('GET', `/api/tests/session/${sessionId}`, undefined, token),
 
   // Patients
   getPatients: (params?: { search?: string; risk?: string; page?: number }) => {
@@ -78,8 +78,8 @@ export const api = {
   getPatient: (id: number, token?: string) =>
     request<PatientDetail>('GET', `/api/patients/${id}`, undefined, token),
 
-  getPatientSummary: (id: number) =>
-    request('GET', `/api/patients/${id}/summary`),
+  getPatientSummary: (id: number, token?: string) =>
+    request('GET', `/api/patients/${id}/summary`, undefined, token),
 
   // Doctor
   getDoctorPatients: (doctorId: number, token?: string) =>
@@ -90,6 +90,21 @@ export const api = {
 
   saveNote: (sessionId: number, data: object, token?: string) =>
     request('PUT', `/api/doctor/sessions/${sessionId}/note`, data, token),
+
+  // Penautan pasien lewat kode berbagi yang ditunjukkan pasien sendiri
+  getShareCode: (patientId: number, token?: string) =>
+    request<{ shareCode: string }>('GET', `/api/patients/${patientId}/share-code`, undefined, token),
+
+  resetShareCode: (patientId: number, token?: string) =>
+    request<{ shareCode: string }>('POST', `/api/patients/${patientId}/share-code/reset`, undefined, token),
+
+  linkPatientByCode: (code: string, token?: string) =>
+    request<{ message: string; patient: { id: number; name: string } }>(
+      'POST', '/api/doctor/link-by-code', { code }, token
+    ),
+
+  unlinkPatient: (patientId: number, token?: string) =>
+    request<{ message: string }>('DELETE', `/api/doctor/patients/${patientId}`, undefined, token),
 
   // Chat asisten (NeuroBot)
   chat: (messages: ChatApiMessage[], lang: 'id' | 'en' = 'id') =>

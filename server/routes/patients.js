@@ -1,12 +1,22 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { generateTrainingDataset, CONDITION_PROFILES, CLINICAL_REFERENCE } from '../data/clinicalData.js';
+import { requireAuth } from '../middleware/auth.js';
+import { requireRole, canAccessPatient } from '../middleware/access.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
-/** GET /api/patients, Daftar semua pasien (admin/dokter) */
-router.get('/', async (req, res) => {
+/**
+ * GET /api/patients, daftar seluruh pasien.
+ *
+ * Hanya untuk administrator. Sebelumnya jalur ini terbuka tanpa token dan
+ * mengembalikan nama, surel, serta tanggal lahir seluruh pasien terdaftar
+ * kepada siapa pun yang mengetahui alamatnya. Dokter tidak memakai jalur ini;
+ * daftar pasiennya diambil dari /api/doctor/patients yang sudah tersaring
+ * menurut tautan.
+ */
+router.get('/', requireAuth, requireRole('ADMIN'), async (req, res) => {
   try {
     const { search, risk, page = 1, limit = 20 } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -44,8 +54,8 @@ router.get('/', async (req, res) => {
   }
 });
 
-/** GET /api/patients/:id, Detail pasien */
-router.get('/:id', async (req, res) => {
+/** GET /api/patients/:id, detail pasien beserta seluruh sesinya. */
+router.get('/:id', requireAuth, canAccessPatient, async (req, res) => {
   try {
     const patient = await prisma.user.findUnique({
       where: { id: parseInt(req.params.id) },
@@ -94,8 +104,8 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-/** GET /api/patients/:id/summary, Ringkasan statistik pasien */
-router.get('/:id/summary', async (req, res) => {
+/** GET /api/patients/:id/summary, ringkasan statistik pasien. */
+router.get('/:id/summary', requireAuth, canAccessPatient, async (req, res) => {
   try {
     const sessions = await prisma.session.findMany({
       where: { patientId: parseInt(req.params.id) },
@@ -125,6 +135,95 @@ router.get('/:id/summary', async (req, res) => {
     });
   } catch (e) {
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Kode berbagi memakai huruf dan angka yang tidak mudah tertukar saat dibaca
+ * atau didiktekan: tanpa I, O, 0, dan 1. Panjang delapan karakter memberi lebih
+ * dari satu triliun kemungkinan, sehingga tidak realistis ditebak.
+ */
+const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+function generateShareCode() {
+  let code = '';
+  for (let i = 0; i < 8; i++) {
+    code += CODE_ALPHABET[Math.floor(Math.random() * CODE_ALPHABET.length)];
+  }
+  return code;
+}
+
+/**
+ * GET /api/patients/:id/share-code
+ * Mengembalikan kode berbagi milik pasien, dan membuatkannya bila belum ada.
+ * Kode ini yang diserahkan pasien kepada tenaga kesehatan agar dapat melihat
+ * hasil skriningnya.
+ */
+router.get('/:id/share-code', requireAuth, canAccessPatient, async (req, res) => {
+  try {
+    const patientId = parseInt(req.params.id);
+
+    // Hanya pemilik akun yang boleh memunculkan kodenya sendiri. Dokter yang
+    // sudah tertaut tidak perlu, dan membiarkannya membaca kode akan membuat
+    // kode itu bisa diteruskan ke pihak lain tanpa sepengetahuan pasien.
+    if (req.user.userId !== patientId && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Hanya pemilik akun yang dapat melihat kode berbaginya' });
+    }
+
+    const existing = await prisma.user.findUnique({
+      where: { id: patientId },
+      select: { shareCode: true },
+    });
+    if (existing?.shareCode) return res.json({ shareCode: existing.shareCode });
+
+    // Tabrakan kode sangat jarang, tetapi tetap dicoba ulang beberapa kali
+    // agar permintaan tidak gagal hanya karena kebetulan.
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const code = generateShareCode();
+      try {
+        const updated = await prisma.user.update({
+          where: { id: patientId },
+          data: { shareCode: code },
+          select: { shareCode: true },
+        });
+        return res.json({ shareCode: updated.shareCode });
+      } catch (e) {
+        if (e.code !== 'P2002') throw e;
+      }
+    }
+    res.status(500).json({ error: 'Gagal membuat kode berbagi, coba lagi' });
+  } catch (e) {
+    console.error('Share code error:', e.message);
+    res.status(500).json({ error: 'Gagal menyiapkan kode berbagi' });
+  }
+});
+
+/**
+ * POST /api/patients/:id/share-code/reset
+ * Membuat kode baru sekaligus membatalkan kode lama. Dipakai bila pasien
+ * merasa kodenya sudah tersebar terlalu luas.
+ */
+router.post('/:id/share-code/reset', requireAuth, canAccessPatient, async (req, res) => {
+  try {
+    const patientId = parseInt(req.params.id);
+    if (req.user.userId !== patientId && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Hanya pemilik akun yang dapat mengganti kode berbaginya' });
+    }
+    for (let attempt = 0; attempt < 5; attempt++) {
+      try {
+        const updated = await prisma.user.update({
+          where: { id: patientId },
+          data: { shareCode: generateShareCode() },
+          select: { shareCode: true },
+        });
+        return res.json({ shareCode: updated.shareCode });
+      } catch (e) {
+        if (e.code !== 'P2002') throw e;
+      }
+    }
+    res.status(500).json({ error: 'Gagal membuat kode baru, coba lagi' });
+  } catch (e) {
+    res.status(500).json({ error: 'Gagal mengganti kode berbagi' });
   }
 });
 
