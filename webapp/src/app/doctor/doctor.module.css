@@ -9,11 +9,23 @@
   margin: 0 auto;
 }
 
+/* Kepala halaman.
+   Sebelumnya satu baris kaku tanpa izin membungkus, sehingga di lebar ponsel
+   tombol Perbarui dan Keluar terdorong keluar layar. Overflow mendatar pada
+   body menyembunyikannya alih-alih memunculkan bilah geser, jadi tombolnya
+   hilang begitu saja dan tidak bisa ditekan sama sekali. */
 .header {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
   margin-bottom: 40px;
+}
+
+.header > div:first-child {
+  min-width: 0;
+  flex: 1 1 260px;
 }
 
 .header h1 {
@@ -153,6 +165,10 @@
 }
 
 .detailHeader {
+  /* Diizinkan membungkus supaya isinya turun ke baris berikutnya di layar
+     sempit, bukan terdorong keluar layar lalu terpotong tanpa jejak oleh
+     overflow-x: hidden pada body. */
+  flex-wrap: wrap;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;

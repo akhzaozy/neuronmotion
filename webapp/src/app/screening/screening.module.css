@@ -126,6 +126,10 @@
 }
 
 .controls {
+  /* Diizinkan membungkus supaya isinya turun ke baris berikutnya di layar
+     sempit, bukan terdorong keluar layar lalu terpotong tanpa jejak oleh
+     overflow-x: hidden pada body. */
+  flex-wrap: wrap;
   display: flex;
   gap: 12px;
   margin-top: 16px;

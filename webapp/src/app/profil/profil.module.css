@@ -10,6 +10,10 @@
 }
 
 .profileHeader {
+  /* Diizinkan membungkus supaya isinya turun ke baris berikutnya di layar
+     sempit, bukan terdorong keluar layar lalu terpotong tanpa jejak oleh
+     overflow-x: hidden pada body. */
+  flex-wrap: wrap;
   display: flex;
   align-items: center;
   gap: 18px;
@@ -57,6 +61,10 @@
 }
 
 .cardHeader {
+  /* Diizinkan membungkus supaya isinya turun ke baris berikutnya di layar
+     sempit, bukan terdorong keluar layar lalu terpotong tanpa jejak oleh
+     overflow-x: hidden pada body. */
+  flex-wrap: wrap;
   display: flex;
   align-items: center;
   justify-content: space-between;

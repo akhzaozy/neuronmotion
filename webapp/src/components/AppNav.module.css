@@ -115,7 +115,32 @@
   .link { padding: 8px 10px; font-size: 0.84rem; }
 }
 
+/* Di lebar ponsel, menu dipindah ke barisnya sendiri di bawah merek.
+   Sebelumnya keempat menu berdesakan dengan tombol bahasa dan tema pada satu
+   baris selebar 375 piksel, menyisakan sekitar 135 piksel untuk menu sehingga
+   hanya satu setengah menu yang terlihat dan sisanya tertutup tombol bahasa.
+   Menu tetap dapat digeser mendatar, tetapi kini punya lebar penuh. */
 @media (max-width: 640px) {
-  .brandText { display: none; }
-  .inner { gap: 8px; }
+  .inner {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "brand actions"
+      "links links";
+    align-items: center;
+    gap: 8px 10px;
+    height: auto;
+    padding: 10px 14px;
+  }
+
+  .brand { grid-area: brand; }
+  .actions { grid-area: actions; margin-left: 0; }
+
+  .links {
+    grid-area: links;
+    width: 100%;
+    padding-bottom: 2px;
+  }
+
+  .link { padding: 7px 12px; }
 }
