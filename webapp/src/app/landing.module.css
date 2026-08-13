@@ -397,7 +397,7 @@
   height: 32px;
   border-radius: 50%;
   background: var(--brand-dim);
-  color: var(--brand-light);
+  color: var(--brand-text);
   flex-shrink: 0;
 }
 
@@ -425,7 +425,7 @@
 }
 
 .demoCard:hover .demoArrow {
-  color: var(--brand-light);
+  color: var(--brand-text);
   transform: translateX(3px);
 }
 

@@ -103,7 +103,7 @@ export default function DemoPage() {
           )}
 
           {analyzeError && (
-            <div style={{ textAlign: 'center', padding: 16, color: 'var(--red)' }}>{analyzeError}</div>
+            <div style={{ textAlign: 'center', padding: 16, color: 'var(--red-text)' }}>{analyzeError}</div>
           )}
 
           {result && (
@@ -112,7 +112,7 @@ export default function DemoPage() {
                 className={styles.scoreCircle}
                 style={{
                   borderColor: result.score >= 65 ? 'var(--red)' : result.score >= 35 ? 'var(--yellow)' : 'var(--green)',
-                  color: result.score >= 65 ? 'var(--red)' : result.score >= 35 ? 'var(--yellow)' : 'var(--green)',
+                  color: result.score >= 65 ? 'var(--red-text)' : result.score >= 35 ? 'var(--yellow-text)' : 'var(--green-text)',
                 }}
               >
                 {Math.round(result.score)}

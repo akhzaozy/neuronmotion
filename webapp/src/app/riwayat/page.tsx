@@ -10,10 +10,23 @@ import ReportPrintHost from '@/components/ReportPrintHost';
 import { useI18n, translateServerLabel, dateLocale, type Lang } from '@/lib/i18n';
 import styles from './riwayat.module.css';
 
-const RISK_COLOR: Record<string, string> = {
+/**
+ * Dua peta warna dipisah dengan sengaja. RISK_FILL dipakai untuk titik grafik
+ * dan isian pil, yang boleh pekat karena berdampingan dengan warna lain.
+ * RISK_TEXT dipakai ketika warnanya menjadi warna huruf, dan nilainya
+ * menyesuaikan tema agar tetap memenuhi rasio kontras: hijau #059669 hanya
+ * mencapai 3,9:1 di atas kartu gelap.
+ */
+const RISK_FILL: Record<string, string> = {
   HIGH: 'var(--red)',
   MEDIUM: 'var(--yellow)',
   LOW: 'var(--green)',
+};
+
+const RISK_TEXT: Record<string, string> = {
+  HIGH: 'var(--red-text)',
+  MEDIUM: 'var(--yellow-text)',
+  LOW: 'var(--green-text)',
 };
 
 const RISK_LABEL: Record<Lang, Record<string, string>> = {
@@ -69,7 +82,7 @@ function TrendChart({ sessions }: { sessions: Session[] }) {
 
         {points.map((p, i) => (
           <g key={p.id}>
-            <circle cx={xFor(i)} cy={yFor(p.compositeScore)} r="4.5" fill={RISK_COLOR[p.riskCategory] || 'var(--brand)'} stroke="var(--bg-card)" strokeWidth="2" />
+            <circle cx={xFor(i)} cy={yFor(p.compositeScore)} r="4.5" fill={RISK_FILL[p.riskCategory] || 'var(--brand)'} stroke="var(--bg-card)" strokeWidth="2" />
             <title>{`${t('hist.session')} #${p.id} - ${t('risk.score')} ${Math.round(p.compositeScore)} (${riskLabel(p.riskCategory, lang)})`}</title>
           </g>
         ))}
@@ -245,11 +258,21 @@ export default function RiwayatPage() {
               <div className={styles.card}>
                 <h2 className={styles.cardTitle}>{t('hist.compareTitle')}</h2>
                 <div className={styles.compareRow}>
-                  <select className={styles.compareSelect} value={compareA ?? ''} onChange={e => setCompareA(Number(e.target.value))}>
+                  <select
+                    className={styles.compareSelect}
+                    aria-label={lang === 'en' ? 'First session to compare' : 'Sesi pertama yang dibandingkan'}
+                    value={compareA ?? ''}
+                    onChange={e => setCompareA(Number(e.target.value))}
+                  >
                     {sessions.map(s => <option key={s.id} value={s.id} data-no-translate="">#{s.id} · {formatDate(s.timestamp, lang)}</option>)}
                   </select>
                   <span style={{ color: 'var(--text-muted)' }}>vs</span>
-                  <select className={styles.compareSelect} value={compareB ?? ''} onChange={e => setCompareB(Number(e.target.value))}>
+                  <select
+                    className={styles.compareSelect}
+                    aria-label={lang === 'en' ? 'Second session to compare' : 'Sesi kedua yang dibandingkan'}
+                    value={compareB ?? ''}
+                    onChange={e => setCompareB(Number(e.target.value))}
+                  >
                     {sessions.map(s => <option key={s.id} value={s.id} data-no-translate="">#{s.id} · {formatDate(s.timestamp, lang)}</option>)}
                   </select>
                 </div>
@@ -260,7 +283,7 @@ export default function RiwayatPage() {
                       <span className={styles.deltaLabel}>{t('hist.compositeScore')}</span>
                       <span className={styles.deltaValue}>
                         {Math.round(sessionA.compositeScore)} → {Math.round(sessionB.compositeScore)}{' '}
-                        <span style={{ color: sessionB.compositeScore > sessionA.compositeScore ? 'var(--red)' : sessionB.compositeScore < sessionA.compositeScore ? 'var(--green)' : 'var(--text-muted)' }}>
+                        <span style={{ color: sessionB.compositeScore > sessionA.compositeScore ? 'var(--red-text)' : sessionB.compositeScore < sessionA.compositeScore ? 'var(--green-text)' : 'var(--text-muted)' }}>
                           {sessionB.compositeScore > sessionA.compositeScore ? `↑ ${t('hist.worsening')}`
                             : sessionB.compositeScore < sessionA.compositeScore ? `↓ ${t('hist.improving')}` : `→ ${t('hist.stable')}`}
                         </span>
@@ -275,7 +298,7 @@ export default function RiwayatPage() {
                           <span className={styles.deltaLabel}>{d.label}</span>
                           <span className={styles.deltaValue}>
                             {d.from} → {d.to} {d.unit}{' '}
-                            <span style={{ color: worse ? 'var(--red)' : better ? 'var(--green)' : 'var(--text-muted)' }}>
+                            <span style={{ color: worse ? 'var(--red-text)' : better ? 'var(--green-text)' : 'var(--text-muted)' }}>
                               {worse ? `↑ ${t('hist.worsening')}` : better ? `↓ ${t('hist.improving')}` : `→ ${t('hist.stable')}`}
                             </span>
                           </span>
@@ -305,9 +328,9 @@ export default function RiwayatPage() {
                     {sessions.map(s => (
                       <tr key={s.id}>
                         <td>{formatDate(s.timestamp, lang)}</td>
-                        <td style={{ fontWeight: 700, color: RISK_COLOR[s.riskCategory] }}>{Math.round(s.compositeScore)}</td>
+                        <td style={{ fontWeight: 700, color: RISK_TEXT[s.riskCategory] }}>{Math.round(s.compositeScore)}</td>
                         <td>
-                          <span className={styles.riskPill} style={{ background: `color-mix(in srgb, ${RISK_COLOR[s.riskCategory]} 15%, transparent)`, color: RISK_COLOR[s.riskCategory] }}>
+                          <span className={styles.riskPill} style={{ background: `color-mix(in srgb, ${RISK_FILL[s.riskCategory]} 15%, transparent)`, color: RISK_TEXT[s.riskCategory] }}>
                             {riskLabel(s.riskCategory, lang)}
                           </span>
                         </td>
@@ -341,17 +364,17 @@ export default function RiwayatPage() {
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', marginBottom: 16 }}>{formatDate(detail.timestamp, lang)}</p>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-              <span style={{ fontSize: '2.2rem', fontWeight: 800, color: RISK_COLOR[detail.riskCategory] }}>
+              <span style={{ fontSize: '2.2rem', fontWeight: 800, color: RISK_TEXT[detail.riskCategory] }}>
                 {Math.round(detail.compositeScore)}
               </span>
-              <span className={styles.riskPill} style={{ background: `color-mix(in srgb, ${RISK_COLOR[detail.riskCategory]} 15%, transparent)`, color: RISK_COLOR[detail.riskCategory] }}>
+              <span className={styles.riskPill} style={{ background: `color-mix(in srgb, ${RISK_FILL[detail.riskCategory]} 15%, transparent)`, color: RISK_TEXT[detail.riskCategory] }}>
                 {t('dash.riskPrefix')} {riskLabel(detail.riskCategory, lang)}
               </span>
             </div>
 
             {detail.mlPrediction?.predictedLabel && (
               <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: 8 }}>
-                {t('hist.closestPattern')}: <strong style={{ color: 'var(--purple)' }}>{translateServerLabel(detail.mlPrediction.predictedLabel, lang)}</strong>
+                {t('hist.closestPattern')}: <strong style={{ color: 'var(--purple-text)' }}>{translateServerLabel(detail.mlPrediction.predictedLabel, lang)}</strong>
                 {detail.mlPrediction.confidence !== undefined && ` (${detail.mlPrediction.confidence}%)`}
               </p>
             )}

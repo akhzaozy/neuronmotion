@@ -137,7 +137,7 @@
 .successMsg {
   background: var(--green-dim);
   border: 1px solid rgba(5, 150, 105, 0.3);
-  color: var(--green);
+  color: var(--green-text);
   padding: 10px 14px;
   border-radius: var(--radius-md);
   font-size: 0.85rem;
@@ -147,7 +147,7 @@
 .errorMsg {
   background: var(--red-dim);
   border: 1px solid rgba(220, 38, 38, 0.3);
-  color: var(--red);
+  color: var(--red-text);
   padding: 10px 14px;
   border-radius: var(--radius-md);
   font-size: 0.85rem;

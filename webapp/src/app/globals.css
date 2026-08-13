@@ -13,14 +13,27 @@
   /* Text */
   --text-primary: #0f172a;
   --text-secondary: #475569;
-  --text-muted: #94a3b8;
+  /* #94a3b8 hanya mencapai rasio 2,6:1 di atas putih, jauh di bawah ambang
+     WCAG AA 4,5:1, sehingga keterangan kecil nyaris tidak terbaca. Nilainya
+     tertukar dengan mode gelap: yang paling terang justru dipakai di latar
+     terang, dan yang paling redup di latar gelap. */
+  --text-muted: #64748b;
 
   /* Brand (Trust Medical Blue) */
   --brand: #2563eb;
   --brand-light: #3b82f6;
   --brand-dim: rgba(37, 99, 235, 0.08);
 
-  /* Status */
+  /* Status
+     Nilai --*-text dipakai ketika warna berperan sebagai teks, bukan sebagai
+     isian atau garis tepi. Isian boleh lebih pekat karena berdampingan dengan
+     warna lain, sedangkan teks harus memenuhi rasio kontras tersendiri. */
+  --green-text: #047857;
+  --yellow-text: #b45309;
+  --red-text: #dc2626;
+  --purple-text: #6d28d9;
+  --brand-text: #2563eb;
+
   --green: #059669;
   --green-dim: rgba(5, 150, 105, 0.1);
   --yellow: #d97706;
@@ -65,7 +78,16 @@
 
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --text-muted: #94a3b8;
+
+  /* Warna status bawaan disusun untuk latar putih dan menjadi terlalu pekat di
+     atas kartu gelap: hijau #059669 hanya 3,9:1 dan merah #dc2626 bahkan 3,0:1.
+     Versi terang berikut mengembalikan keduanya ke atas 5:1. */
+  --green-text: #34d399;
+  --yellow-text: #fbbf24;
+  --red-text: #f87171;
+  --purple-text: #c4b5fd;
+  --brand-text: #60a5fa;
 
   --brand-dim: rgba(59, 130, 246, 0.15);
   --green-dim: rgba(16, 185, 129, 0.16);
@@ -94,7 +116,16 @@
 
     --text-primary: #f8fafc;
     --text-secondary: #94a3b8;
-    --text-muted: #64748b;
+    --text-muted: #94a3b8;
+
+    /* Warna status bawaan disusun untuk latar putih dan menjadi terlalu pekat di
+       atas kartu gelap: hijau #059669 hanya 3,9:1 dan merah #dc2626 bahkan 3,0:1.
+       Versi terang berikut mengembalikan keduanya ke atas 5:1. */
+    --green-text: #34d399;
+    --yellow-text: #fbbf24;
+    --red-text: #f87171;
+    --purple-text: #c4b5fd;
+    --brand-text: #60a5fa;
 
     --brand-dim: rgba(59, 130, 246, 0.15);
     --green-dim: rgba(16, 185, 129, 0.16);
@@ -197,11 +228,11 @@ input, textarea, select { font-family: inherit; outline: none; }
   font-weight: 600;
   letter-spacing: 0.02em;
 }
-.badge-brand { background: var(--brand-dim); color: var(--brand-light); border: 1px solid rgba(59,130,246,0.3); }
-.badge-green { background: var(--green-dim); color: var(--green); border: 1px solid rgba(16,185,129,0.3); }
-.badge-yellow { background: var(--yellow-dim); color: var(--yellow); border: 1px solid rgba(245,158,11,0.3); }
-.badge-red { background: var(--red-dim); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
-.badge-purple { background: var(--purple-dim); color: var(--purple); border: 1px solid rgba(139,92,246,0.3); }
+.badge-brand { background: var(--brand-dim); color: var(--brand-text); border: 1px solid rgba(59,130,246,0.3); }
+.badge-green { background: var(--green-dim); color: var(--green-text); border: 1px solid rgba(16,185,129,0.3); }
+.badge-yellow { background: var(--yellow-dim); color: var(--yellow-text); border: 1px solid rgba(245,158,11,0.3); }
+.badge-red { background: var(--red-dim); color: var(--red-text); border: 1px solid rgba(239,68,68,0.3); }
+.badge-purple { background: var(--purple-dim); color: var(--purple-text); border: 1px solid rgba(139,92,246,0.3); }
 
 /* Button */
 .btn {
@@ -241,11 +272,13 @@ input, textarea, select { font-family: inherit; outline: none; }
   transform: translateY(-1px);
 }
 .btn-outline:active { transform: translateY(0); }
-.btn-danger { background: var(--red-dim); color: var(--red); border-color: rgba(220,38,38,0.35); }
+.btn-danger { background: var(--red-dim); color: var(--red-text); border-color: rgba(220,38,38,0.35); }
 .btn-danger:hover { background: rgba(220,38,38,0.18); border-color: var(--red); transform: translateY(-1px); }
 .btn-danger:active { transform: translateY(0); }
 .btn-lg { padding: 14px 28px; font-size: 1rem; border-radius: var(--radius-lg); }
-.btn-sm { padding: 7px 14px; font-size: 0.8rem; border-radius: var(--radius-sm); }
+/* Tinggi minimum dijaga 34px supaya tombol kecil tetap mudah ditekan di
+   layar sentuh; padding saja hanya menghasilkan sekitar 31px. */
+.btn-sm { min-height: 34px; padding: 7px 14px; font-size: 0.8rem; border-radius: var(--radius-sm); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none; }
 
 /* Input */
@@ -273,9 +306,9 @@ input, textarea, select { font-family: inherit; outline: none; }
 select.input { cursor: pointer; }
 
 /* Risk colors */
-.risk-high { color: var(--red); }
-.risk-medium { color: var(--yellow); }
-.risk-low { color: var(--green); }
+.risk-high { color: var(--red-text); }
+.risk-medium { color: var(--yellow-text); }
+.risk-low { color: var(--green-text); }
 .risk-bg-high { background: var(--red-dim); border-color: rgba(239,68,68,0.3); }
 .risk-bg-medium { background: var(--yellow-dim); border-color: rgba(245,158,11,0.3); }
 .risk-bg-low { background: var(--green-dim); border-color: rgba(16,185,129,0.3); }

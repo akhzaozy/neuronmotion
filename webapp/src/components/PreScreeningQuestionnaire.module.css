@@ -50,7 +50,7 @@
   padding: 4px 12px;
   border-radius: 99px;
   background: var(--brand-dim);
-  color: var(--brand-light);
+  color: var(--brand-text);
   margin-bottom: 14px;
 }
 
@@ -219,7 +219,7 @@
   border-radius: 99px;
   background: var(--purple-dim);
   border: 1px solid rgba(124, 58, 237, 0.3);
-  color: var(--purple);
+  color: var(--purple-text);
   font-size: 0.8rem;
   font-weight: 600;
   margin-bottom: 18px;

@@ -562,8 +562,11 @@ export function LanguageToggle() {
           key={l}
           onClick={() => setLang(l)}
           aria-pressed={lang === l}
+          // Tinggi minimum 32px agar tetap nyaman disentuh di layar sentuh;
+          // sebelumnya kotak singgungnya hanya 25px.
           style={{
-            padding: '5px 11px',
+            minHeight: 32,
+            padding: '0 12px',
             fontSize: '0.74rem',
             fontWeight: 700,
             letterSpacing: '0.03em',

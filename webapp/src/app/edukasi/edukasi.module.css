@@ -67,7 +67,7 @@
   padding: 3px 10px;
   border-radius: 99px;
   background: var(--brand-dim);
-  color: var(--brand-light);
+  color: var(--brand-text);
 }
 
 .articleTitle {

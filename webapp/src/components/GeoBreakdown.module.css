@@ -114,9 +114,9 @@
   border-radius: 99px;
 }
 
-.tagHigh { background: var(--red-dim); color: var(--red); }
-.tagMed { background: var(--yellow-dim); color: var(--yellow); }
-.tagLow { background: var(--green-dim); color: var(--green); }
+.tagHigh { background: var(--red-dim); color: var(--red-text); }
+.tagMed { background: var(--yellow-dim); color: var(--yellow-text); }
+.tagLow { background: var(--green-dim); color: var(--green-text); }
 .tagNone { background: var(--bg-secondary); color: var(--text-muted); }
 
 .empty, .note {

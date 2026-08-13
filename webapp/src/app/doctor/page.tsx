@@ -178,19 +178,19 @@ export default function DoctorPortal() {
         <div className={styles.statsGrid}>
           <div className={styles.statCard}>
             <div className={styles.statTitle}>{t('doc.totalPatients')}</div>
-            <div className={styles.statValue} style={{ color: 'var(--brand-light)' }}>{dashboard.totalPatients}</div>
+            <div className={styles.statValue} style={{ color: 'var(--brand-text)' }}>{dashboard.totalPatients}</div>
           </div>
           <div className={styles.statCard}>
             <div className={styles.statTitle}>{t('doc.highRisk')}</div>
-            <div className={styles.statValue} style={{ color: 'var(--red)' }}>{dashboard.riskBreakdown?.HIGH || 0}</div>
+            <div className={styles.statValue} style={{ color: 'var(--red-text)' }}>{dashboard.riskBreakdown?.HIGH || 0}</div>
           </div>
           <div className={styles.statCard}>
             <div className={styles.statTitle}>{t('doc.mediumRisk')}</div>
-            <div className={styles.statValue} style={{ color: 'var(--yellow)' }}>{dashboard.riskBreakdown?.MEDIUM || 0}</div>
+            <div className={styles.statValue} style={{ color: 'var(--yellow-text)' }}>{dashboard.riskBreakdown?.MEDIUM || 0}</div>
           </div>
           <div className={styles.statCard}>
             <div className={styles.statTitle}>{t('doc.earlyParkinson')}</div>
-            <div className={styles.statValue} style={{ color: 'var(--purple)' }}>{dashboard.conditionBreakdown?.PARKINSON_EARLY || 0}</div>
+            <div className={styles.statValue} style={{ color: 'var(--purple-text)' }}>{dashboard.conditionBreakdown?.PARKINSON_EARLY || 0}</div>
           </div>
         </div>
 
@@ -281,7 +281,7 @@ export default function DoctorPortal() {
                     
                     {activePatient.sessions[activeSessionIndex].mlPrediction?.predictedLabel && (
                       <div style={{ background: 'var(--bg-secondary)', padding: 16, borderRadius: 8, marginBottom: 24, borderLeft: '4px solid var(--purple)' }}>
-                        <h4 style={{ color: 'var(--purple)', marginBottom: 4, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('doc.clinicalClassification')}</h4>
+                        <h4 style={{ color: 'var(--purple-text)', marginBottom: 4, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('doc.clinicalClassification')}</h4>
                         <p style={{ fontWeight: 600 }}>{translateServerLabel(activePatient.sessions[activeSessionIndex].mlPrediction.predictedLabel, lang)}</p>
                         <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: 4 }}>
                           {t('doc.confidence')}: {activePatient.sessions[activeSessionIndex].mlPrediction.confidence || '?'}%

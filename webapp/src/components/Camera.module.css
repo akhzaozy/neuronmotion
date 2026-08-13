@@ -129,7 +129,7 @@
   padding: 6px 14px;
   font-size: 0.82rem;
   font-weight: 700;
-  color: var(--red);
+  color: var(--red-text);
   backdrop-filter: blur(8px);
   z-index: 5;
 }

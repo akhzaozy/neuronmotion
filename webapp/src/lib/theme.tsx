@@ -68,46 +68,63 @@ export function ThemeToggle({ size = 'md' }: { size?: 'sm' | 'md' }) {
       onClick={toggleTheme}
       title={theme === 'light' ? 'Ganti ke mode gelap' : 'Ganti ke mode terang'}
       aria-label={theme === 'light' ? 'Ganti ke mode gelap' : 'Ganti ke mode terang'}
+      aria-pressed={theme === 'dark'}
+      // Sakelar ini sengaja tetap ramping secara visual, tetapi tombolnya
+      // diberi ruang singgung minimal 32px agar tidak sulit ditekan di layar
+      // sentuh. Tampilan sakelar dipindah ke elemen di dalamnya.
       style={{
-        position: 'relative',
-        width: w,
-        height: h,
-        borderRadius: h / 2,
-        background: theme === 'light' ? '#e2e8f0' : '#1e293b',
-        border: '1px solid',
-        borderColor: theme === 'light' ? '#cbd5e1' : '#334155',
-        cursor: 'pointer',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: 32,
+        minWidth: 44,
         padding: 0,
+        background: 'transparent',
+        border: 'none',
+        cursor: 'pointer',
         flexShrink: 0,
-        transition: 'background 0.2s ease, border-color 0.2s ease',
       }}
     >
       <span
         style={{
-          position: 'absolute',
-          top: 2,
-          left: theme === 'light' ? 2 : w - thumb - 4,
-          width: thumb,
-          height: thumb,
-          background: '#fff',
-          borderRadius: '50%',
-          boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
-          transition: 'left 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
-          zIndex: 2,
+          position: 'relative',
+          display: 'block',
+          width: w,
+          height: h,
+          borderRadius: h / 2,
+          background: theme === 'light' ? '#e2e8f0' : '#1e293b',
+          border: '1px solid',
+          borderColor: theme === 'light' ? '#cbd5e1' : '#334155',
+          transition: 'background 0.2s ease, border-color 0.2s ease',
         }}
-      />
-      <span style={{ position: 'absolute', left: 6, top: '50%', transform: 'translateY(-50%)', display: 'flex', zIndex: 1, color: theme === 'light' ? '#f59e0b' : '#64748b' }}>
+      >
+        <span
+          style={{
+            position: 'absolute',
+            top: 2,
+            left: theme === 'light' ? 2 : w - thumb - 4,
+            width: thumb,
+            height: thumb,
+            background: '#fff',
+            borderRadius: '50%',
+            boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
+            transition: 'left 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            zIndex: 2,
+          }}
+        />
+        <span style={{ position: 'absolute', left: 6, top: '50%', transform: 'translateY(-50%)', display: 'flex', zIndex: 1, color: theme === 'light' ? '#f59e0b' : '#64748b' }}>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
           <circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />
           <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
           <line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" />
           <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
         </svg>
-      </span>
-      <span style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', display: 'flex', zIndex: 1, color: theme === 'dark' ? '#60a5fa' : '#94a3b8' }}>
+        </span>
+        <span style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', display: 'flex', zIndex: 1, color: theme === 'dark' ? '#60a5fa' : '#94a3b8' }}>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
         </svg>
+        </span>
       </span>
     </button>
   );

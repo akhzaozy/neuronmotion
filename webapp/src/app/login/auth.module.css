@@ -83,7 +83,7 @@
 }
 
 .backHome:hover {
-  color: var(--brand-light);
+  color: var(--brand-text);
   border-color: var(--brand);
   transform: translateX(-2px);
 }
@@ -129,7 +129,7 @@
 
 .errorBox {
   background: var(--red-dim);
-  color: var(--red);
+  color: var(--red-text);
   padding: 12px 16px;
   border-radius: var(--radius-md);
   border: 1px solid rgba(239,68,68,0.3);
@@ -145,7 +145,7 @@
 }
 
 .link {
-  color: var(--brand-light);
+  color: var(--brand-text);
   font-weight: 600;
   text-decoration: none;
 }

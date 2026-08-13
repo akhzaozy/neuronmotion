@@ -261,7 +261,7 @@ export default function ScreeningPage() {
                 style={{
                   borderColor: result.composite.riskCategory === 'HIGH' ? 'var(--red)' :
                                result.composite.riskCategory === 'MEDIUM' ? 'var(--yellow)' : 'var(--green)',
-                  color: result.composite.riskCategory === 'HIGH' ? 'var(--red)' :
+                  color: result.composite.riskCategory === 'HIGH' ? 'var(--red-text)' :
                          result.composite.riskCategory === 'MEDIUM' ? 'var(--yellow)' : 'var(--green)'
                 }}
               >

@@ -99,12 +99,12 @@
 }
 
 .faqQuestion:hover {
-  color: var(--brand-light);
+  color: var(--brand-text);
 }
 
 .faqIcon {
   font-size: 1.2rem;
-  color: var(--brand-light);
+  color: var(--brand-text);
   flex-shrink: 0;
   transition: transform 0.2s;
 }

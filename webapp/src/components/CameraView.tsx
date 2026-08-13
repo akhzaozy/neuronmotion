@@ -77,7 +77,7 @@ export default function CameraView({
         {error && (
           <div className={styles.overlay}>
             <div className={styles.errorBox}>
-              <div className={styles.cameraIcon} style={{ color: 'var(--red)' }}><IconAlert /></div>
+              <div className={styles.cameraIcon} style={{ color: 'var(--red-text)' }}><IconAlert /></div>
               <h3>Terjadi Masalah</h3>
               <p>{error}</p>
               <button className="btn btn-primary" onClick={onStart}>Coba Lagi</button>

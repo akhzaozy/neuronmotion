@@ -97,14 +97,23 @@
   transform: scale(0.85) translateY(16px);
   opacity: 0;
   pointer-events: none;
+  /* Tanpa visibility, isi jendela yang tertutup tetap dapat dicapai dengan
+     tombol Tab meski tidak terlihat, sehingga fokus keyboard seolah hilang.
+     Ditunda agar animasi menutup tetap terlihat sampai selesai. */
+  visibility: hidden;
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
-    opacity 0.25s ease;
+    opacity 0.25s ease,
+    visibility 0s linear 0.3s;
 }
 
 .chatWindowOpen {
   transform: scale(1) translateY(0);
   opacity: 1;
   pointer-events: auto;
+  visibility: visible;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.25s ease,
+    visibility 0s;
 }
 
 /* Header */
@@ -296,9 +305,10 @@
 }
 
 .quickPromptBtn {
+  min-height: 32px;
   padding: 6px 12px;
   background: var(--brand-dim);
-  color: var(--brand-light);
+  color: var(--brand-text);
   border: 1px solid rgba(59, 130, 246, 0.25);
   border-radius: 999px;
   font-size: 0.78rem;

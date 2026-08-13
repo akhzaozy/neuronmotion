@@ -46,7 +46,7 @@
 }
 
 .shareBtn:hover {
-  color: var(--brand-light);
+  color: var(--brand-text);
   border-color: var(--brand);
   background: var(--brand-dim);
 }

@@ -211,7 +211,7 @@
   font-size: 0.74rem;
   font-weight: 700;
   background: var(--purple-dim);
-  color: var(--purple);
+  color: var(--purple-text);
   white-space: nowrap;
 }
 
@@ -237,7 +237,7 @@
 .aiTitle {
   font-size: 0.92rem;
   font-weight: 800;
-  color: var(--purple);
+  color: var(--purple-text);
 }
 
 .aiConfidence {
@@ -246,7 +246,7 @@
   padding: 3px 10px;
   border-radius: 99px;
   background: rgba(124, 58, 237, 0.15);
-  color: var(--purple);
+  color: var(--purple-text);
   white-space: nowrap;
 }
 
@@ -318,7 +318,7 @@
   border-radius: var(--radius-md);
   font-size: 0.84rem;
   font-weight: 600;
-  color: var(--red);
+  color: var(--red-text);
   line-height: 1.55;
 }
 
@@ -337,7 +337,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--brand-light);
+  color: var(--brand-text);
   margin-bottom: 6px;
 }
 

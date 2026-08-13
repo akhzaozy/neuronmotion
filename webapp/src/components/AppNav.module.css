@@ -34,7 +34,7 @@
 }
 
 .brandSuffix {
-  color: var(--brand-light);
+  color: var(--brand-text);
   font-weight: 800;
 }
 
@@ -43,7 +43,7 @@
   border-radius: 99px;
   background: var(--purple-dim);
   border: 1px solid rgba(124, 58, 237, 0.3);
-  color: var(--purple);
+  color: var(--purple-text);
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.03em;
@@ -86,7 +86,7 @@
 }
 
 .linkActive {
-  color: var(--brand-light);
+  color: var(--brand-text);
   background: var(--brand-dim);
 }
 

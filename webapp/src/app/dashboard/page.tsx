@@ -140,7 +140,7 @@ export default function DashboardPage() {
               <>
                 <div
                   className={styles.scoreValue}
-                  style={{ color: latestRisk === 'HIGH' ? 'var(--red)' : latestRisk === 'MEDIUM' ? 'var(--yellow)' : 'var(--green)' }}
+                  style={{ color: latestRisk === 'HIGH' ? 'var(--red-text)' : latestRisk === 'MEDIUM' ? 'var(--yellow-text)' : 'var(--green-text)' }}
                 >
                   {displayScore}
                 </div>
@@ -202,7 +202,7 @@ export default function DashboardPage() {
                 </div>
                 <div
                   className={styles.historyScore}
-                  style={{ color: session.riskCategory === 'HIGH' ? 'var(--red)' : session.riskCategory === 'MEDIUM' ? 'var(--yellow)' : 'var(--green)' }}
+                  style={{ color: session.riskCategory === 'HIGH' ? 'var(--red-text)' : session.riskCategory === 'MEDIUM' ? 'var(--yellow-text)' : 'var(--green-text)' }}
                 >
                   {Math.round(session.compositeScore)}
                 </div>
@@ -214,7 +214,7 @@ export default function DashboardPage() {
               )}
               {session.doctorNote && (
                 <div style={{ fontSize: '0.82rem', background: 'var(--bg-secondary)', borderLeft: '3px solid var(--brand)', padding: '8px 12px', borderRadius: 4 }}>
-                  <strong style={{ color: 'var(--brand-light)' }}>{t('hist.doctorNote')}:</strong>{' '}
+                  <strong style={{ color: 'var(--brand-text)' }}>{t('hist.doctorNote')}:</strong>{' '}
                   <span data-no-translate="">{session.doctorNote}</span>
                 </div>
               )}

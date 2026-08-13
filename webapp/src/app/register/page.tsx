@@ -136,7 +136,7 @@ export default function RegisterPage() {
               </button>
             </div>
             {passwordTooShort && (
-              <span style={{ fontSize: '0.78rem', color: 'var(--red)' }}>{t('auth.passwordTooShort')}</span>
+              <span style={{ fontSize: '0.78rem', color: 'var(--red-text)' }}>{t('auth.passwordTooShort')}</span>
             )}
           </div>
           <div className={styles.formGroup}>

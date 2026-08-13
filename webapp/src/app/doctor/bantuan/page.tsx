@@ -113,7 +113,7 @@ export default function DoctorBantuanPage() {
             <div className={styles.contactItem}>
               <div className={styles.contactLabel}>Dokumentasi metodologi</div>
               <div className={styles.contactValue}>
-                <Link href="/doctor/edukasi" style={{ color: 'var(--brand-light)' }}>
+                <Link href="/doctor/edukasi" style={{ color: 'var(--brand-text)' }}>
                   Halaman Edukasi
                 </Link>
               </div>
