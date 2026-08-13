@@ -7,6 +7,7 @@ import { api, Session } from '@/lib/api';
 import AppNav from '@/components/AppNav';
 import ReportTemplate from '@/components/ReportTemplate';
 import ReportPrintHost from '@/components/ReportPrintHost';
+import { ClipboardIcon, SparkleIcon } from '@/components/icons';
 import { useI18n, translateServerLabel, dateLocale, type Lang } from '@/lib/i18n';
 import styles from './riwayat.module.css';
 
@@ -296,7 +297,9 @@ export default function RiwayatPage() {
         {sessions.length === 0 ? (
           <div className={styles.card}>
             <div className={styles.emptyState}>
-              <div style={{ fontSize: '2.6rem', marginBottom: 12, opacity: 0.6 }}>📋</div>
+              <div style={{ marginBottom: 14, color: 'var(--text-muted)', display: 'flex', justifyContent: 'center' }}>
+                <ClipboardIcon size={36} />
+              </div>
               <p style={{ marginBottom: 16 }}>{t('hist.noHistory')}</p>
               <Link href="/screening" className="btn btn-primary">{t('hist.startFirst')}</Link>
             </div>
@@ -390,7 +393,7 @@ export default function RiwayatPage() {
                         </td>
                         <td>
                           {s.aiAnalysis?.available
-                            ? <span className={styles.aiPill}>✨ {t('hist.available')}</span>
+                            ? <span className={styles.aiPill}><SparkleIcon size={13} /> {t('hist.available')}</span>
                             : <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>{t('hist.none')}</span>}
                         </td>
                         <td className={styles.noteCell}>
@@ -477,7 +480,7 @@ export default function RiwayatPage() {
             {detail.aiAnalysis?.available && (
               <div className={styles.aiBox}>
                 <div className={styles.aiHeader}>
-                  <span className={styles.aiTitle}>✨ {t('hist.aiCombined')}</span>
+                  <span className={styles.aiTitle}><SparkleIcon size={16} /> {t('hist.aiCombined')}</span>
                   {detail.aiAnalysis.tingkatKeyakinan && (
                     <span className={styles.aiConfidence}>{t('hist.confidence')}: {detail.aiAnalysis.tingkatKeyakinan}</span>
                   )}

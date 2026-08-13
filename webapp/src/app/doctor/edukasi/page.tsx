@@ -3,12 +3,15 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import DoctorNav from '@/components/DoctorNav';
+import { useI18n } from '@/lib/i18n';
+import { RulerIcon, MicroscopeIcon, WarningIcon, ChartIcon, HandIcon, TargetIcon, BulbIcon, CheckIcon } from '@/components/icons';
 import styles from '../../edukasi/edukasi.module.css';
 import local from './doctorEdukasi.module.css';
 
 interface Article {
   id: string;
-  icon: string;
+  // Komponen ikon, bukan emoji, agar seragam di semua perangkat
+  icon: React.ComponentType<{ size?: number }>;
   tag: string;
   title: string;
   excerpt: string;
@@ -21,7 +24,7 @@ interface Article {
 const CLINICAL_ARTICLES: Article[] = [
   {
     id: 'metodologi',
-    icon: '📐',
+    icon: RulerIcon,
     tag: 'Metodologi',
     title: 'Bagaimana Skor Risiko Dihitung',
     excerpt: 'Rincian bobot per biomarker, ambang kategori, dan peran K-NN dalam menyusun skor komposit.',
@@ -49,7 +52,7 @@ const CLINICAL_ARTICLES: Article[] = [
   },
   {
     id: 'interpretasi',
-    icon: '🔬',
+    icon: MicroscopeIcon,
     tag: 'Interpretasi',
     title: 'Membaca Hasil Biomarker di Portal',
     excerpt: 'Arti tiap angka yang tampil pada detail pasien dan batas kewajaran interpretasinya.',
@@ -71,7 +74,7 @@ const CLINICAL_ARTICLES: Article[] = [
   },
   {
     id: 'keterbatasan',
-    icon: '⚠️',
+    icon: WarningIcon,
     tag: 'Keterbatasan',
     title: 'Batas Kemampuan Sistem yang Perlu Diketahui',
     excerpt: 'Apa yang belum dapat dijamin sistem ini, dan mengapa penilaian klinis tetap menentukan.',
@@ -91,7 +94,7 @@ const CLINICAL_ARTICLES: Article[] = [
   },
   {
     id: 'kualitas-data',
-    icon: '📊',
+    icon: ChartIcon,
     tag: 'Praktik',
     title: 'Menilai Mutu Sesi Skrining Pasien',
     excerpt: 'Cara mengenali sesi dengan data lemah dan meminta pasien mengulang dengan benar.',
@@ -119,7 +122,7 @@ const CLINICAL_ARTICLES: Article[] = [
 const PATIENT_ARTICLES: Article[] = [
   {
     id: 'p-tremor',
-    icon: '🤚',
+    icon: HandIcon,
     tag: 'Untuk Pasien',
     title: 'Apa Itu Tremor dan Kapan Perlu Diperiksa',
     excerpt: 'Penjelasan bahasa awam tentang beda getaran biasa dan yang perlu dievaluasi.',
@@ -140,7 +143,7 @@ const PATIENT_ARTICLES: Article[] = [
   },
   {
     id: 'p-skor',
-    icon: '🎯',
+    icon: TargetIcon,
     tag: 'Untuk Pasien',
     title: 'Memahami Arti Skor Skrining Anda',
     excerpt: 'Penjelasan kategori Rendah, Sedang, dan Tinggi tanpa istilah teknis.',
@@ -159,7 +162,7 @@ const PATIENT_ARTICLES: Article[] = [
   },
   {
     id: 'p-persiapan',
-    icon: '💡',
+    icon: BulbIcon,
     tag: 'Untuk Pasien',
     title: 'Persiapan Agar Hasil Tes Akurat',
     excerpt: 'Panduan praktis pencahayaan, jarak kamera, dan posisi tubuh saat tes.',
@@ -180,6 +183,7 @@ const PATIENT_ARTICLES: Article[] = [
 ];
 
 export default function DoctorEdukasiPage() {
+  const { t } = useI18n();
   const router = useRouter();
   const { user, isLoading } = useAuth();
   const [reading, setReading] = useState<Article | null>(null);
@@ -205,7 +209,7 @@ export default function DoctorEdukasiPage() {
   const renderCard = (a: Article, shareable = false) => (
     <div key={a.id} className={local.cardWrap}>
       <button className={styles.articleCard} onClick={() => setReading(a)}>
-        <span className={styles.articleIcon}>{a.icon}</span>
+        <span className={styles.articleIcon}><a.icon size={22} /></span>
         <span className={styles.articleTag}>{a.tag}</span>
         <span className={styles.articleTitle}>{a.title}</span>
         <span className={styles.articleExcerpt}>{a.excerpt}</span>
@@ -213,7 +217,9 @@ export default function DoctorEdukasiPage() {
       </button>
       {shareable && (
         <button className={local.shareBtn} onClick={() => shareArticle(a)}>
-          {copied === a.id ? '✓ Tersalin' : 'Salin untuk pasien'}
+          {copied === a.id
+                      ? <><CheckIcon size={14} /> {t('edu.copied')}</>
+                      : t('edu.copyForPatient')}
         </button>
       )}
     </div>

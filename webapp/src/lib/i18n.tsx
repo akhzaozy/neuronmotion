@@ -22,9 +22,10 @@ const DICT: Record<string, { id: string; en: string }> = {
 
   // NeuroBot
   'bot.welcome': {
-    id: 'Halo! Saya **NeuroBot**, asisten kesehatan virtual NeuronMotion 👋\n\nSaya siap membantu Anda memahami hasil skrining, menjawab pertanyaan seputar kesehatan motorik, dan memberikan informasi umum tentang gangguan saraf.\n\nApa yang ingin Anda tanyakan hari ini?',
-    en: 'Hello! I am **NeuroBot**, the NeuronMotion virtual health assistant 👋\n\nI can help you understand your screening results, answer questions about motor health, and share general information about neurological conditions.\n\nWhat would you like to ask today?',
+    id: 'Halo! Saya **NeuroBot**, asisten kesehatan virtual NeuronMotion.\n\nSaya siap membantu Anda memahami hasil skrining, menjawab pertanyaan seputar kesehatan motorik, dan memberikan informasi umum tentang gangguan saraf.\n\nApa yang ingin Anda tanyakan hari ini?',
+    en: 'Hello! I am **NeuroBot**, the NeuronMotion virtual health assistant.\n\nI can help you understand your screening results, answer questions about motor health, and share general information about neurological conditions.\n\nWhat would you like to ask today?',
   },
+  'bot.errorPrefix': { id: 'Gagal:', en: 'Failed:' },
   'bot.error': { id: 'Terjadi kesalahan. Silakan coba lagi.', en: 'Something went wrong. Please try again.' },
   'bot.openChat': { id: 'Buka chat dengan NeuroBot', en: 'Open chat with NeuroBot' },
   'bot.closeChat': { id: 'Tutup chat', en: 'Close chat' },
@@ -38,8 +39,8 @@ const DICT: Record<string, { id: string; en: string }> = {
   'bot.messageLabel': { id: 'Pesan untuk NeuroBot', en: 'Message for NeuroBot' },
   'bot.send': { id: 'Kirim pesan', en: 'Send message' },
   'bot.disclaimer': {
-    id: '⚕️ NeuroBot bukan dokter, selalu konsultasikan kondisi Anda ke tenaga medis',
-    en: '⚕️ NeuroBot is not a doctor, always consult a healthcare professional about your condition',
+    id: 'NeuroBot bukan dokter, selalu konsultasikan kondisi Anda ke tenaga medis',
+    en: 'NeuroBot is not a doctor, always consult a healthcare professional about your condition',
   },
 
   // Sebaran wilayah

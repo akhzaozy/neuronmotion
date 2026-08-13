@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import Logo from '@/components/Logo';
-import { EyeIcon, EyeOffIcon, ArrowLeftIcon } from '@/components/icons';
+import { EyeIcon, EyeOffIcon, ArrowLeftIcon, PersonIcon, StethoscopeIcon } from '@/components/icons';
 import { ThemeToggle } from '@/lib/theme';
 import { LanguageToggle, useI18n } from '@/lib/i18n';
 import styles from './auth.module.css';
@@ -105,14 +105,14 @@ export default function LoginPage() {
             className={`${styles.roleTab} ${role === 'PATIENT' ? styles.roleTabActive : ''}`}
             onClick={() => { setRole('PATIENT'); setError(''); }}
           >
-            🧍 {t('auth.patient')}
+            <PersonIcon size={17} /> {t('auth.patient')}
           </button>
           <button
             type="button"
             className={`${styles.roleTab} ${role === 'DOCTOR' ? styles.roleTabActive : ''}`}
             onClick={() => { setRole('DOCTOR'); setError(''); }}
           >
-            🩺 {t('auth.doctor')}
+            <StethoscopeIcon size={17} /> {t('auth.doctor')}
           </button>
         </div>
 

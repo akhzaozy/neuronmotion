@@ -170,3 +170,11 @@
   justify-content: center;
   gap: 16px;
 }
+
+/* Ikon tren disejajarkan terhadap garis dasar teks di sebelahnya, karena ikon
+   segaris teks yang tidak disejajarkan akan tampak melayang. */
+.trendIcon {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: -0.15em;
+}

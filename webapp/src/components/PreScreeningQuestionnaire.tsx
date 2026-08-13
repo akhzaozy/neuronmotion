@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { api, QuestionnaireQuestion } from '@/lib/api';
 import styles from './PreScreeningQuestionnaire.module.css';
+import { SparkleIcon, CheckIcon } from './icons';
 
 const CATEGORY_LABEL: Record<string, string> = {
   MOTORIK: 'Gejala Gerakan',
@@ -61,7 +62,7 @@ export default function PreScreeningQuestionnaire({ onComplete, onSkip }: Props)
         <div className={styles.introCard}>
           {aiEnabled && (
             <div className={styles.aiBadge}>
-              <span>✨</span> Dianalisis bersama AI
+              <SparkleIcon size={15} /> Dianalisis bersama AI
             </div>
           )}
           <h2 className={styles.introTitle}>Sebelum Tes Gerakan, Ceritakan Kondisi Anda</h2>
@@ -154,7 +155,7 @@ export default function PreScreeningQuestionnaire({ onComplete, onSkip }: Props)
                   onClick={() => toggleMulti(opt.value)}
                 >
                   <span className={`${styles.checkbox} ${selected ? styles.checkboxChecked : ''}`}>
-                    {selected ? '✓' : ''}
+                    {selected ? <CheckIcon size={14} /> : null}
                   </span>
                   {opt.label}
                 </button>

@@ -364,3 +364,23 @@
   line-height: 1.6;
   margin-bottom: 12px;
 }
+
+/* Ikon sebaris teks perlu disejajarkan lewat flex, bukan dibiarkan mengikuti
+   garis dasar huruf, agar tidak tampak naik atau turun sendiri. */
+.instructions h4 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.stepLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.stepState {
+  display: inline-flex;
+  align-items: center;
+  min-width: 17px;
+}

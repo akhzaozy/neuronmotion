@@ -1,31 +1,32 @@
 'use client';
 import { useState } from 'react';
 import AppNav from '@/components/AppNav';
+import { PenIcon, BulbIcon, VideoIcon, ActivityIcon, ChartIcon } from '@/components/icons';
 import styles from './bantuan.module.css';
 
 const STEPS = [
   {
-    icon: '📝',
+    icon: PenIcon,
     title: 'Daftar dan lengkapi profil',
     desc: 'Buat akun sebagai pasien, lalu isi tanggal lahir dan jenis kelamin. Data usia dipakai untuk membandingkan hasil Anda dengan rentang normal kelompok usia yang sesuai.',
   },
   {
-    icon: '💡',
+    icon: BulbIcon,
     title: 'Siapkan ruangan dan posisi',
     desc: 'Cari ruangan dengan pencahayaan cukup (tidak gelap, tidak silau). Untuk tes berjalan, sediakan ruang gerak sekitar 2 meter dan pastikan seluruh tubuh terlihat kamera.',
   },
   {
-    icon: '🎥',
+    icon: VideoIcon,
     title: 'Izinkan akses kamera',
     desc: 'Browser akan meminta izin kamera. Video tidak dikirim ke server, semua analisis gerakan berjalan di perangkat Anda sendiri.',
   },
   {
-    icon: '🤸',
+    icon: ActivityIcon,
     title: 'Ikuti 6 tes gerakan',
     desc: 'Setiap tes diawali panduan bergambar dan hitung mundur. Ikuti instruksi bagian tubuh yang diminta. Sistem akan memberi peringatan jika bagian tubuh tidak terdeteksi jelas.',
   },
   {
-    icon: '📊',
+    icon: ChartIcon,
     title: 'Lihat hasil dan pantau tren',
     desc: 'Hasil skrining muncul lengkap dengan skor risiko dan rekomendasi. Semua sesi tersimpan di halaman Riwayat agar Anda bisa membandingkan perkembangan dari waktu ke waktu.',
   },
@@ -79,7 +80,7 @@ export default function BantuanPage() {
           <div className={styles.steps}>
             {STEPS.map((step, i) => (
               <div key={i} className={styles.step}>
-                <div className={styles.stepNum}>{step.icon}</div>
+                <div className={styles.stepNum}><step.icon size={20} /></div>
                 <div>
                   <div className={styles.stepTitle}>{i + 1}. {step.title}</div>
                   <div className={styles.stepDesc}>{step.desc}</div>

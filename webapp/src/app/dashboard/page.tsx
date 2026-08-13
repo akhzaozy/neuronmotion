@@ -7,6 +7,7 @@ import { api, Session } from '@/lib/api';
 import AppNav from '@/components/AppNav';
 import { useI18n, translateServerLabel, dateLocale } from '@/lib/i18n';
 import LiveChat from '@/components/LiveChat';
+import { TrendUpIcon, TrendDownIcon, TrendFlatIcon, BrainIcon } from '@/components/icons';
 import styles from './dashboard.module.css';
 
 function getGreeting(lang: string) {
@@ -119,7 +120,7 @@ export default function DashboardPage() {
           <div>
             <h1>
               {getGreeting(lang)},{' '}
-              <span data-no-translate="">{user?.name?.split(' ')[0]}</span> 👋
+              <span data-no-translate="">{user?.name?.split(' ')[0]}</span>
             </h1>
             <p>{t('dash.subtitle')}</p>
           </div>
@@ -151,7 +152,11 @@ export default function DashboardPage() {
                   {t('dash.riskPrefix')} {riskLabel}
                 </div>
                 <div className={styles.trendBox}>
-                  <span>{summary.trendDirection === 'WORSENING' ? '📈' : summary.trendDirection === 'IMPROVING' ? '📉' : '➖'}</span>
+                  <span className={styles.trendIcon}>
+                    {summary.trendDirection === 'WORSENING' ? <TrendUpIcon size={16} />
+                      : summary.trendDirection === 'IMPROVING' ? <TrendDownIcon size={16} />
+                      : <TrendFlatIcon size={16} />}
+                  </span>
                   {t('dash.trend')}: {summary.trendDirection === 'WORSENING' ? t('dash.worsening') : summary.trendDirection === 'IMPROVING' ? t('dash.improving') : t('dash.stable')}
                   ({summary.trendDelta > 0 ? '+' : ''}{summary.trendDelta})
                 </div>
@@ -163,7 +168,9 @@ export default function DashboardPage() {
               </>
             ) : (
               <div style={{ textAlign: 'center', padding: '12px 0' }}>
-                <div style={{ fontSize: '2.4rem', marginBottom: 8, opacity: 0.6 }}>🧠</div>
+                <div style={{ marginBottom: 10, color: 'var(--text-muted)', display: 'flex', justifyContent: 'center' }}>
+                  <BrainIcon size={34} />
+                </div>
                 <p style={{ color: 'var(--text-secondary)' }}>{t('dash.noData')}</p>
               </div>
             )}

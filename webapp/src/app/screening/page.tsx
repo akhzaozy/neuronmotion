@@ -7,15 +7,28 @@ import { useBiomarkerCapture, TestType } from '@/hooks/useBiomarkerCapture';
 import CameraView from '@/components/CameraView';
 import AppNav from '@/components/AppNav';
 import PreScreeningQuestionnaire, { QuestionnaireAnswers } from '@/components/PreScreeningQuestionnaire';
+import {
+  HandIcon, TapIcon, WalkIcon, ArmSwingIcon, PostureIcon, KneeIcon,
+  ClipboardIcon, CheckCircleIcon, ClockIcon, SparkleIcon,
+} from '@/components/icons';
 import styles from './screening.module.css';
 
-const TEST_SEQUENCE: { type: TestType; name: string; desc: string; icon: string }[] = [
-  { type: 'tremor', name: 'Tremor', desc: 'Angkat tangan kanan Anda sejajar dada dan tahan dalam keadaan rileks. Kamera akan mengukur frekuensi dan amplitudo getaran.', icon: '🤚' },
-  { type: 'fingerTapping', name: 'Finger Tapping', desc: 'Angkat tangan Anda. Buka ibu jari dan telunjuk selebar mungkin, lalu ketuk keduanya secepat dan selebar mungkin berulang kali.', icon: '☝️' },
-  { type: 'gait', name: 'Pola Jalan (Gait)', desc: 'Mundur 2-3 meter agar seluruh tubuh terlihat. Berjalanlah lurus mendekati kamera dengan langkah biasa.', icon: '🚶' },
-  { type: 'armSwing', name: 'Ayunan Lengan', desc: 'Berjalanlah di tempat atau bolak-balik dengan mengayunkan lengan secara natural.', icon: '💪' },
-  { type: 'posture', name: 'Keseimbangan', desc: 'Berdiri tegak dengan kaki rapat dan tangan di samping badan. Tahan posisi tersebut.', icon: '🧍' },
-  { type: 'rom', name: 'ROM Lutut', desc: 'Berdiri menyamping, angkat satu lutut setinggi mungkin, lalu luruskan perlahan.', icon: '🦵' },
+interface TestStep {
+  type: TestType;
+  name: string;
+  desc: string;
+  // Ikon berupa komponen agar bentuknya sama di setiap perangkat, tidak seperti
+  // emoji yang digambar ulang oleh masing-masing sistem operasi.
+  icon: React.ComponentType<{ size?: number }>;
+}
+
+const TEST_SEQUENCE: TestStep[] = [
+  { type: 'tremor', name: 'Tremor', desc: 'Angkat tangan kanan Anda sejajar dada dan tahan dalam keadaan rileks. Kamera akan mengukur frekuensi dan amplitudo getaran.', icon: HandIcon },
+  { type: 'fingerTapping', name: 'Finger Tapping', desc: 'Angkat tangan Anda. Buka ibu jari dan telunjuk selebar mungkin, lalu ketuk keduanya secepat dan selebar mungkin berulang kali.', icon: TapIcon },
+  { type: 'gait', name: 'Pola Jalan (Gait)', desc: 'Mundur 2-3 meter agar seluruh tubuh terlihat. Berjalanlah lurus mendekati kamera dengan langkah biasa.', icon: WalkIcon },
+  { type: 'armSwing', name: 'Ayunan Lengan', desc: 'Berjalanlah di tempat atau bolak-balik dengan mengayunkan lengan secara natural.', icon: ArmSwingIcon },
+  { type: 'posture', name: 'Keseimbangan', desc: 'Berdiri tegak dengan kaki rapat dan tangan di samping badan. Tahan posisi tersebut.', icon: PostureIcon },
+  { type: 'rom', name: 'ROM Lutut', desc: 'Berdiri menyamping, angkat satu lutut setinggi mungkin, lalu luruskan perlahan.', icon: KneeIcon },
 ];
 
 export default function ScreeningPage() {
@@ -115,7 +128,9 @@ export default function ScreeningPage() {
         {showOnboarding && (
           <div className={styles.resultPanel}>
             <div className={styles.resultCard} style={{ textAlign: 'left', maxWidth: 520 }}>
-              <h2 style={{ marginBottom: 16 }}>📋 Sebelum Mulai Skrining</h2>
+              <h2 style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <ClipboardIcon size={22} /> Sebelum Mulai Skrining
+              </h2>
               <p style={{ color: 'var(--text-secondary)', marginBottom: 16, lineHeight: 1.6 }}>
                 Ini adalah self-test yang Anda lakukan sendiri di depan kamera, tanpa didampingi tenaga
                 medis secara langsung. Mohon perhatikan hal berikut sebelum mulai:
@@ -163,7 +178,7 @@ export default function ScreeningPage() {
 
         <div className={styles.mainColumn}>
           <div className={styles.instructions}>
-            <h4>{currentTest.icon} Instruksi {currentTest.name}</h4>
+            <h4><currentTest.icon size={19} /> Instruksi {currentTest.name}</h4>
             <p>{currentTest.desc}</p>
           </div>
 
@@ -228,8 +243,10 @@ export default function ScreeningPage() {
                 const isActive = currentStep === i;
                 return (
                   <div key={test.type} className={`${styles.stepItem} ${isActive ? styles.active : ''} ${isDone ? styles.done : ''}`}>
-                    <span>{test.icon} {test.name}</span>
-                    <span>{isDone ? '✅' : isActive ? '⏳' : ''}</span>
+                    <span className={styles.stepLabel}><test.icon size={17} /> {test.name}</span>
+                    <span className={styles.stepState}>
+                      {isDone ? <CheckCircleIcon size={17} /> : isActive ? <ClockIcon size={17} /> : null}
+                    </span>
                   </div>
                 );
               })}
@@ -295,7 +312,7 @@ export default function ScreeningPage() {
             {result.aiAnalysis?.available && (
               <div className={styles.aiBox}>
                 <div className={styles.aiHeader}>
-                  <span className={styles.aiTitle}>✨ Analisis Gabungan AI</span>
+                  <span className={styles.aiTitle}><SparkleIcon size={16} /> Analisis Gabungan AI</span>
                   {result.aiAnalysis.tingkatKeyakinan && (
                     <span className={styles.aiConfidence}>
                       Keyakinan: {result.aiAnalysis.tingkatKeyakinan}

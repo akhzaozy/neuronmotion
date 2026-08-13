@@ -60,7 +60,7 @@
   border-radius: 50%;
   background: var(--brand-dim);
   border: 1px solid rgba(59, 130, 246, 0.3);
-  font-size: 1.15rem;
+  color: var(--brand-text);
   flex-shrink: 0;
 }
 

@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { HandIcon } from '@/components/icons';
 import { api } from '@/lib/api';
 import { useBiomarkerCapture } from '@/hooks/useBiomarkerCapture';
 import CameraView from '@/components/CameraView';
@@ -57,7 +58,7 @@ export default function DemoPage() {
         <div className={styles.mainColumn}>
           {!result && !analyzing && (
             <div className={styles.instructions}>
-              <h4>🤚 Instruksi Tremor</h4>
+              <h4 style={{ display: 'flex', alignItems: 'center', gap: 9 }}><HandIcon size={19} /> Instruksi Tremor</h4>
               <p>Angkat tangan kanan Anda sejajar dada dan tahan dalam keadaan rileks selama 10 detik. Kamera akan mengukur frekuensi dan amplitudo getaran.</p>
             </div>
           )}

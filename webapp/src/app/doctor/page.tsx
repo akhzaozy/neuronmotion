@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/auth';
 import { api, PatientDetail, Session } from '@/lib/api';
 import DoctorNav from '@/components/DoctorNav';
 import GeoBreakdown from '@/components/GeoBreakdown';
+import { ClipboardIcon, RefreshIcon } from '@/components/icons';
 import { useI18n, translateServerLabel, dateLocale } from '@/lib/i18n';
 import styles from './doctor.module.css';
 
@@ -163,7 +164,7 @@ export default function DoctorPortal() {
             </div>
             <div className={styles.detailView}>
               <div className={styles.emptyState}>
-                <div className={styles.emptyStateIcon}>📋</div>
+                <div className={styles.emptyStateIcon}><ClipboardIcon size={34} /></div>
                 <h3>{t('doc.loadingPortal')}</h3>
               </div>
             </div>
@@ -202,7 +203,7 @@ export default function DoctorPortal() {
               disabled={isRefreshing}
               title={t('doc.refreshNow')}
             >
-              {isRefreshing ? t('doc.refreshing') : `↻ ${t('doc.refresh')}`}
+              {isRefreshing ? t('doc.refreshing') : <><RefreshIcon size={15} /> {t('doc.refresh')}</>}
             </button>
             <button className="btn btn-outline" onClick={() => { logout(); router.push('/login'); }}>
               {t('common.logout')}
@@ -412,7 +413,7 @@ export default function DoctorPortal() {
               </>
             ) : (
               <div className={styles.emptyState}>
-                <div className={styles.emptyStateIcon}>📋</div>
+                <div className={styles.emptyStateIcon}><ClipboardIcon size={34} /></div>
                 <h3>{t('doc.selectPatient')}</h3>
                 <p>{t('doc.selectPatientHint')}</p>
               </div>

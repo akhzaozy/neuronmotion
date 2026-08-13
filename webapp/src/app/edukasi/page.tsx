@@ -1,11 +1,14 @@
 'use client';
 import { useState } from 'react';
 import AppNav from '@/components/AppNav';
+import { HandIcon, BrainIcon, WalkIcon, PulseIcon, CalendarIcon, LockIcon } from '@/components/icons';
 import styles from './edukasi.module.css';
 
 interface Article {
   id: string;
-  icon: string;
+  // Ikon disimpan sebagai komponen, bukan karakter emoji, agar rupanya sama di
+  // setiap perangkat dan mewarisi warna serta ukuran dari tata letaknya.
+  icon: React.ComponentType<{ size?: number }>;
   tag: string;
   title: string;
   excerpt: string;
@@ -16,7 +19,7 @@ interface Article {
 const ARTICLES: Article[] = [
   {
     id: 'tremor',
-    icon: '🤚',
+    icon: HandIcon,
     tag: 'Gejala',
     title: 'Apa Itu Tremor dan Kapan Perlu Diperiksa?',
     excerpt: 'Tidak semua getaran tangan berbahaya. Kenali beda tremor biasa dan yang perlu dievaluasi dokter.',
@@ -39,7 +42,7 @@ const ARTICLES: Article[] = [
   },
   {
     id: 'parkinson',
-    icon: '🧠',
+    icon: BrainIcon,
     tag: 'Kondisi',
     title: 'Mengenali Tanda Awal Parkinson',
     excerpt: 'Parkinson tidak selalu dimulai dengan tremor. Ada tanda lain yang sering terlewat.',
@@ -62,7 +65,7 @@ const ARTICLES: Article[] = [
   },
   {
     id: 'gait',
-    icon: '🚶',
+    icon: WalkIcon,
     tag: 'Biomarker',
     title: 'Kenapa Cara Berjalan Bisa Menunjukkan Kesehatan Saraf?',
     excerpt: 'Berjalan terlihat sederhana, padahal melibatkan koordinasi otak yang rumit.',
@@ -83,7 +86,7 @@ const ARTICLES: Article[] = [
   },
   {
     id: 'stroke',
-    icon: '⚡',
+    icon: PulseIcon,
     tag: 'Kondisi',
     title: 'Rehabilitasi Pasca Stroke dan Pemantauan Mandiri',
     excerpt: 'Pemulihan stroke adalah proses panjang. Pemantauan berkala membantu melihat kemajuan.',
@@ -104,7 +107,7 @@ const ARTICLES: Article[] = [
   },
   {
     id: 'skrining-rutin',
-    icon: '📅',
+    icon: CalendarIcon,
     tag: 'Tips',
     title: 'Seberapa Sering Sebaiknya Melakukan Skrining?',
     excerpt: 'Terlalu sering bisa membuat cemas, terlalu jarang bisa melewatkan perubahan.',
@@ -126,7 +129,7 @@ const ARTICLES: Article[] = [
   },
   {
     id: 'privasi',
-    icon: '🔒',
+    icon: LockIcon,
     tag: 'Privasi',
     title: 'Bagaimana Data Gerakan Anda Diproses?',
     excerpt: 'Video Anda tidak dikirim ke server. Ini penjelasan teknisnya secara sederhana.',
@@ -164,7 +167,7 @@ export default function EdukasiPage() {
         <div className={styles.grid}>
           {ARTICLES.map(article => (
             <button key={article.id} className={styles.articleCard} onClick={() => setActive(article)}>
-              <span className={styles.articleIcon}>{article.icon}</span>
+              <span className={styles.articleIcon}><article.icon size={22} /></span>
               <span className={styles.articleTag}>{article.tag}</span>
               <span className={styles.articleTitle}>{article.title}</span>
               <span className={styles.articleExcerpt}>{article.excerpt}</span>
@@ -177,7 +180,7 @@ export default function EdukasiPage() {
       {active && (
         <div className={styles.overlay} onClick={() => setActive(null)}>
           <div className={styles.readerCard} onClick={e => e.stopPropagation()}>
-            <div style={{ fontSize: '2rem', marginBottom: 8 }}>{active.icon}</div>
+            <div style={{ marginBottom: 10, color: 'var(--brand-text)' }}><active.icon size={30} /></div>
             <h2 className={styles.readerTitle}>{active.title}</h2>
             <p className={styles.readerMeta}>{active.tag} &bull; {active.readTime}</p>
             <div className={styles.readerBody}>{active.body}</div>

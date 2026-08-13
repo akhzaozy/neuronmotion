@@ -2,6 +2,7 @@
 import styles from './Camera.module.css';
 import { LiveMetrics, TestType } from '@/hooks/useBiomarkerCapture';
 import ScreeningInstruction from './ScreeningInstruction';
+import { BulbIcon, WarningIcon } from './icons';
 
 interface Props {
   videoRef: React.RefObject<HTMLVideoElement | null>;
@@ -126,14 +127,14 @@ export default function CameraView({
         {/* Peringatan pencahayaan, muncul kapan saja kamera aktif, bukan cuma saat rekam */}
         {cameraReady && poseReady && lightingWarning && (
           <div className={styles.lightingWarning}>
-            💡 {lightingWarning}
+            <BulbIcon size={16} /> {lightingWarning}
           </div>
         )}
 
         {/* Peringatan live: bagian tubuh yang diminta tidak terdeteksi */}
         {isCapturing && detectionWarning && (
           <div className={styles.detectionWarning} style={lightingWarning ? { top: 92 } : undefined}>
-            ⚠️ {detectionWarning}
+            <WarningIcon size={16} /> {detectionWarning}
           </div>
         )}
 

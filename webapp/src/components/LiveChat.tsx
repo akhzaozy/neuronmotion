@@ -88,7 +88,7 @@ export default function LiveChat() {
     } catch (err: unknown) {
       const errorMsg: ChatMessage = {
         role: 'model',
-        parts: [{ text: `⚠️ ${err instanceof Error ? err.message : t('bot.error')}` }],
+        parts: [{ text: `**${t('bot.errorPrefix')}** ${err instanceof Error ? err.message : t('bot.error')}` }],
         id: `err-${Date.now()}`,
       };
       setMessages(prev => [...prev, errorMsg]);
