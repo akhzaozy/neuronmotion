@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { api, UserProfile } from '@/lib/api';
 import AppNav from '@/components/AppNav';
+import LocationFields, { LocationValue } from '@/components/LocationFields';
 import { EyeIcon, EyeOffIcon } from '@/components/icons';
 import styles from './profil.module.css';
 
@@ -28,6 +29,7 @@ export default function ProfilPage() {
   const [name, setName] = useState('');
   const [gender, setGender] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
+  const [location, setLocation] = useState<LocationValue>({});
   const [specialization, setSpecialization] = useState('');
   const [institution, setInstitution] = useState('');
 
@@ -51,6 +53,7 @@ export default function ProfilPage() {
         setName(p.name || '');
         setGender(p.gender || '');
         setDateOfBirth(p.dateOfBirth ? new Date(p.dateOfBirth).toISOString().split('T')[0] : '');
+        setLocation({ country: p.country, countryName: p.countryName, region: p.region, state: p.state, city: p.city });
         setSpecialization(p.specialization || '');
         setInstitution(p.institution || '');
       })
@@ -63,7 +66,11 @@ export default function ProfilPage() {
     setBusy(true); setError(''); setMessage('');
     try {
       const updated = await api.updateProfile(
-        { name, gender, dateOfBirth: dateOfBirth || undefined, specialization, institution },
+        {
+          name, gender, dateOfBirth: dateOfBirth || undefined, specialization, institution,
+          country: location.country, countryName: location.countryName,
+          region: location.region, state: location.state, city: location.city,
+        },
         token!
       );
       setProfile(updated);
@@ -178,6 +185,12 @@ export default function ProfilPage() {
                   {profile.gender === 'M' ? 'Laki-laki' : profile.gender === 'F' ? 'Perempuan' : 'Belum diisi'}
                 </span>
               </div>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Wilayah</span>
+                <span className={styles.infoValue}>
+                  {[profile.city, profile.state, profile.countryName].filter(Boolean).join(', ') || 'Belum diisi'}
+                </span>
+              </div>
               {isDoctor && (
                 <>
                   <div className={styles.infoRow}>
@@ -232,6 +245,13 @@ export default function ProfilPage() {
                   </div>
                 </>
               )}
+
+              <LocationFields
+                value={location}
+                onChange={setLocation}
+                title={isDoctor ? 'Wilayah Praktik' : 'Wilayah Tempat Tinggal'}
+              />
+
               <div className={styles.actionRow}>
                 <button className="btn btn-primary" onClick={saveProfile} disabled={busy}>
                   {busy && <span className="btnSpinner" />}Simpan Perubahan

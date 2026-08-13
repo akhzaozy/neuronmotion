@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import Logo from '@/components/Logo';
 import { EyeIcon, EyeOffIcon, ArrowLeftIcon } from '@/components/icons';
 import { ThemeToggle } from '@/lib/theme';
+import LocationFields, { LocationValue } from '@/components/LocationFields';
 import styles from '../login/auth.module.css';
 
 const SPECIALIZATIONS = ['Neurolog', 'Dokter Umum', 'Fisioterapis', 'Perawat'];
@@ -20,6 +21,7 @@ export default function RegisterPage() {
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [specialization, setSpecialization] = useState('');
   const [institution, setInstitution] = useState('');
+  const [location, setLocation] = useState<LocationValue>({});
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -38,6 +40,11 @@ export default function RegisterPage() {
         dateOfBirth: !isDoctor && dateOfBirth ? dateOfBirth : undefined,
         specialization: isDoctor ? specialization : undefined,
         institution: isDoctor ? institution : undefined,
+        country: location.country,
+        countryName: location.countryName,
+        region: location.region,
+        state: location.state,
+        city: location.city,
       });
       // Auto-login after register
       const data = await api.login(email, password);
@@ -183,6 +190,15 @@ export default function RegisterPage() {
               </div>
             </>
           )}
+
+          <LocationFields
+            value={location}
+            onChange={setLocation}
+            title={isDoctor ? 'Wilayah Praktik' : 'Wilayah Tempat Tinggal'}
+            hint={isDoctor
+              ? 'Dipakai untuk memetakan sebaran wilayah pasien yang Anda tangani.'
+              : 'Menjadi bagian identitas Anda dan membantu memahami sebaran pengguna antar wilayah.'}
+          />
 
           <button type="submit" className="btn btn-primary btn-lg" disabled={loading || passwordTooShort} style={{ marginTop: 10 }}>
             {loading && <span className="btnSpinner" />}

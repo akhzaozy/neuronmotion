@@ -3,6 +3,8 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { api, PatientDetail, Session } from '@/lib/api';
+import DoctorNav from '@/components/DoctorNav';
+import GeoBreakdown from '@/components/GeoBreakdown';
 import styles from './doctor.module.css';
 
 const POLL_INTERVAL_MS = 30_000; // 30 detik
@@ -98,6 +100,7 @@ export default function DoctorPortal() {
   if (isLoading || !dashboard) {
     return (
       <div className={styles.page}>
+        <DoctorNav />
         <div className={styles.container}>
           <div className={styles.statsGrid}>
             {[0, 1, 2, 3].map(i => (
@@ -139,6 +142,7 @@ export default function DoctorPortal() {
 
   return (
     <div className={styles.page}>
+      <DoctorNav />
       <div className={styles.container}>
         <div className={styles.header}>
           <div>
@@ -186,6 +190,8 @@ export default function DoctorPortal() {
             <div className={styles.statValue} style={{ color: 'var(--purple)' }}>{dashboard.conditionBreakdown?.PARKINSON_EARLY || 0}</div>
           </div>
         </div>
+
+        <GeoBreakdown data={dashboard.geoBreakdown} />
 
         <div className={styles.contentGrid}>
           {/* Patient List */}

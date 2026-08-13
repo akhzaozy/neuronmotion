@@ -1,0 +1,134 @@
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  margin-bottom: 32px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.subtitle {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+
+.tab {
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.tab:hover { color: var(--text-primary); }
+
+.tabActive {
+  background: var(--gradient-brand);
+  color: #fff;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rowHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rowName {
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.rowTotal {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  white-space: nowrap;
+}
+
+.barTrack {
+  display: flex;
+  height: 12px;
+  border-radius: 99px;
+  overflow: hidden;
+  min-width: 40px;
+  background: var(--bg-secondary);
+}
+
+.segHigh { background: var(--red); }
+.segMed { background: var(--yellow); }
+.segLow { background: var(--green); }
+.segNone { background: var(--border-light); }
+
+.rowMeta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tagHigh, .tagMed, .tagLow, .tagNone {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 99px;
+}
+
+.tagHigh { background: var(--red-dim); color: var(--red); }
+.tagMed { background: var(--yellow-dim); color: var(--yellow); }
+.tagLow { background: var(--green-dim); color: var(--green); }
+.tagNone { background: var(--bg-secondary); color: var(--text-muted); }
+
+.empty, .note {
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.note {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}

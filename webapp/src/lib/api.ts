@@ -119,6 +119,11 @@ export interface UserProfile {
   dateOfBirth?: string;
   specialization?: string;
   institution?: string;
+  country?: string;
+  countryName?: string;
+  region?: string;
+  state?: string;
+  city?: string;
 }
 
 export interface RegisterInput {
@@ -131,6 +136,11 @@ export interface RegisterInput {
   specialization?: string;
   institution?: string;
   licenseNumber?: string;
+  country?: string;
+  countryName?: string;
+  region?: string;
+  state?: string;
+  city?: string;
 }
 
 export interface Session {

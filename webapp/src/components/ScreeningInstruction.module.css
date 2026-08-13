@@ -11,7 +11,9 @@
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  padding: 36px 24px 20px;
+  /* Padding atas lebih besar agar kartu instruksi turun sedikit dan tidak
+     menempel ke tepi atas video, sehingga tombolnya lebih mudah terlihat. */
+  padding: 56px 24px 28px;
   animation: fadeIn 0.3s ease-out;
   overflow-y: auto;
 }

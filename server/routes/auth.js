@@ -22,7 +22,11 @@ function isSchemaDriftError(error) {
 // Register User (PATIENT or DOCTOR)
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, name, role, gender, dateOfBirth, specialization, institution, licenseNumber } = req.body;
+    const {
+      email, password, name, role, gender, dateOfBirth,
+      specialization, institution, licenseNumber,
+      country, countryName, region, state, city,
+    } = req.body;
 
     // Check if user exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -48,6 +52,13 @@ router.post('/register', async (req, res) => {
         specialization: resolvedRole === 'DOCTOR' ? (specialization || null) : null,
         institution: resolvedRole === 'DOCTOR' ? (institution || null) : null,
         licenseNumber: resolvedRole === 'DOCTOR' ? (licenseNumber || null) : null,
+        // Lokasi berlaku untuk kedua peran: identitas bagi pasien, dan bahan
+        // pemetaan sebaran pasien bagi tenaga kesehatan
+        country: country || null,
+        countryName: countryName || null,
+        region: region || null,
+        state: state || null,
+        city: city || null,
       }
     });
 
@@ -123,7 +134,10 @@ router.get('/me', requireAuth, async (req, res) => {
 /** PUT /api/auth/profile, ubah data pribadi milik akun sendiri */
 router.put('/profile', requireAuth, async (req, res) => {
   try {
-    const { name, gender, dateOfBirth, specialization, institution } = req.body;
+    const {
+      name, gender, dateOfBirth, specialization, institution,
+      country, countryName, region, state, city,
+    } = req.body;
     const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
     if (!user) return res.status(404).json({ error: 'Akun tidak ditemukan' });
 
@@ -137,6 +151,12 @@ router.put('/profile', requireAuth, async (req, res) => {
       if (specialization !== undefined) data.specialization = specialization || null;
       if (institution !== undefined) data.institution = institution || null;
     }
+    // Lokasi dapat diperbarui oleh kedua peran
+    if (country !== undefined) data.country = country || null;
+    if (countryName !== undefined) data.countryName = countryName || null;
+    if (region !== undefined) data.region = region || null;
+    if (state !== undefined) data.state = state || null;
+    if (city !== undefined) data.city = city || null;
 
     const updated = await prisma.user.update({ where: { id: req.user.userId }, data });
     const { password, ...safeUser } = updated;

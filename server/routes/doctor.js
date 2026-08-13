@@ -4,6 +4,57 @@ import { PrismaClient } from '@prisma/client';
 const router = express.Router();
 const prisma = new PrismaClient();
 
+/**
+ * Menyusun sebaran wilayah pasien beserta kategori risiko terakhirnya.
+ * Berguna bagi tenaga kesehatan untuk melihat di wilayah mana pasien berisiko
+ * tinggi paling banyak terkumpul.
+ */
+async function buildGeoBreakdown(patientIds) {
+  if (!patientIds.length) return { byCountry: [], byState: [], byCity: [], unknownCount: 0 };
+
+  const patients = await prisma.user.findMany({
+    where: { id: { in: patientIds } },
+    select: {
+      country: true, countryName: true, region: true, state: true, city: true,
+      patientSessions: {
+        orderBy: { timestamp: 'desc' }, take: 1,
+        select: { riskCategory: true },
+      },
+    },
+  });
+
+  // Satu penghitung dipakai ulang untuk ketiga tingkat wilayah
+  const tally = (keyFn) => {
+    const map = new Map();
+    let unknown = 0;
+    for (const p of patients) {
+      const key = keyFn(p);
+      if (!key) { unknown++; continue; }
+      const entry = map.get(key) || { name: key, total: 0, HIGH: 0, MEDIUM: 0, LOW: 0 };
+      entry.total++;
+      const risk = p.patientSessions[0]?.riskCategory;
+      if (risk === 'HIGH' || risk === 'MEDIUM' || risk === 'LOW') entry[risk]++;
+      map.set(key, entry);
+    }
+    return {
+      rows: Array.from(map.values()).sort((a, b) => b.total - a.total || b.HIGH - a.HIGH),
+      unknown,
+    };
+  };
+
+  const byCountry = tally(p => p.countryName);
+  const byState = tally(p => p.state);
+  const byCity = tally(p => p.city);
+
+  return {
+    byCountry: byCountry.rows,
+    byState: byState.rows,
+    byCity: byCity.rows,
+    unknownCount: byCountry.unknown,
+    totalPatients: patients.length,
+  };
+}
+
 /** GET /api/doctor/patients, Daftar pasien dokter */
 router.get('/patients', async (req, res) => {
   try {
@@ -135,6 +186,7 @@ router.get('/dashboard/:doctorId', async (req, res) => {
         return acc;
       }, {}),
       conditionBreakdown: conditionCounts,
+      geoBreakdown: await buildGeoBreakdown(patientIds),
     });
   } catch (e) {
     console.error(e);

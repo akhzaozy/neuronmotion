@@ -17,6 +17,13 @@ model User {
   gender      String?   // M or F
   phone       String?
   address     String?
+  // Lokasi bertingkat, dipakai untuk identitas pasien dan pemetaan sebaran
+  // pasien di dashboard tenaga kesehatan
+  country     String?   // kode ISO 3166-1 alpha-2, misalnya ID
+  countryName String?   // nama negara agar tampilan tidak perlu tabel referensi
+  state       String?   // provinsi atau negara bagian
+  region      String?   // kawasan yang lebih luas, dapat mencakup beberapa provinsi
+  city        String?
   // Doctor-specific
   licenseNumber String?
   specialization String?
