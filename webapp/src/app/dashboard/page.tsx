@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { api, Session } from '@/lib/api';
 import AppNav from '@/components/AppNav';
-import { useI18n } from '@/lib/i18n';
+import { useI18n, translateServerLabel, dateLocale } from '@/lib/i18n';
 import LiveChat from '@/components/LiveChat';
 import styles from './dashboard.module.css';
 
@@ -98,7 +98,7 @@ export default function DashboardPage() {
 
   const displayScore = useCountUp(summary?.latestScore !== undefined ? Math.round(summary.latestScore) : undefined);
 
-  if (isLoading || loading) return <div style={{ padding: 40, textAlign: 'center' }}>Memuat Dashboard...</div>;
+  if (isLoading || loading) return <div style={{ padding: 40, textAlign: 'center' }}>{t('dash.loading')}</div>;
 
   // riskDistribution adalah objek HITUNGAN ({HIGH: 4, LOW: 1, ...}), bukan urutan sesi.
   // Sebelumnya kode mengambil key terakhirnya, sehingga kategori yang tampil tidak ada
@@ -108,7 +108,7 @@ export default function DashboardPage() {
   const latestRisk =
     timeline?.[timeline.length - 1]?.risk ||
     (summary?.latestScore >= 65 ? 'HIGH' : summary?.latestScore >= 35 ? 'MEDIUM' : 'LOW');
-  const riskLabelId = latestRisk === 'HIGH' ? 'Tinggi' : latestRisk === 'MEDIUM' ? 'Sedang' : 'Rendah';
+  const riskLabel = latestRisk === 'HIGH' ? t('risk.high') : latestRisk === 'MEDIUM' ? t('risk.medium') : t('risk.low');
 
   return (
     <div className={styles.page}>
@@ -117,14 +117,17 @@ export default function DashboardPage() {
       <div className={styles.container}>
         <div className={styles.header}>
           <div>
-            <h1>{getGreeting(lang)}, {user?.name?.split(' ')[0]} 👋</h1>
-            <p>{lang === 'en' ? 'Track your motor health over time.' : 'Pantau perkembangan kesehatan motorik Anda secara berkala.'}</p>
+            <h1>
+              {getGreeting(lang)},{' '}
+              <span data-no-translate="">{user?.name?.split(' ')[0]}</span> 👋
+            </h1>
+            <p>{t('dash.subtitle')}</p>
           </div>
           <div className={styles.userCard}>
-            <div className={styles.avatar}>{user?.name.charAt(0)}</div>
+            <div className={styles.avatar} data-no-translate="">{user?.name.charAt(0)}</div>
             <div>
-              <div className={styles.userName}>{user?.name}</div>
-              <div className={styles.userRole}>Pasien Terdaftar</div>
+              <div className={styles.userName} data-no-translate="">{user?.name}</div>
+              <div className={styles.userRole}>{t('dash.registeredPatient')}</div>
             </div>
           </div>
         </div>
@@ -145,11 +148,11 @@ export default function DashboardPage() {
                   latestRisk === 'HIGH' ? 'risk-bg-high risk-high' :
                   latestRisk === 'MEDIUM' ? 'risk-bg-medium risk-medium' : 'risk-bg-low risk-low'
                 }`}>
-                  Risiko {riskLabelId}
+                  {t('dash.riskPrefix')} {riskLabel}
                 </div>
                 <div className={styles.trendBox}>
                   <span>{summary.trendDirection === 'WORSENING' ? '📈' : summary.trendDirection === 'IMPROVING' ? '📉' : '➖'}</span>
-                  Tren: {summary.trendDirection === 'WORSENING' ? 'Meningkat' : summary.trendDirection === 'IMPROVING' ? 'Membaik' : 'Stabil'}
+                  {t('dash.trend')}: {summary.trendDirection === 'WORSENING' ? t('dash.worsening') : summary.trendDirection === 'IMPROVING' ? t('dash.improving') : t('dash.stable')}
                   ({summary.trendDelta > 0 ? '+' : ''}{summary.trendDelta})
                 </div>
                 {summary.timeline?.length > 1 && (
@@ -169,7 +172,7 @@ export default function DashboardPage() {
           {/* Quick Start Card */}
           <div className={styles.ctaBox}>
             <h3 style={{ fontSize: '1.5rem', fontWeight: 800 }}>{t('dash.startScreening')}</h3>
-            <p style={{ fontSize: '0.9rem', opacity: 0.9 }}>Lakukan skrining berkala menggunakan kamera perangkat Anda.</p>
+            <p style={{ fontSize: '0.9rem', opacity: 0.9 }}>{t('dash.quickSub')}</p>
             <Link href="/screening" className="btn" style={{ background: '#fff', color: 'var(--brand)', width: '100%' }}>
               {t('dash.startNow')}
             </Link>
@@ -189,10 +192,12 @@ export default function DashboardPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <div className={styles.historyDate}>
-                    {new Date(session.timestamp).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    {new Date(session.timestamp).toLocaleDateString(dateLocale(lang), { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                   </div>
                   <div className={styles.historyDesc}>
-                    {session.mlPrediction?.predictedLabel ? session.mlPrediction.predictedLabel : 'Skrining Motorik'}
+                    {session.mlPrediction?.predictedLabel
+                      ? translateServerLabel(session.mlPrediction.predictedLabel, lang)
+                      : t('dash.motorScreening')}
                   </div>
                 </div>
                 <div
@@ -209,13 +214,14 @@ export default function DashboardPage() {
               )}
               {session.doctorNote && (
                 <div style={{ fontSize: '0.82rem', background: 'var(--bg-secondary)', borderLeft: '3px solid var(--brand)', padding: '8px 12px', borderRadius: 4 }}>
-                  <strong style={{ color: 'var(--brand-light)' }}>{t('hist.doctorNote')}:</strong> {session.doctorNote}
+                  <strong style={{ color: 'var(--brand-light)' }}>{t('hist.doctorNote')}:</strong>{' '}
+                  <span data-no-translate="">{session.doctorNote}</span>
                 </div>
               )}
             </div>
           )) : (
             <div style={{ textAlign: 'center', padding: 40, background: 'var(--bg-card)', borderRadius: 12, border: '1px solid var(--border)' }}>
-              {lang === 'en' ? 'No examination history yet.' : 'Belum ada riwayat pemeriksaan.'}
+              {t('dash.noHistory')}
             </div>
           )}
         </div>

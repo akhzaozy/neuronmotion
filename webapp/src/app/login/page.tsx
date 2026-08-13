@@ -7,11 +7,13 @@ import { useAuth } from '@/lib/auth';
 import Logo from '@/components/Logo';
 import { EyeIcon, EyeOffIcon, ArrowLeftIcon } from '@/components/icons';
 import { ThemeToggle } from '@/lib/theme';
+import { LanguageToggle, useI18n } from '@/lib/i18n';
 import styles from './auth.module.css';
 
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
+  const { t, lang } = useI18n();
   const [role, setRole] = useState<'PATIENT' | 'DOCTOR'>('PATIENT');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -32,14 +34,18 @@ export default function LoginPage() {
       // Hanya berlaku untuk PATIENT & DOCTOR — role lain (misal ADMIN) tidak
       // termasuk dalam pilihan tab, jadi langsung tampilkan pesan informatif.
       if (userRole !== 'PATIENT' && userRole !== 'DOCTOR') {
-        setError(`Akun ini memiliki peran "${userRole}" yang tidak dapat mengakses portal ini. Hubungi administrator.`);
+        setError(lang === 'en'
+          ? `This account has the role "${userRole}", which cannot access this portal. Please contact an administrator.`
+          : `Akun ini memiliki peran "${userRole}" yang tidak dapat mengakses portal ini. Hubungi administrator.`);
         setLoading(false);
         return;
       }
 
       if (userRole !== role) {
-        const actualLabel = userRole === 'DOCTOR' ? 'Dokter / Nakes' : 'Pasien';
-        setError(`Akun ini terdaftar sebagai ${actualLabel}. Silakan pilih tab "${actualLabel}" di atas.`);
+        const actualLabel = userRole === 'DOCTOR' ? t('auth.doctor') : t('auth.patient');
+        setError(lang === 'en'
+          ? `This account is registered as ${actualLabel}. Please select the "${actualLabel}" tab above.`
+          : `Akun ini terdaftar sebagai ${actualLabel}. Silakan pilih tab "${actualLabel}" di atas.`);
         setLoading(false);
         return;
       }
@@ -55,7 +61,9 @@ export default function LoginPage() {
         router.push('/login');
       }
     } catch (err: any) {
-      setError(err.message || 'Gagal login. Periksa email dan password Anda.');
+      setError(err.message || (lang === 'en'
+        ? 'Sign-in failed. Check your email and password.'
+        : 'Gagal login. Periksa email dan password Anda.'));
     } finally {
       setLoading(false);
     }
@@ -70,21 +78,24 @@ export default function LoginPage() {
 
       <Link href="/" className={styles.backHome}>
         <ArrowLeftIcon />
-        Kembali ke Beranda
+        {t('common.backHome')}
       </Link>
 
-      <div style={{ position: 'absolute', top: 20, right: 20, zIndex: 2 }}>
+      <div style={{ position: 'absolute', top: 20, right: 20, zIndex: 2, display: 'flex', gap: 10, alignItems: 'center' }}>
+        <LanguageToggle />
         <ThemeToggle size="sm" />
       </div>
 
       <div className={`${styles.authCard} glass`}>
         <div className={styles.header}>
-          <Link href="/" className={styles.logo} aria-label="Kembali ke beranda">
+          <Link href="/" className={styles.logo} aria-label={t('common.backHome')}>
             <Logo />
           </Link>
-          <h1 className={styles.title}>Selamat Datang</h1>
+          <h1 className={styles.title}>{t('auth.welcome')}</h1>
           <p className={styles.subtitle}>
-            Masuk sebagai {role === 'DOCTOR' ? 'dokter / tenaga kesehatan' : 'pasien'}
+            {lang === 'en'
+              ? `Sign in as ${role === 'DOCTOR' ? 'a clinician' : 'a patient'}`
+              : `Masuk sebagai ${role === 'DOCTOR' ? 'dokter / tenaga kesehatan' : 'pasien'}`}
           </p>
         </div>
 
@@ -94,14 +105,14 @@ export default function LoginPage() {
             className={`${styles.roleTab} ${role === 'PATIENT' ? styles.roleTabActive : ''}`}
             onClick={() => { setRole('PATIENT'); setError(''); }}
           >
-            🧍 Pasien
+            🧍 {t('auth.patient')}
           </button>
           <button
             type="button"
             className={`${styles.roleTab} ${role === 'DOCTOR' ? styles.roleTabActive : ''}`}
             onClick={() => { setRole('DOCTOR'); setError(''); }}
           >
-            🩺 Dokter / Nakes
+            🩺 {t('auth.doctor')}
           </button>
         </div>
 
@@ -109,32 +120,34 @@ export default function LoginPage() {
 
         <form className={styles.form} onSubmit={handleSubmit}>
           <div className={styles.formGroup}>
-            <label className={styles.label}>Email</label>
+            <label className={styles.label}>{t('auth.email')}</label>
             <input
               type="email"
               className="input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder={role === 'DOCTOR' ? 'Contoh: dokter@neuronmotion.id' : 'Contoh: pasien@neuronmotion.id'}
+              placeholder={`${lang === 'en' ? 'e.g.' : 'Contoh:'} ${role === 'DOCTOR' ? 'dokter' : 'pasien'}@neuronmotion.id`}
               required
             />
           </div>
           <div className={styles.formGroup}>
-            <label className={styles.label}>Password</label>
+            <label className={styles.label}>{t('auth.password')}</label>
             <div className={styles.passwordWrap}>
               <input
                 type={showPassword ? 'text' : 'password'}
                 className="input"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Masukkan password"
+                placeholder={lang === 'en' ? 'Enter your password' : 'Masukkan password'}
                 required
               />
               <button
                 type="button"
                 className={styles.togglePw}
                 onClick={() => setShowPassword(v => !v)}
-                aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
+                aria-label={showPassword
+                  ? (lang === 'en' ? 'Hide password' : 'Sembunyikan password')
+                  : (lang === 'en' ? 'Show password' : 'Tampilkan password')}
                 tabIndex={-1}
               >
                 {showPassword ? <EyeOffIcon /> : <EyeIcon />}
@@ -144,12 +157,12 @@ export default function LoginPage() {
 
           <button type="submit" className="btn btn-primary btn-lg" disabled={loading} style={{ marginTop: 10 }}>
             {loading && <span className="btnSpinner" />}
-            {loading ? 'Memproses...' : `Masuk sebagai ${role === 'DOCTOR' ? 'Dokter/Nakes' : 'Pasien'}`}
+            {loading ? t('common.loading') : (role === 'DOCTOR' ? t('auth.loginAsDoctor') : t('auth.loginAsPatient'))}
           </button>
         </form>
 
         <div className={styles.footer}>
-          Belum punya akun? <Link href="/register" className={styles.link}>Daftar di sini</Link>
+          {t('auth.noAccount')} <Link href="/register" className={styles.link}>{t('auth.registerHere')}</Link>
         </div>
       </div>
     </div>

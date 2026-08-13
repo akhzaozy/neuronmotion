@@ -50,7 +50,8 @@ router.get('/diagnose', async (req, res) => {
  * sini juga membuat GEMINI_API_KEY cukup disimpan di satu tempat.
  */
 router.post('/', async (req, res) => {
-  const result = await chatWithAssistant(req.body?.messages);
+  const lang = req.body?.lang === 'en' ? 'en' : 'id';
+  const result = await chatWithAssistant(req.body?.messages, lang);
   if (result.error) {
     return res.status(result.status || 503).json({ error: result.error });
   }

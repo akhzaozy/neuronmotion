@@ -23,7 +23,7 @@ export default function AppNav() {
       <div className={styles.inner}>
         <Link href="/dashboard" className={styles.brand}>
           <Logo size={30} />
-          <span className={styles.brandText}>NeuronMotion</span>
+          <span className={styles.brandText} data-no-translate="">NeuronMotion</span>
         </Link>
         <div className={styles.links}>
           {NAV_ITEMS.map(item => (

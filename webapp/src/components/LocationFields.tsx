@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { COUNTRIES, REGIONS, getCountry } from '@/lib/countries';
 import { STATES_BY_COUNTRY } from '@/lib/states';
+import { useI18n } from '@/lib/i18n';
 import styles from './LocationFields.module.css';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
@@ -23,6 +24,7 @@ interface Props {
 }
 
 export default function LocationFields({ value, onChange, required = false, title, hint }: Props) {
+  const { t, lang } = useI18n();
   const [cities, setCities] = useState<string[]>([]);
   const [loadingCities, setLoadingCities] = useState(false);
 
@@ -63,29 +65,32 @@ export default function LocationFields({ value, onChange, required = false, titl
       {hint && <p className={styles.hint}>{hint}</p>}
 
       <div className={styles.field}>
-        <label className={styles.label}>Negara {required && <span className={styles.req}>*</span>}</label>
+        <label className={styles.label}>{t('loc.country')} {required && <span className={styles.req}>*</span>}</label>
         <select className="input" value={value.country || ''} onChange={e => selectCountry(e.target.value)} required={required}>
-          <option value="">Pilih negara</option>
-          {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
+          <option value="">{t('loc.selectCountry')}</option>
+          {/* Nama negara, provinsi, dan kota adalah nama diri. Selain salah bila
+              diterjemahkan, jumlahnya mencapai ribuan dan akan menghabiskan
+              kuota penerjemahan bila ikut terbaca penerjemah halaman. */}
+          {COUNTRIES.map(c => <option key={c.code} value={c.code} data-no-translate="">{c.name}</option>)}
         </select>
       </div>
 
       <div className={styles.field}>
-        <label className={styles.label}>Kawasan</label>
+        <label className={styles.label}>{t('loc.region')}</label>
         <select
           className="input"
           value={value.region || ''}
           onChange={e => onChange({ ...value, region: e.target.value || undefined })}
         >
-          <option value="">Pilih kawasan</option>
-          {REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
+          <option value="">{t('loc.selectRegion')}</option>
+          {REGIONS.map(r => <option key={r} value={r} data-no-translate="">{r}</option>)}
         </select>
-        <span className={styles.note}>Terisi otomatis mengikuti negara yang dipilih.</span>
+        <span className={styles.note}>{t('loc.autoFilled')}</span>
       </div>
 
       <div className={styles.row}>
         <div className={styles.field}>
-          <label className={styles.label}>Provinsi / Negara Bagian</label>
+          <label className={styles.label}>{t('loc.state')}</label>
           {states.length > 0 ? (
             <select
               className="input"
@@ -93,8 +98,8 @@ export default function LocationFields({ value, onChange, required = false, titl
               onChange={e => onChange({ ...value, state: e.target.value || undefined })}
               disabled={!value.country}
             >
-              <option value="">{value.country ? 'Pilih provinsi' : 'Pilih negara dulu'}</option>
-              {states.map(s => <option key={s} value={s}>{s}</option>)}
+              <option value="">{value.country ? t('loc.selectState') : t('loc.selectCountryFirst')}</option>
+              {states.map(s => <option key={s} value={s} data-no-translate="">{s}</option>)}
             </select>
           ) : (
             // Sebagian negara tidak memiliki pembagian provinsi pada sumber data,
@@ -104,14 +109,14 @@ export default function LocationFields({ value, onChange, required = false, titl
               className="input"
               value={value.state || ''}
               onChange={e => onChange({ ...value, state: e.target.value || undefined })}
-              placeholder={value.country ? 'Ketik provinsi' : 'Pilih negara dulu'}
+              placeholder={value.country ? (lang === 'en' ? 'Type a state' : 'Ketik provinsi') : t('loc.selectCountryFirst')}
               disabled={!value.country}
             />
           )}
         </div>
 
         <div className={styles.field}>
-          <label className={styles.label}>Kota</label>
+          <label className={styles.label}>{t('loc.city')}</label>
           {/* Daftar kota bisa mencapai ribuan per negara, jadi memakai isian
               berpelengkap otomatis agar dapat dicari sambil mengetik, sekaligus
               tetap menerima nama kota yang belum ada di data */}
@@ -122,18 +127,22 @@ export default function LocationFields({ value, onChange, required = false, titl
             value={value.city || ''}
             onChange={e => onChange({ ...value, city: e.target.value || undefined })}
             placeholder={
-              !value.country ? 'Pilih negara dulu'
-                : loadingCities ? 'Memuat daftar kota...'
-                : cities.length ? 'Ketik untuk mencari kota'
-                : 'Ketik nama kota'
+              !value.country ? t('loc.selectCountryFirst')
+                : loadingCities ? t('loc.loadingCities')
+                : cities.length ? t('loc.searchCity')
+                : (lang === 'en' ? 'Type a city name' : 'Ketik nama kota')
             }
             disabled={!value.country}
           />
-          <datalist id="city-options">
+          <datalist id="city-options" data-no-translate="">
             {cities.map(c => <option key={c} value={c} />)}
           </datalist>
           {value.country && cities.length > 0 && (
-            <span className={styles.note}>{cities.length} kota tersedia, ketik untuk menyaring.</span>
+            <span className={styles.note}>
+              {lang === 'en'
+                ? `${cities.length} cities available, type to filter.`
+                : `${cities.length} kota tersedia, ketik untuk menyaring.`}
+            </span>
           )}
         </div>
       </div>

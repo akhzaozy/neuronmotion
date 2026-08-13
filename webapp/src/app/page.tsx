@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { api, ModelAccuracy } from '@/lib/api';
 import Logo from '@/components/Logo';
 import { ThemeToggle } from '@/lib/theme';
+import { LanguageToggle, useI18n } from '@/lib/i18n';
 import styles from './landing.module.css';
 
 // SVG Icon medis minimalis, bukan AI/tech look
@@ -41,12 +42,12 @@ const IconROM = () => (
 );
 
 const FEATURES = [
-  { Icon: IconTremor,   title: 'Deteksi Tremor',    desc: 'Analisis frekuensi dan amplitudo tremor istirahat menggunakan estimasi pose tangan secara real-time.' },
-  { Icon: IconTapping,  title: 'Finger Tapping',     desc: 'Ukur kecepatan ketukan dan konsistensi gerak, indikator utama bradikinesia pada evaluasi motorik.' },
-  { Icon: IconGait,     title: 'Analisis Gait',      desc: 'Deteksi asimetri langkah dan kadense berjalan dari rekaman kamera tanpa sensor tambahan.' },
-  { Icon: IconArmSwing, title: 'Arm Swing',          desc: 'Ukur asimetri ayunan lengan kiri vs kanan, penanda motorik awal yang terukur secara objektif.' },
-  { Icon: IconPosture,  title: 'Stabilitas Postur',  desc: 'Hitung sway area dan panjang jalur untuk menilai risiko jatuh dan keseimbangan postural.' },
-  { Icon: IconROM,      title: 'Range of Motion',    desc: 'Evaluasi ROM sendi lutut, bahu, dan siku menggunakan estimasi pose tubuh secara non-invasif.' },
+  { Icon: IconTremor,   titleKey: 'bio.tremor',   descKey: 'bio.tremorDesc' },
+  { Icon: IconTapping,  titleKey: 'bio.tapping',  descKey: 'bio.tappingDesc' },
+  { Icon: IconGait,     titleKey: 'bio.gait',     descKey: 'bio.gaitDesc' },
+  { Icon: IconArmSwing, titleKey: 'bio.armSwing', descKey: 'bio.armSwingDesc' },
+  { Icon: IconPosture,  titleKey: 'bio.posture',  descKey: 'bio.postureDesc' },
+  { Icon: IconROM,      titleKey: 'bio.rom',      descKey: 'bio.romDesc' },
 ];
 
 const IconBrain = () => (
@@ -69,10 +70,10 @@ const IconBalance = () => (
 );
 
 const CONDITIONS = [
-  { label: 'Parkinson',         color: '#ef4444', Icon: IconBrain },
-  { label: 'Essential Tremor',  color: '#f59e0b', Icon: IconHand },
-  { label: 'Pasca Stroke',      color: '#8b5cf6', Icon: IconBrain },
-  { label: 'Ataksia Serebelar', color: '#3b82f6', Icon: IconBalance },
+  { key: 'cond.parkinson',      color: '#ef4444', Icon: IconBrain },
+  { key: 'cond.essentialTremor', color: '#f59e0b', Icon: IconHand },
+  { key: 'cond.postStroke',     color: '#8b5cf6', Icon: IconBrain },
+  { key: 'cond.ataxia',         color: '#3b82f6', Icon: IconBalance },
 ];
 
 const AnimatedBrainGraphic = () => (
@@ -182,6 +183,7 @@ const ANIMATIONS = [
 export default function LandingPage() {
   const [modelIndex, setModelIndex] = useState(0);
   const [modelInfo, setModelInfo] = useState<ModelAccuracy | null>(null);
+  const { t, lang } = useI18n();
 
   useEffect(() => {
     // Ambil akurasi model SUNGGUHAN (hasil validasi holdout di backend),
@@ -202,13 +204,14 @@ export default function LandingPage() {
       <nav className={styles.nav}>
         <div className={styles.navBrand}>
           <Logo size={34} />
-          <span className={styles.navName}>NeuronMotion</span>
+          <span className={styles.navName} data-no-translate="">NeuronMotion</span>
           <span className="badge badge-brand">Beta</span>
         </div>
         <div className={styles.navLinks}>
+          <LanguageToggle />
           <ThemeToggle />
-          <Link href="/login" className="btn btn-outline btn-sm">Masuk</Link>
-          <Link href="/register" className="btn btn-primary btn-sm">Daftar Gratis</Link>
+          <Link href="/login" className="btn btn-outline btn-sm">{t('land.login')}</Link>
+          <Link href="/register" className="btn btn-primary btn-sm">{t('land.registerFree')}</Link>
         </div>
       </nav>
 
@@ -217,34 +220,46 @@ export default function LandingPage() {
         <div className={styles.heroBg} />
         <div className={styles.heroContent}>
           <div className="badge badge-brand" style={{ marginBottom: 20 }}>
-            Alat Skrining Klinis Berbasis Kamera
+            {t('land.badge')}
           </div>
           <h1 className={styles.heroTitle}>
-            Deteksi Dini<br />
-            <span className={styles.gradientText}>Gangguan Saraf</span><br />
-            Dari Kamera Anda
+            {t('land.title1')}<br />
+            <span className={styles.gradientText}>{t('land.title2')}</span><br />
+            {t('land.title3')}
           </h1>
           <p className={styles.heroDesc}>
-            NeuronMotion menganalisis tremor, pola jalan, dan biomarker motorik melalui kamera perangkat Anda,
-            membantu deteksi awal Parkinson dan gangguan neurologis lainnya tanpa perangkat tambahan.
+            {t('land.desc')}
           </p>
           <div className={styles.heroCTA}>
             <Link href="/register" className="btn btn-primary btn-lg">
-              Mulai Skrining Gratis
+              {t('land.startFree')}
             </Link>
             <Link href="/login" className="btn btn-outline btn-lg">
-              Sudah Punya Akun
+              {t('land.hasAccount')}
             </Link>
           </div>
-          <Link href="/demo" style={{ display: 'inline-block', fontSize: '0.9rem', color: 'var(--brand-light)', fontWeight: 600, marginBottom: 24 }}>
-            Mau coba dulu tanpa akun?
+          <Link href="/demo" className={styles.demoCard}>
+            <span className={styles.demoIcon}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="5 3 19 12 5 21 5 3" />
+              </svg>
+            </span>
+            <span className={styles.demoText}>
+              <span className={styles.demoTitle}>{t('land.tryDemo')}</span>
+              <span className={styles.demoSub}>{t('land.tryDemoSub')}</span>
+            </span>
+            <span className={styles.demoArrow}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+              </svg>
+            </span>
           </Link>
           <div className={styles.heroStats}>
             {[
-              [modelInfo ? `${modelInfo.trainSize + modelInfo.testSize}+` : '...', 'Profil Sintetis Referensi'],
-              ['6', 'Parameter Biomarker'],
-              [modelInfo ? `${modelInfo.accuracy}%` : '...', 'Akurasi Uji Internal'],
-              ['Real-time', 'Via Kamera'],
+              [modelInfo ? `${modelInfo.trainSize + modelInfo.testSize}+` : '...', t('land.statProfiles')],
+              ['6', t('land.statBiomarkers')],
+              [modelInfo ? `${modelInfo.accuracy}%` : '...', t('land.statAccuracy')],
+              ['Real-time', t('land.statRealtime')],
             ].map(([val, label]) => (
               <div key={label} className={styles.statItem}>
                 <span className={styles.statVal}>{val}</span>
@@ -253,7 +268,7 @@ export default function LandingPage() {
             ))}
           </div>
           <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 10 }}>
-            Akurasi dihitung dari validasi holdout 80/20 pada dataset sintetis (bukan uji klinis pada pasien nyata).
+            {t('land.accuracyNote')}
           </p>
         </div>
         <div className={styles.heroVisual} style={{ transition: 'opacity 0.5s', position: 'relative' }}>
@@ -275,17 +290,17 @@ export default function LandingPage() {
       <section className={styles.section}>
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
-            <h2>6 Biomarker yang Dianalisis</h2>
-            <p>Setiap parameter diukur menggunakan estimasi pose dari kamera, tanpa sensor fisik tambahan</p>
+            <h2>{t('land.featuresTitle')}</h2>
+            <p>{t('land.featuresDesc')}</p>
           </div>
           <div className={styles.featureGrid}>
-            {FEATURES.map(({ Icon, title, desc }) => (
-              <div key={title} className={styles.featureCard}>
+            {FEATURES.map(({ Icon, titleKey, descKey }) => (
+              <div key={titleKey} className={styles.featureCard}>
                 <div className={styles.featureIconWrap}>
                   <Icon />
                 </div>
-                <h3>{title}</h3>
-                <p>{desc}</p>
+                <h3>{t(titleKey)}</h3>
+                <p>{t(descKey)}</p>
               </div>
             ))}
           </div>
@@ -297,19 +312,20 @@ export default function LandingPage() {
         <div className={styles.container}>
           <div className={styles.conditionBox}>
             <div className={styles.sectionHeader}>
-              <h2>Kondisi yang Dapat Dideteksi</h2>
+              <h2>{t('land.conditionsTitle')}</h2>
               <p>
-                Model klasifikasi dilatih dengan {modelInfo ? `${modelInfo.trainSize}` : '1.600+'} profil pasien sintetis
-                (diuji pada {modelInfo ? modelInfo.testSize : 400} profil terpisah) berdasarkan standar klinis MDS-UPDRS
+                {lang === 'en'
+                  ? `Classifier trained on ${modelInfo ? modelInfo.trainSize : '1,600+'} synthetic patient profiles (tested on ${modelInfo ? modelInfo.testSize : 400} held-out profiles) against MDS-UPDRS clinical standards`
+                  : `Model klasifikasi dilatih dengan ${modelInfo ? modelInfo.trainSize : '1.600+'} profil pasien sintetis (diuji pada ${modelInfo ? modelInfo.testSize : 400} profil terpisah) berdasarkan standar klinis MDS-UPDRS`}
               </p>
             </div>
             <div className={styles.conditionGrid}>
               {CONDITIONS.map(c => (
-                <div key={c.label} className={styles.conditionChip} style={{ borderColor: c.color + '44', background: c.color + '15' }}>
+                <div key={c.key} className={styles.conditionChip} style={{ borderColor: c.color + '44', background: c.color + '15' }}>
                   <div style={{ color: c.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <c.Icon />
                   </div>
-                  <span style={{ color: c.color, fontWeight: 600 }}>{c.label}</span>
+                  <span style={{ color: c.color, fontWeight: 600 }}>{t(c.key)}</span>
                 </div>
               ))}
             </div>
@@ -320,20 +336,21 @@ export default function LandingPage() {
       {/* CTA */}
       <section className={styles.ctaSection}>
         <div className={styles.ctaBox}>
-          <h2>Mulai Skrining Sekarang</h2>
-          <p>Gratis, privat, dan tidak memerlukan perangkat tambahan, hanya kamera.</p>
+          <h2>{t('land.ctaTitle')}</h2>
+          <p>{t('land.ctaDesc')}</p>
           <Link href="/register" className="btn btn-lg" style={{ background: '#fff', color: 'var(--brand)' }}>
-            Buat Akun dan Mulai Skrining
+            {t('land.ctaButton')}
           </Link>
         </div>
       </section>
 
       {/* Footer */}
       <footer className={styles.footer}>
-        <p>NeuronMotion adalah alat skrining awal. Bukan pengganti diagnosis tenaga medis.</p>
+        <p>{t('land.footerDisclaimer')}</p>
         <p style={{ marginTop: 4, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-          Rentang klinis mengacu pada MDS-UPDRS &bull; Hoehn &amp; Yahr &bull; Zhang dkk. 2017 (tremor)
-          &bull; Zanardi dkk. 2021 (gait) &bull; Lewek dkk. 2010 (ayunan lengan)
+          {lang === 'en' ? 'Clinical ranges reference' : 'Rentang klinis mengacu pada'} MDS-UPDRS &bull; Hoehn &amp; Yahr
+          &bull; Zhang et al. 2017 ({lang === 'en' ? 'tremor' : 'tremor'}) &bull; Zanardi et al. 2021 (gait)
+          &bull; Lewek et al. 2010 ({lang === 'en' ? 'arm swing' : 'ayunan lengan'})
         </p>
       </footer>
     </div>

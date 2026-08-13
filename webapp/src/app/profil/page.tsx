@@ -6,6 +6,7 @@ import { api, UserProfile } from '@/lib/api';
 import AppNav from '@/components/AppNav';
 import LocationFields, { LocationValue } from '@/components/LocationFields';
 import { EyeIcon, EyeOffIcon } from '@/components/icons';
+import { useI18n, dateLocale, type Lang } from '@/lib/i18n';
 import styles from './profil.module.css';
 
 const SPECIALIZATIONS = ['Neurolog', 'Dokter Umum', 'Fisioterapis', 'Perawat'];
@@ -15,14 +16,15 @@ function calcAge(dob?: string) {
   return Math.floor((Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 3600 * 1000));
 }
 
-function formatDob(dob?: string) {
-  if (!dob) return 'Belum diisi';
-  return new Date(dob).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+function formatDob(dob: string | undefined, lang: Lang, fallback: string) {
+  if (!dob) return fallback;
+  return new Date(dob).toLocaleDateString(dateLocale(lang), { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
 export default function ProfilPage() {
   const router = useRouter();
   const { user, token, login, logout, isLoading } = useAuth();
+  const { t, lang } = useI18n();
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [editing, setEditing] = useState(false);
@@ -57,7 +59,7 @@ export default function ProfilPage() {
         setSpecialization(p.specialization || '');
         setInstitution(p.institution || '');
       })
-      .catch(() => setError('Gagal memuat profil.'));
+      .catch(() => setError(t('prof.loadFailed')));
   }, [user, token, isLoading, router]);
 
   const isDoctor = profile?.role === 'DOCTOR';
@@ -77,9 +79,9 @@ export default function ProfilPage() {
       // Sinkronkan juga data user di context supaya nama di navbar/sapaan ikut berubah
       login(updated, token!);
       setEditing(false);
-      setMessage('Data pribadi berhasil diperbarui.');
+      setMessage(t('prof.saved'));
     } catch (e: any) {
-      setError(e.message || 'Gagal menyimpan perubahan.');
+      setError(e.message || t('prof.saveFailed'));
     } finally {
       setBusy(false);
     }
@@ -91,9 +93,9 @@ export default function ProfilPage() {
       await api.changePassword(currentPassword, newPassword, token!);
       setShowPwForm(false);
       setCurrentPassword(''); setNewPassword('');
-      setMessage('Password berhasil diperbarui.');
+      setMessage(t('prof.pwSaved'));
     } catch (e: any) {
-      setError(e.message || 'Gagal mengganti password.');
+      setError(e.message || t('prof.pwFailed'));
     } finally {
       setBusy(false);
     }
@@ -104,9 +106,9 @@ export default function ProfilPage() {
     try {
       const res = await api.deleteHistory(token!);
       setConfirmAction(null);
-      setMessage(`Riwayat pemeriksaan berhasil dihapus (${res.deletedCount} sesi).`);
+      setMessage(`${t('prof.histDeleted')} (${res.deletedCount} ${t('prof.sessions')}).`);
     } catch (e: any) {
-      setError(e.message || 'Gagal menghapus riwayat.');
+      setError(e.message || t('prof.histDeleteFailed'));
       setConfirmAction(null);
     } finally {
       setBusy(false);
@@ -120,7 +122,7 @@ export default function ProfilPage() {
       logout();
       router.push('/');
     } catch (e: any) {
-      setError(e.message || 'Gagal menghapus akun.');
+      setError(e.message || t('prof.accDeleteFailed'));
       setConfirmAction(null);
       setBusy(false);
     }
@@ -130,7 +132,7 @@ export default function ProfilPage() {
     return (
       <div className={styles.page}>
         <AppNav />
-        <div className={styles.container}><p>Memuat profil...</p></div>
+        <div className={styles.container}><p>{t('prof.loading')}</p></div>
       </div>
     );
   }
@@ -142,15 +144,15 @@ export default function ProfilPage() {
       <AppNav />
       <div className={styles.container}>
         <div className={styles.profileHeader}>
-          <div className={styles.avatar}>{profile.name?.charAt(0).toUpperCase()}</div>
+          <div className={styles.avatar} data-no-translate="">{profile.name?.charAt(0).toUpperCase()}</div>
           <div>
-            <div className={styles.profileName}>{profile.name}</div>
-            <div className={styles.profileRole}>
+            <div className={styles.profileName} data-no-translate="">{profile.name}</div>
+            <div className={styles.profileRole} data-no-translate={isDoctor ? '' : undefined}>
               {isDoctor
-                ? `${profile.specialization || 'Dokter / Nakes'}${profile.institution ? ` · ${profile.institution}` : ''}`
-                : 'Pasien Terdaftar'}
+                ? `${profile.specialization || t('prof.doctorNakes')}${profile.institution ? ` · ${profile.institution}` : ''}`
+                : t('dash.registeredPatient')}
             </div>
-            <div className={styles.profileEmail}>{profile.email}</div>
+            <div className={styles.profileEmail} data-no-translate="">{profile.email}</div>
           </div>
         </div>
 
@@ -159,47 +161,48 @@ export default function ProfilPage() {
 
         <div className={styles.card}>
           <div className={styles.cardHeader}>
-            <h2 className={styles.cardTitle}>Informasi Pribadi</h2>
+            <h2 className={styles.cardTitle}>{t('prof.personalInfo')}</h2>
             {!editing && (
-              <button className="btn btn-outline btn-sm" onClick={() => setEditing(true)}>Ubah</button>
+              <button className="btn btn-outline btn-sm" onClick={() => setEditing(true)}>{t('common.edit')}</button>
             )}
           </div>
 
           {!editing ? (
             <>
               <div className={styles.infoRow}>
-                <span className={styles.infoLabel}>Nama</span>
-                <span className={styles.infoValue}>{profile.name}</span>
+                <span className={styles.infoLabel}>{t('prof.name')}</span>
+                <span className={styles.infoValue} data-no-translate="">{profile.name}</span>
               </div>
               {!isDoctor && (
                 <div className={styles.infoRow}>
-                  <span className={styles.infoLabel}>Tanggal Lahir</span>
+                  <span className={styles.infoLabel}>{t('prof.dob')}</span>
                   <span className={styles.infoValue}>
-                    {formatDob(profile.dateOfBirth)}{age !== null ? ` (${age} tahun)` : ''}
+                    {formatDob(profile.dateOfBirth, lang, t('common.notFilled'))}
+                    {age !== null ? ` (${age} ${t('common.years')})` : ''}
                   </span>
                 </div>
               )}
               <div className={styles.infoRow}>
-                <span className={styles.infoLabel}>Jenis Kelamin</span>
+                <span className={styles.infoLabel}>{t('prof.gender')}</span>
                 <span className={styles.infoValue}>
-                  {profile.gender === 'M' ? 'Laki-laki' : profile.gender === 'F' ? 'Perempuan' : 'Belum diisi'}
+                  {profile.gender === 'M' ? t('prof.male') : profile.gender === 'F' ? t('prof.female') : t('common.notFilled')}
                 </span>
               </div>
               <div className={styles.infoRow}>
-                <span className={styles.infoLabel}>Wilayah</span>
-                <span className={styles.infoValue}>
-                  {[profile.city, profile.state, profile.countryName].filter(Boolean).join(', ') || 'Belum diisi'}
+                <span className={styles.infoLabel}>{t('prof.region')}</span>
+                <span className={styles.infoValue} data-no-translate="">
+                  {[profile.city, profile.state, profile.countryName].filter(Boolean).join(', ') || t('common.notFilled')}
                 </span>
               </div>
               {isDoctor && (
                 <>
                   <div className={styles.infoRow}>
-                    <span className={styles.infoLabel}>Profesi</span>
-                    <span className={styles.infoValue}>{profile.specialization || 'Belum diisi'}</span>
+                    <span className={styles.infoLabel}>{t('prof.profession')}</span>
+                    <span className={styles.infoValue}>{profile.specialization || t('common.notFilled')}</span>
                   </div>
                   <div className={styles.infoRow}>
-                    <span className={styles.infoLabel}>Institusi</span>
-                    <span className={styles.infoValue}>{profile.institution || 'Belum diisi'}</span>
+                    <span className={styles.infoLabel}>{t('prof.institution')}</span>
+                    <span className={styles.infoValue} data-no-translate="">{profile.institution || t('common.notFilled')}</span>
                   </div>
                 </>
               )}
@@ -207,12 +210,12 @@ export default function ProfilPage() {
           ) : (
             <>
               <div className={styles.formGroup}>
-                <label className={styles.label}>Nama Lengkap</label>
+                <label className={styles.label}>{t('prof.fullName')}</label>
                 <input className="input" value={name} onChange={e => setName(e.target.value)} />
               </div>
               {!isDoctor && (
                 <div className={styles.formGroup}>
-                  <label className={styles.label}>Tanggal Lahir</label>
+                  <label className={styles.label}>{t('prof.dob')}</label>
                   <input
                     type="date"
                     className="input"
@@ -223,24 +226,24 @@ export default function ProfilPage() {
                 </div>
               )}
               <div className={styles.formGroup}>
-                <label className={styles.label}>Jenis Kelamin</label>
+                <label className={styles.label}>{t('prof.gender')}</label>
                 <select className="input" value={gender} onChange={e => setGender(e.target.value)}>
-                  <option value="">Tidak ingin menyebutkan</option>
-                  <option value="M">Laki-laki</option>
-                  <option value="F">Perempuan</option>
+                  <option value="">{t('prof.preferNotSay')}</option>
+                  <option value="M">{t('prof.male')}</option>
+                  <option value="F">{t('prof.female')}</option>
                 </select>
               </div>
               {isDoctor && (
                 <>
                   <div className={styles.formGroup}>
-                    <label className={styles.label}>Profesi</label>
+                    <label className={styles.label}>{t('prof.profession')}</label>
                     <select className="input" value={specialization} onChange={e => setSpecialization(e.target.value)}>
-                      <option value="">Pilih profesi</option>
+                      <option value="">{t('prof.selectProfession')}</option>
                       {SPECIALIZATIONS.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </div>
                   <div className={styles.formGroup}>
-                    <label className={styles.label}>Institusi / Tempat Praktik</label>
+                    <label className={styles.label}>{t('prof.institutionLabel')}</label>
                     <input className="input" value={institution} onChange={e => setInstitution(e.target.value)} />
                   </div>
                 </>
@@ -249,14 +252,14 @@ export default function ProfilPage() {
               <LocationFields
                 value={location}
                 onChange={setLocation}
-                title={isDoctor ? 'Wilayah Praktik' : 'Wilayah Tempat Tinggal'}
+                title={isDoctor ? t('loc.practice') : t('loc.residence')}
               />
 
               <div className={styles.actionRow}>
                 <button className="btn btn-primary" onClick={saveProfile} disabled={busy}>
-                  {busy && <span className="btnSpinner" />}Simpan Perubahan
+                  {busy && <span className="btnSpinner" />}{t('prof.saveChanges')}
                 </button>
-                <button className="btn btn-outline" onClick={() => setEditing(false)} disabled={busy}>Batal</button>
+                <button className="btn btn-outline" onClick={() => setEditing(false)} disabled={busy}>{t('common.cancel')}</button>
               </div>
             </>
           )}
@@ -264,20 +267,20 @@ export default function ProfilPage() {
 
         <div className={styles.card}>
           <div className={styles.cardHeader}>
-            <h2 className={styles.cardTitle}>Keamanan</h2>
+            <h2 className={styles.cardTitle}>{t('prof.security')}</h2>
             {!showPwForm && (
-              <button className="btn btn-outline btn-sm" onClick={() => setShowPwForm(true)}>Ganti Password</button>
+              <button className="btn btn-outline btn-sm" onClick={() => setShowPwForm(true)}>{t('prof.changePassword')}</button>
             )}
           </div>
 
           {!showPwForm ? (
             <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
-              Gunakan password yang kuat dan tidak dipakai di layanan lain.
+              {t('prof.securityNote')}
             </p>
           ) : (
             <>
               <div className={styles.formGroup}>
-                <label className={styles.label}>Password Saat Ini</label>
+                <label className={styles.label}>{t('prof.currentPassword')}</label>
                 <input
                   type={showPw ? 'text' : 'password'}
                   className="input"
@@ -286,7 +289,7 @@ export default function ProfilPage() {
                 />
               </div>
               <div className={styles.formGroup}>
-                <label className={styles.label}>Password Baru (minimal 6 karakter)</label>
+                <label className={styles.label}>{t('prof.newPassword')}</label>
                 <div style={{ position: 'relative' }}>
                   <input
                     type={showPw ? 'text' : 'password'}
@@ -299,7 +302,7 @@ export default function ProfilPage() {
                   <button
                     type="button"
                     onClick={() => setShowPw(v => !v)}
-                    aria-label={showPw ? 'Sembunyikan password' : 'Tampilkan password'}
+                    aria-label={showPw ? t('prof.hidePassword') : t('prof.showPassword')}
                     style={{
                       position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)',
                       background: 'transparent', color: 'var(--text-muted)', padding: 6,
@@ -316,14 +319,14 @@ export default function ProfilPage() {
                   onClick={savePassword}
                   disabled={busy || !currentPassword || newPassword.length < 6}
                 >
-                  {busy && <span className="btnSpinner" />}Simpan Password
+                  {busy && <span className="btnSpinner" />}{t('prof.savePassword')}
                 </button>
                 <button
                   className="btn btn-outline"
                   onClick={() => { setShowPwForm(false); setCurrentPassword(''); setNewPassword(''); }}
                   disabled={busy}
                 >
-                  Batal
+                  {t('common.cancel')}
                 </button>
               </div>
             </>
@@ -331,25 +334,24 @@ export default function ProfilPage() {
         </div>
 
         <div className={`${styles.card} ${styles.dangerZone}`}>
-          <h2 className={styles.cardTitle} style={{ marginBottom: 12 }}>Privasi dan Data</h2>
+          <h2 className={styles.cardTitle} style={{ marginBottom: 12 }}>{t('prof.privacyData')}</h2>
           <p className={styles.dangerNote}>
-            Sesuai UU Perlindungan Data Pribadi, Anda berhak menghapus data Anda kapan saja.
-            Tindakan di bawah ini bersifat permanen dan tidak dapat dibatalkan.
+            {t('prof.privacyNote')}
           </p>
           <div className={styles.actionRow}>
             {!isDoctor && (
               <button className="btn btn-danger" onClick={() => setConfirmAction('history')} disabled={busy}>
-                Hapus Riwayat
+                {t('prof.deleteHistory')}
               </button>
             )}
             <button className="btn btn-danger" onClick={() => setConfirmAction('account')} disabled={busy}>
-              Hapus Akun Saya
+              {t('prof.deleteMyAccount')}
             </button>
           </div>
         </div>
 
         <button className={`btn ${styles.logoutBtn}`} onClick={() => { logout(); router.push('/login'); }}>
-          Keluar
+          {t('common.logout')}
         </button>
       </div>
 
@@ -357,12 +359,10 @@ export default function ProfilPage() {
         <div className={styles.overlay} onClick={() => !busy && setConfirmAction(null)}>
           <div className={styles.confirmCard} onClick={e => e.stopPropagation()}>
             <h3 className={styles.confirmTitle}>
-              {confirmAction === 'history' ? 'Hapus Semua Riwayat?' : 'Hapus Akun Secara Permanen?'}
+              {confirmAction === 'history' ? t('prof.confirmHistTitle') : t('prof.confirmAccTitle')}
             </h3>
             <p className={styles.confirmText}>
-              {confirmAction === 'history'
-                ? 'Seluruh sesi pemeriksaan Anda, termasuk skor risiko dan catatan dari nakes, akan dihapus permanen. Akun Anda tetap aktif dan Anda masih bisa melakukan skrining baru.'
-                : 'Akun Anda beserta seluruh riwayat pemeriksaan dan data profil akan dihapus permanen. Anda akan langsung keluar dari aplikasi dan data ini tidak dapat dipulihkan.'}
+              {confirmAction === 'history' ? t('prof.confirmHistText') : t('prof.confirmAccText')}
             </p>
             <div className={styles.actionRow}>
               <button
@@ -371,10 +371,10 @@ export default function ProfilPage() {
                 disabled={busy}
               >
                 {busy && <span className="btnSpinner" />}
-                {confirmAction === 'history' ? 'Ya, Hapus Riwayat' : 'Ya, Hapus Akun Saya'}
+                {confirmAction === 'history' ? t('prof.yesDeleteHist') : t('prof.yesDeleteAcc')}
               </button>
               <button className="btn btn-outline" onClick={() => setConfirmAction(null)} disabled={busy}>
-                Batal
+                {t('common.cancel')}
               </button>
             </div>
           </div>

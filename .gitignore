@@ -21,3 +21,7 @@ storage/
 CLAUDE.md
 AGENTS.md
 prisma/dev.db
+
+# Cache terjemahan DeepL. Berisi potongan teks yang pernah diterjemahkan,
+# termasuk ringkasan AI milik pasien, jadi tidak ikut masuk repositori.
+data/translation-cache.json

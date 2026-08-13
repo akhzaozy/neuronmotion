@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import Logo from '@/components/Logo';
 import { EyeIcon, EyeOffIcon, ArrowLeftIcon } from '@/components/icons';
 import { ThemeToggle } from '@/lib/theme';
+import { LanguageToggle, useI18n } from '@/lib/i18n';
 import LocationFields, { LocationValue } from '@/components/LocationFields';
 import styles from '../login/auth.module.css';
 
@@ -13,6 +14,7 @@ const SPECIALIZATIONS = ['Neurolog', 'Dokter Umum', 'Fisioterapis', 'Perawat'];
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { t, lang } = useI18n();
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
@@ -53,7 +55,7 @@ export default function RegisterPage() {
       // Let's just redirect to login for simplicity.
       router.push('/login');
     } catch (err: any) {
-      setError(err.message || 'Gagal mendaftar. Email mungkin sudah terpakai.');
+      setError(err.message || t('auth.registerFailed'));
     } finally {
       setLoading(false);
     }
@@ -68,56 +70,57 @@ export default function RegisterPage() {
 
       <Link href="/" className={styles.backHome}>
         <ArrowLeftIcon />
-        Kembali ke Beranda
+        {t('common.backHome')}
       </Link>
 
-      <div style={{ position: 'absolute', top: 20, right: 20, zIndex: 2 }}>
+      <div style={{ position: 'absolute', top: 20, right: 20, zIndex: 2, display: 'flex', gap: 10, alignItems: 'center' }}>
+        <LanguageToggle />
         <ThemeToggle size="sm" />
       </div>
 
       <div className={`${styles.authCard} glass`}>
         <div className={styles.header}>
-          <Link href="/" className={styles.logo} aria-label="Kembali ke beranda">
+          <Link href="/" className={styles.logo} aria-label={t('common.backHome')}>
             <Logo />
           </Link>
-          <h1 className={styles.title}>Buat Akun</h1>
-          <p className={styles.subtitle}>Mulai deteksi dini hari ini</p>
+          <h1 className={styles.title}>{t('auth.createAccount')}</h1>
+          <p className={styles.subtitle}>{lang === 'en' ? 'Start early detection today' : 'Mulai deteksi dini hari ini'}</p>
         </div>
 
         {error && <div className={styles.errorBox}>{error}</div>}
 
         <form className={styles.form} onSubmit={handleSubmit}>
           <div className={styles.formGroup}>
-            <label className={styles.label}>Nama Lengkap</label>
+            <label className={styles.label}>{t('auth.fullName')}</label>
             <input
               type="text"
               className="input"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Contoh: Budi Santoso"
+              placeholder={t('auth.namePlaceholder')}
               required
             />
           </div>
           <div className={styles.formGroup}>
-            <label className={styles.label}>Email</label>
+            <label className={styles.label}>{t('auth.email')}</label>
             <input
               type="email"
               className="input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Contoh: budi@email.com"
+              placeholder={t('auth.emailPlaceholder')}
               required
             />
           </div>
           <div className={styles.formGroup}>
-            <label className={styles.label}>Password</label>
+            <label className={styles.label}>{t('auth.password')}</label>
             <div className={styles.passwordWrap}>
               <input
                 type={showPassword ? 'text' : 'password'}
                 className="input"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Minimal 6 karakter"
+                placeholder={t('auth.passwordPlaceholder')}
                 required
                 minLength={6}
                 style={passwordTooShort ? { borderColor: 'var(--red)' } : undefined}
@@ -126,35 +129,35 @@ export default function RegisterPage() {
                 type="button"
                 className={styles.togglePw}
                 onClick={() => setShowPassword(v => !v)}
-                aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
+                aria-label={showPassword ? t('prof.hidePassword') : t('prof.showPassword')}
                 tabIndex={-1}
               >
                 {showPassword ? <EyeOffIcon /> : <EyeIcon />}
               </button>
             </div>
             {passwordTooShort && (
-              <span style={{ fontSize: '0.78rem', color: 'var(--red)' }}>Password minimal 6 karakter</span>
+              <span style={{ fontSize: '0.78rem', color: 'var(--red)' }}>{t('auth.passwordTooShort')}</span>
             )}
           </div>
           <div className={styles.formGroup}>
-            <label className={styles.label}>Saya mendaftar sebagai:</label>
+            <label className={styles.label}>{lang === 'en' ? 'I am registering as:' : 'Saya mendaftar sebagai:'}</label>
             <select className="input" value={role} onChange={(e) => setRole(e.target.value)}>
-              <option value="PATIENT">Pasien</option>
-              <option value="DOCTOR">Dokter / Nakes</option>
+              <option value="PATIENT">{t('auth.patient')}</option>
+              <option value="DOCTOR">{t('auth.doctor')}</option>
             </select>
           </div>
           <div className={styles.formGroup}>
-            <label className={styles.label}>Jenis Kelamin (opsional)</label>
+            <label className={styles.label}>{t('auth.gender')}{lang === 'en' ? ' (optional)' : ' (opsional)'}</label>
             <select className="input" value={gender} onChange={(e) => setGender(e.target.value)}>
-              <option value="">Tidak ingin menyebutkan</option>
-              <option value="M">Laki-laki</option>
-              <option value="F">Perempuan</option>
+              <option value="">{t('auth.preferNotSay')}</option>
+              <option value="M">{t('auth.male')}</option>
+              <option value="F">{t('auth.female')}</option>
             </select>
           </div>
 
           {!isDoctor && (
             <div className={styles.formGroup}>
-              <label className={styles.label}>Tanggal Lahir</label>
+              <label className={styles.label}>{t('auth.dateOfBirth')}</label>
               <input
                 type="date"
                 className="input"
@@ -163,7 +166,7 @@ export default function RegisterPage() {
                 max={new Date().toISOString().split('T')[0]}
               />
               <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
-                Dipakai untuk membandingkan hasil skrining dengan rentang normal sesuai kelompok usia Anda.
+                {t('auth.dobHint')}
               </span>
             </div>
           )}
@@ -171,20 +174,20 @@ export default function RegisterPage() {
           {isDoctor && (
             <>
               <div className={styles.formGroup}>
-                <label className={styles.label}>Profesi</label>
+                <label className={styles.label}>{t('prof.profession')}</label>
                 <select className="input" value={specialization} onChange={(e) => setSpecialization(e.target.value)} required>
-                  <option value="" disabled>Pilih profesi</option>
+                  <option value="" disabled>{t('prof.selectProfession')}</option>
                   {SPECIALIZATIONS.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
               <div className={styles.formGroup}>
-                <label className={styles.label}>Institusi / Tempat Praktik</label>
+                <label className={styles.label}>{t('prof.institutionLabel')}</label>
                 <input
                   type="text"
                   className="input"
                   value={institution}
                   onChange={(e) => setInstitution(e.target.value)}
-                  placeholder="Contoh: RS Siloam Jakarta"
+                  placeholder={t('auth.institutionPlaceholder')}
                   required
                 />
               </div>
@@ -194,20 +197,18 @@ export default function RegisterPage() {
           <LocationFields
             value={location}
             onChange={setLocation}
-            title={isDoctor ? 'Wilayah Praktik' : 'Wilayah Tempat Tinggal'}
-            hint={isDoctor
-              ? 'Dipakai untuk memetakan sebaran wilayah pasien yang Anda tangani.'
-              : 'Menjadi bagian identitas Anda dan membantu memahami sebaran pengguna antar wilayah.'}
+            title={isDoctor ? t('loc.practice') : t('loc.residence')}
+            hint={isDoctor ? t('loc.hintDoctor') : t('loc.hintPatient')}
           />
 
           <button type="submit" className="btn btn-primary btn-lg" disabled={loading || passwordTooShort} style={{ marginTop: 10 }}>
             {loading && <span className="btnSpinner" />}
-            {loading ? 'Memproses...' : 'Daftar Sekarang'}
+            {loading ? t('common.loading') : t('auth.registerNow')}
           </button>
         </form>
 
         <div className={styles.footer}>
-          Sudah punya akun? <Link href="/login" className={styles.link}>Masuk di sini</Link>
+          {t('auth.hasAccount')} <Link href="/login" className={styles.link}>{t('auth.loginHere')}</Link>
         </div>
       </div>
     </div>

@@ -92,8 +92,8 @@ export const api = {
     request('PUT', `/api/doctor/sessions/${sessionId}/note`, data, token),
 
   // Chat asisten (NeuroBot)
-  chat: (messages: ChatApiMessage[]) =>
-    request<{ reply: string }>('POST', '/api/chat', { messages }),
+  chat: (messages: ChatApiMessage[], lang: 'id' | 'en' = 'id') =>
+    request<{ reply: string }>('POST', '/api/chat', { messages, lang }),
 
   // Admin
   getStats: () => request('GET', '/api/admin/stats'),

@@ -1,6 +1,7 @@
 'use client';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
+import { useI18n } from '@/lib/i18n';
 import styles from './LiveChat.module.css';
 
 interface ChatMessage {
@@ -9,11 +10,9 @@ interface ChatMessage {
   id: string;
 }
 
-const WELCOME_MESSAGE: ChatMessage = {
-  role: 'model',
-  parts: [{ text: 'Halo! Saya **NeuroBot**, asisten kesehatan virtual NeuronMotion 👋\n\nSaya siap membantu Anda memahami hasil skrining, menjawab pertanyaan seputar kesehatan motorik, dan memberikan informasi umum tentang gangguan saraf.\n\nApa yang ingin Anda tanyakan hari ini?' }],
-  id: 'welcome',
-};
+function welcomeMessage(text: string): ChatMessage {
+  return { role: 'model', parts: [{ text }], id: 'welcome' };
+}
 
 function renderMarkdown(text: string): string {
   return text
@@ -23,8 +22,9 @@ function renderMarkdown(text: string): string {
 }
 
 export default function LiveChat() {
+  const { t, lang } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([WELCOME_MESSAGE]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
@@ -35,6 +35,12 @@ export default function LiveChat() {
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
+
+  // Sapaan pembuka ikut berganti saat bahasa diubah, selama percakapan belum
+  // dimulai. Bila pengguna sudah bertanya, isi percakapan dibiarkan apa adanya.
+  useEffect(() => {
+    setMessages(prev => (prev.length <= 1 ? [welcomeMessage(t('bot.welcome'))] : prev));
+  }, [t]);
 
   useEffect(() => {
     if (isOpen) {
@@ -71,7 +77,7 @@ export default function LiveChat() {
       // sama seperti seluruh pemanggilan API lain. Sebelumnya memakai URL
       // relatif '/api/chat', yang di produksi diteruskan nginx ke Express
       // sebagai POST /chat dan berakhir 404.
-      const data = await api.chat(history);
+      const data = await api.chat(history, lang);
 
       const botMsg: ChatMessage = {
         role: 'model',
@@ -82,7 +88,7 @@ export default function LiveChat() {
     } catch (err: unknown) {
       const errorMsg: ChatMessage = {
         role: 'model',
-        parts: [{ text: `⚠️ ${err instanceof Error ? err.message : 'Terjadi kesalahan. Silakan coba lagi.'}` }],
+        parts: [{ text: `⚠️ ${err instanceof Error ? err.message : t('bot.error')}` }],
         id: `err-${Date.now()}`,
       };
       setMessages(prev => [...prev, errorMsg]);
@@ -99,7 +105,7 @@ export default function LiveChat() {
   }
 
   function clearChat() {
-    setMessages([WELCOME_MESSAGE]);
+    setMessages([welcomeMessage(t('bot.welcome'))]);
   }
 
   return (
@@ -109,8 +115,8 @@ export default function LiveChat() {
         id="livechat-toggle-btn"
         className={`${styles.fab} ${isOpen ? styles.fabOpen : ''}`}
         onClick={() => setIsOpen(o => !o)}
-        aria-label={isOpen ? 'Tutup chat' : 'Buka chat dengan NeuroBot'}
-        title={isOpen ? 'Tutup chat' : 'Chat dengan NeuroBot AI'}
+        aria-label={isOpen ? t('bot.closeChat') : t('bot.openChat')}
+        title={isOpen ? t('bot.closeChat') : t('bot.chatWith')}
       >
         {hasUnread && !isOpen && <span className={styles.unreadDot} />}
         <span className={styles.fabIcon}>
@@ -134,7 +140,7 @@ export default function LiveChat() {
         id="livechat-window"
         className={`${styles.chatWindow} ${isOpen ? styles.chatWindowOpen : ''}`}
         role="dialog"
-        aria-label="Chat dengan NeuroBot AI"
+        aria-label={t('bot.chatWith')}
         aria-hidden={!isOpen}
       >
         {/* Header */}
@@ -148,7 +154,7 @@ export default function LiveChat() {
             <div className={styles.botName}>NeuroBot</div>
             <div className={styles.botStatus}>
               <span className={styles.statusDot} />
-              Asisten AI · Powered by Last Dance
+              {t('bot.status')}
             </div>
           </div>
           <div className={styles.headerActions}>
@@ -156,8 +162,8 @@ export default function LiveChat() {
               id="livechat-clear-btn"
               className={styles.iconBtn}
               onClick={clearChat}
-              title="Hapus riwayat chat"
-              aria-label="Hapus riwayat chat"
+              title={t('bot.clearHistory')}
+              aria-label={t('bot.clearHistory')}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                 <polyline points="3 6 5 6 21 6" />
@@ -170,8 +176,8 @@ export default function LiveChat() {
               id="livechat-close-btn"
               className={styles.iconBtn}
               onClick={() => setIsOpen(false)}
-              title="Tutup chat"
-              aria-label="Tutup chat"
+              title={t('bot.closeChat')}
+              aria-label={t('bot.closeChat')}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <line x1="18" y1="6" x2="6" y2="18" />
@@ -195,8 +201,12 @@ export default function LiveChat() {
                   </svg>
                 </div>
               )}
+              {/* Pesan pengguna adalah kalimat yang ia ketik sendiri, jadi
+                  dibiarkan apa adanya. Balasan bot sudah dihasilkan dalam
+                  bahasa yang dipilih, sehingga juga tidak perlu diterjemahkan. */}
               <div
                 className={styles.bubbleContent}
+                data-no-translate=""
                 dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.parts[0].text) }}
               />
             </div>
@@ -223,11 +233,7 @@ export default function LiveChat() {
         {/* Quick Prompts */}
         {messages.length <= 1 && (
           <div className={styles.quickPrompts}>
-            {[
-              'Apa arti skor risiko saya?',
-              'Apa itu tremor Parkinson?',
-              'Kapan saya harus ke dokter?',
-            ].map(q => (
+            {[t('bot.q1'), t('bot.q2'), t('bot.q3')].map(q => (
               <button
                 key={q}
                 className={styles.quickPromptBtn}
@@ -251,17 +257,17 @@ export default function LiveChat() {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ketik pertanyaan Anda... (Enter kirim)"
+            placeholder={t('bot.placeholder')}
             rows={1}
             disabled={loading}
-            aria-label="Pesan untuk NeuroBot"
+            aria-label={t('bot.messageLabel')}
           />
           <button
             id="livechat-send-btn"
             className={`${styles.sendBtn} ${(!input.trim() || loading) ? styles.sendBtnDisabled : ''}`}
             onClick={sendMessage}
             disabled={!input.trim() || loading}
-            aria-label="Kirim pesan"
+            aria-label={t('bot.send')}
           >
             {loading ? (
               <div className={styles.sendSpinner} />
@@ -274,7 +280,7 @@ export default function LiveChat() {
           </button>
         </div>
         <div className={styles.disclaimer}>
-          ⚕️ NeuroBot bukan dokter — selalu konsultasikan kondisi Anda ke tenaga medis
+          {t('bot.disclaimer')}
         </div>
       </div>
     </>

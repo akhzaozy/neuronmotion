@@ -242,7 +242,16 @@ ATURAN PENTING:
 // Batasi riwayat yang dikirim agar permintaan tidak membengkak pada percakapan panjang
 const MAX_CHAT_HISTORY = 20;
 
-async function callGeminiChat(model, messages, apiKey) {
+/**
+ * Ditambahkan ke instruksi sistem ketika antarmuka sedang berbahasa Inggris,
+ * supaya jawaban asisten mengikuti bahasa yang dipilih pengguna.
+ */
+const CHAT_LANGUAGE_INSTRUCTION = {
+  id: '\n8. Jawab selalu dalam bahasa Indonesia.',
+  en: '\n8. Always answer in English, regardless of the language of the question.',
+};
+
+async function callGeminiChat(model, messages, apiKey, lang = 'id') {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
@@ -252,7 +261,9 @@ async function callGeminiChat(model, messages, apiKey) {
       headers: { 'Content-Type': 'application/json' },
       signal: controller.signal,
       body: JSON.stringify({
-        systemInstruction: { parts: [{ text: CHAT_SYSTEM_INSTRUCTION }] },
+        systemInstruction: {
+          parts: [{ text: CHAT_SYSTEM_INSTRUCTION + (CHAT_LANGUAGE_INSTRUCTION[lang] || CHAT_LANGUAGE_INSTRUCTION.id) }],
+        },
         contents: messages,
         generationConfig: { temperature: 0.7, maxOutputTokens: 1024 },
       }),
@@ -276,7 +287,7 @@ async function callGeminiChat(model, messages, apiKey) {
  * Menjawab percakapan NeuroBot. Mengembalikan { reply } bila berhasil,
  * atau { error, status } agar route dapat membalas dengan kode yang sesuai.
  */
-export async function chatWithAssistant(messages) {
+export async function chatWithAssistant(messages, lang = 'id') {
   const apiKey = getApiKey();
   const { primary, fallback } = getModels();
   if (!apiKey) {
@@ -304,11 +315,11 @@ export async function chatWithAssistant(messages) {
   }
 
   try {
-    return { reply: await callGeminiChat(primary, sanitized, apiKey) };
+    return { reply: await callGeminiChat(primary, sanitized, apiKey, lang) };
   } catch (primaryError) {
     console.warn(`Chat Gemini primary (${primary}) gagal:`, primaryError.message);
     try {
-      return { reply: await callGeminiChat(fallback, sanitized, apiKey) };
+      return { reply: await callGeminiChat(fallback, sanitized, apiKey, lang) };
     } catch (fallbackError) {
       console.error(`Chat Gemini fallback (${fallback}) juga gagal:`, fallbackError.message);
       return {

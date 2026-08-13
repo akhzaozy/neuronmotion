@@ -22,7 +22,7 @@ export default function DoctorNav() {
       <div className={styles.inner}>
         <Link href="/doctor" className={styles.brand}>
           <Logo size={30} />
-          <span className={styles.brandText}>
+          <span className={styles.brandText} data-no-translate="">
             NeuronMotion <span className={styles.brandSuffix}>AI</span>
           </span>
         </Link>

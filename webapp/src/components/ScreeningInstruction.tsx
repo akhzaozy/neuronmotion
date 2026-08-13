@@ -1,11 +1,10 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { useI18n } from '@/lib/i18n';
 import styles from './ScreeningInstruction.module.css';
 
 interface InstructionConfig {
-  badge: string;
-  title: string;
-  steps: string[];
+  key: string;
   figure: React.ReactNode;
 }
 
@@ -156,72 +155,12 @@ const FigureROM = () => (
 // ── Instruction Configs ───────────────────────────────────────────────────────
 
 const INSTRUCTIONS: Record<string, InstructionConfig> = {
-  tremor: {
-    badge: 'Tes Tremor',
-    title: 'Tahan Tangan Rileks',
-    steps: [
-      'Angkat tangan kanan sejajar dada, telapak menghadap bawah',
-      'Rilekskan seluruh otot tangan, jangan sengaja menahan',
-      'Diam selama 10 detik, tahan posisi ini',
-      'Jangan gerakkan tangan secara sengaja',
-    ],
-    figure: <FigureTremor />,
-  },
-  fingerTapping: {
-    badge: 'Tes Finger Tapping',
-    title: 'Ketuk Ibu Jari ke Telunjuk',
-    steps: [
-      'Angkat tangan ke depan kamera, telapak menghadap kamera',
-      'Ketuk ibu jari ke telunjuk se-cepat dan se-keras mungkin',
-      'Lakukan berulang tanpa henti selama 10 detik',
-      'Usahakan ritme konsisten, jangan melambat di tengah',
-    ],
-    figure: <FigureTapping />,
-  },
-  gait: {
-    badge: 'Tes Gait',
-    title: 'Berjalan di Depan Kamera',
-    steps: [
-      'Letakkan kamera/HP ±2 meter di depan Anda',
-      'Pastikan seluruh tubuh terlihat di kamera saat berdiri',
-      'Berjalan maju-mundur secara natural selama 10 detik',
-      'Jangan mempercepat atau mengubah gaya jalan',
-    ],
-    figure: <FigureGait />,
-  },
-  armSwing: {
-    badge: 'Tes Arm Swing',
-    title: 'Berjalan dan Biarkan Tangan Berayun',
-    steps: [
-      'Posisi kamera sama seperti tes gait (±2 meter)',
-      'Berjalan dengan kecepatan normal, jangan paksa tangan',
-      'Biarkan kedua tangan berayun natural mengikuti langkah',
-      'Lakukan selama 10 detik tanpa menahan ayunan',
-    ],
-    figure: <FigureArmSwing />,
-  },
-  posture: {
-    badge: 'Tes Stabilitas Postur',
-    title: 'Berdiri Tegak dan Diam',
-    steps: [
-      'Berdiri tegak dengan kedua kaki selebar bahu',
-      'Pastikan seluruh tubuh terlihat di kamera',
-      'Tutup mata (opsional) untuk tes lebih akurat',
-      'Diam selama 10 detik, jangan sengaja menahan badan',
-    ],
-    figure: <FigurePosture />,
-  },
-  rom: {
-    badge: 'Tes Range of Motion',
-    title: 'Tekuk dan Luruskan Lutut',
-    steps: [
-      'Duduk di kursi tanpa sandaran tangan, kamera di samping',
-      'Angkat satu kaki dan luruskan sepenuhnya',
-      'Kembalikan ke posisi awal (lutut ±90°)',
-      'Ulang gerakan secara penuh selama 10 detik',
-    ],
-    figure: <FigureROM />,
-  },
+  tremor: { key: 'tremor', figure: <FigureTremor /> },
+  fingerTapping: { key: 'fingerTapping', figure: <FigureTapping /> },
+  gait: { key: 'gait', figure: <FigureGait /> },
+  armSwing: { key: 'armSwing', figure: <FigureArmSwing /> },
+  posture: { key: 'posture', figure: <FigurePosture /> },
+  rom: { key: 'rom', figure: <FigureROM /> },
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -233,6 +172,7 @@ interface Props {
 }
 
 export default function ScreeningInstruction({ testType, onReady, onSkip }: Props) {
+  const { t } = useI18n();
   const [countdown, setCountdown] = useState(5);
   const [started, setStarted] = useState(false);
 
@@ -253,18 +193,18 @@ export default function ScreeningInstruction({ testType, onReady, onSkip }: Prop
   return (
     <div className={styles.overlay}>
       <div className={styles.card}>
-        <span className={styles.badge}>{config.badge}</span>
-        <p className={styles.title}>{config.title}</p>
+        <span className={styles.badge}>{t(`ins.${config.key}.badge`)}</span>
+        <p className={styles.title}>{t(`ins.${config.key}.title`)}</p>
 
         {/* Animated Figure */}
         <div className={styles.figureWrap}>{config.figure}</div>
 
         {/* Steps */}
         <div className={styles.steps}>
-          {config.steps.map((step, i) => (
-            <div key={i} className={styles.step}>
-              <span className={styles.stepNum}>{i + 1}</span>
-              <span>{step}</span>
+          {[1, 2, 3, 4].map(n => (
+            <div key={n} className={styles.step}>
+              <span className={styles.stepNum}>{n}</span>
+              <span>{t(`ins.${config.key}.s${n}`)}</span>
             </div>
           ))}
         </div>
@@ -272,7 +212,7 @@ export default function ScreeningInstruction({ testType, onReady, onSkip }: Prop
         {/* Countdown / Start, "Lewati" hanya muncul setelah countdown berjalan (pola "skip iklan") */}
         {!started ? (
           <button className="btn btn-primary" style={{ width: '100%' }} onClick={startCountdown}>
-            Saya Siap, Mulai
+            {t('scr.readyStart')}
           </button>
         ) : (
           <div className={styles.countdownWrap}>
@@ -281,10 +221,10 @@ export default function ScreeningInstruction({ testType, onReady, onSkip }: Prop
             </div>
             <div className={styles.countdownRow}>
               <p className={styles.countdownLabel}>
-                {countdown > 0 ? `Memulai dalam ${countdown} detik...` : 'Mulai!'}
+                {countdown > 0 ? `${t('ins.startingIn')} ${countdown} ${t('ins.seconds')}` : t('ins.go')}
               </p>
               <button className={styles.skipLink} onClick={onSkip}>
-                Lewati
+                {t('ins.skip')}
               </button>
             </div>
           </div>

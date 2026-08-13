@@ -12,16 +12,17 @@ router.get('/status', async (req, res) => {
  * POST /api/translate
  * Body: { texts: string[], target: 'EN' | 'ID' }
  *
- * Hanya untuk teks dinamis (ringkasan AI, catatan dokter). Label antarmuka
- * memakai kamus lokal di frontend agar tidak memakan kuota DeepL.
+ * Dipakai penerjemah halaman penuh di frontend, yang mengirim seluruh teks
+ * terlihat pada satu halaman dalam beberapa kelompok. Hasilnya disimpan di
+ * cache server, sehingga teks yang sama tidak pernah dikirim dua kali.
  */
 router.post('/', async (req, res) => {
   const { texts, target } = req.body || {};
   if (!Array.isArray(texts) || texts.length === 0) {
     return res.status(400).json({ error: 'texts wajib berupa array dan tidak kosong' });
   }
-  if (texts.length > 20) {
-    return res.status(400).json({ error: 'Maksimal 20 teks per permintaan' });
+  if (texts.length > 120) {
+    return res.status(400).json({ error: 'Maksimal 120 teks per permintaan' });
   }
 
   const clean = texts.filter(t => typeof t === 'string' && t.trim().length > 0);

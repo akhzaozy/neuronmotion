@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/auth';
 import { api, PatientDetail, Session } from '@/lib/api';
 import DoctorNav from '@/components/DoctorNav';
 import GeoBreakdown from '@/components/GeoBreakdown';
+import { useI18n, translateServerLabel, dateLocale } from '@/lib/i18n';
 import styles from './doctor.module.css';
 
 const POLL_INTERVAL_MS = 30_000; // 30 detik
@@ -12,6 +13,7 @@ const POLL_INTERVAL_MS = 30_000; // 30 detik
 export default function DoctorPortal() {
   const router = useRouter();
   const { user, token, logout, isLoading } = useAuth();
+  const { t, lang } = useI18n();
   
   const [dashboard, setDashboard] = useState<any>(null);
   const [patients, setPatients] = useState<any[]>([]);
@@ -80,7 +82,7 @@ export default function DoctorPortal() {
       setActiveSessionIndex(0);
       setNoteText(detail.sessions[0]?.doctorNote || '');
     } catch (e) {
-      alert('Gagal memuat detail pasien');
+      alert(t('doc.loadDetailFailed'));
     }
   };
 
@@ -89,9 +91,9 @@ export default function DoctorPortal() {
     setIsSavingNote(true);
     try {
       await api.saveNote(activePatient.sessions[activeSessionIndex].id, { note: noteText, doctorId: user!.id }, token!);
-      alert('Catatan berhasil disimpan');
+      alert(t('doc.noteSaved'));
     } catch (e: any) {
-      alert('Gagal menyimpan: ' + e.message);
+      alert(`${t('doc.saveFailed')}: ${e.message}`);
     } finally {
       setIsSavingNote(false);
     }
@@ -112,7 +114,7 @@ export default function DoctorPortal() {
           </div>
           <div className={styles.contentGrid}>
             <div className={styles.patientList}>
-              <div className={styles.listHeader}>Memuat daftar pasien...</div>
+              <div className={styles.listHeader}>{t('doc.loadingPatients')}</div>
               <div className={styles.listBody}>
                 {[0, 1, 2, 3, 4].map(i => (
                   <div key={i} className={styles.patientItem}>
@@ -127,7 +129,7 @@ export default function DoctorPortal() {
             <div className={styles.detailView}>
               <div className={styles.emptyState}>
                 <div className={styles.emptyStateIcon}>📋</div>
-                <h3>Memuat Portal Nakes...</h3>
+                <h3>{t('doc.loadingPortal')}</h3>
               </div>
             </div>
           </div>
@@ -146,14 +148,15 @@ export default function DoctorPortal() {
       <div className={styles.container}>
         <div className={styles.header}>
           <div>
-            <h1>Portal Tenaga Kesehatan</h1>
+            <h1>{t('doc.portalTitle')}</h1>
             <p>
-              Selamat datang, {user?.name}, {user?.specialization || 'Dokter Spesialis'}
-              {user?.institution ? ` • ${user.institution}` : ''}
+              {t('doc.welcome')}, <span data-no-translate="">{user?.name}</span>,{' '}
+              {user?.specialization || t('doc.specialist')}
+              {user?.institution ? <span data-no-translate="">{` • ${user.institution}`}</span> : ''}
             </p>
             {lastUpdated && (
               <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 4 }}>
-                Diperbarui: {lastUpdated.toLocaleTimeString('id-ID')} · otomatis setiap 30 detik
+                {t('doc.updatedAt')}: {lastUpdated.toLocaleTimeString(dateLocale(lang))} · {t('doc.autoEvery30')}
               </p>
             )}
           </div>
@@ -162,31 +165,31 @@ export default function DoctorPortal() {
               className="btn btn-outline btn-sm"
               onClick={() => refreshData(user, token, activePatientId)}
               disabled={isRefreshing}
-              title="Perbarui data sekarang"
+              title={t('doc.refreshNow')}
             >
-              {isRefreshing ? 'Memperbarui...' : '↻ Perbarui'}
+              {isRefreshing ? t('doc.refreshing') : `↻ ${t('doc.refresh')}`}
             </button>
             <button className="btn btn-outline" onClick={() => { logout(); router.push('/login'); }}>
-              Keluar
+              {t('common.logout')}
             </button>
           </div>
         </div>
 
         <div className={styles.statsGrid}>
           <div className={styles.statCard}>
-            <div className={styles.statTitle}>Total Pasien Aktif</div>
+            <div className={styles.statTitle}>{t('doc.totalPatients')}</div>
             <div className={styles.statValue} style={{ color: 'var(--brand-light)' }}>{dashboard.totalPatients}</div>
           </div>
           <div className={styles.statCard}>
-            <div className={styles.statTitle}>Pasien Risiko Tinggi (Rujukan)</div>
+            <div className={styles.statTitle}>{t('doc.highRisk')}</div>
             <div className={styles.statValue} style={{ color: 'var(--red)' }}>{dashboard.riskBreakdown?.HIGH || 0}</div>
           </div>
           <div className={styles.statCard}>
-            <div className={styles.statTitle}>Pasien Risiko Sedang (Pantau)</div>
+            <div className={styles.statTitle}>{t('doc.mediumRisk')}</div>
             <div className={styles.statValue} style={{ color: 'var(--yellow)' }}>{dashboard.riskBreakdown?.MEDIUM || 0}</div>
           </div>
           <div className={styles.statCard}>
-            <div className={styles.statTitle}>Deteksi Parkinson Awal</div>
+            <div className={styles.statTitle}>{t('doc.earlyParkinson')}</div>
             <div className={styles.statValue} style={{ color: 'var(--purple)' }}>{dashboard.conditionBreakdown?.PARKINSON_EARLY || 0}</div>
           </div>
         </div>
@@ -197,13 +200,13 @@ export default function DoctorPortal() {
           {/* Patient List */}
           <div className={styles.patientList}>
             <div className={styles.listHeader}>
-              <span>Daftar Pasien ({filteredPatients.length}{search ? ` / ${patients.length}` : ''})</span>
+              <span>{t('doc.patientList')} ({filteredPatients.length}{search ? ` / ${patients.length}` : ''})</span>
             </div>
             <div className={styles.searchBox}>
               <input
                 className={styles.searchInput}
                 type="text"
-                placeholder="Cari nama pasien..."
+                placeholder={t('doc.searchPatient')}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
               />
@@ -216,17 +219,19 @@ export default function DoctorPortal() {
                   onClick={() => loadPatientDetail(p.id)}
                 >
                   <div>
-                    <div className={styles.patientName}>{p.name}</div>
-                    <div className={styles.patientInfo}>Usia: {p.age || '?'} th • Skor: {p.lastSession ? Math.round(p.lastSession.compositeScore) : '-'}</div>
+                    <div className={styles.patientName} data-no-translate="">{p.name}</div>
+                    <div className={styles.patientInfo}>
+                      {t('doc.age')}: {p.age || '?'} {t('doc.yearsShort')} • {t('doc.scoreShort')}: {p.lastSession ? Math.round(p.lastSession.compositeScore) : '-'}
+                    </div>
                   </div>
                   {p.lastSession && (
-                    <div className={`${styles.riskIndicator} ${styles[p.lastSession.riskCategory]}`} title={`Risiko ${p.lastSession.riskCategory}`} />
+                    <div className={`${styles.riskIndicator} ${styles[p.lastSession.riskCategory]}`} title={`${t('dash.riskPrefix')} ${p.lastSession.riskCategory}`} />
                   )}
                 </div>
               ))}
-              {patients.length === 0 && <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-secondary)' }}>Belum ada pasien tertaut.</div>}
+              {patients.length === 0 && <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-secondary)' }}>{t('doc.noPatients')}</div>}
               {patients.length > 0 && filteredPatients.length === 0 && (
-                <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-secondary)' }}>Tidak ada pasien dengan nama &ldquo;{search}&rdquo;.</div>
+                <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-secondary)' }}>{t('doc.noMatch')} &ldquo;{search}&rdquo;.</div>
               )}
             </div>
           </div>
@@ -237,15 +242,15 @@ export default function DoctorPortal() {
               <>
                 <div className={styles.detailHeader}>
                   <div>
-                    <h2 className={styles.detailTitle}>{activePatient.name}</h2>
-                    <div style={{ color: 'var(--text-secondary)' }}>{activePatient.email} • Usia {activePatient.age || '?'} tahun • {activePatient.gender === 'M' ? 'Laki-laki' : activePatient.gender === 'F' ? 'Perempuan' : 'Tidak diketahui'}</div>
+                    <h2 className={styles.detailTitle} data-no-translate="">{activePatient.name}</h2>
+                    <div style={{ color: 'var(--text-secondary)' }}><span data-no-translate="">{activePatient.email}</span> • {t('doc.age')} {activePatient.age || '?'} {t('common.years')} • {activePatient.gender === 'M' ? t('prof.male') : activePatient.gender === 'F' ? t('prof.female') : t('doc.unknown')}</div>
                   </div>
                   {activePatient.sessions[activeSessionIndex] && (
                     <div className={`badge ${
                       activePatient.sessions[activeSessionIndex].riskCategory === 'HIGH' ? 'badge-red' : 
                       activePatient.sessions[activeSessionIndex].riskCategory === 'MEDIUM' ? 'badge-yellow' : 'badge-green'
                     }`} style={{ fontSize: '1rem', padding: '8px 16px' }}>
-                      Risiko {activePatient.sessions[activeSessionIndex].riskCategory} (Skor: {Math.round(activePatient.sessions[activeSessionIndex].compositeScore)})
+                      {t('dash.riskPrefix')} {activePatient.sessions[activeSessionIndex].riskCategory} ({t('doc.scoreShort')}: {Math.round(activePatient.sessions[activeSessionIndex].compositeScore)})
                     </div>
                   )}
                 </div>
@@ -253,7 +258,7 @@ export default function DoctorPortal() {
                 {activePatient.sessions[activeSessionIndex] ? (
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                      <h3>Sesi Skrining: {new Date(activePatient.sessions[activeSessionIndex].timestamp).toLocaleDateString('id-ID')}</h3>
+                      <h3>{t('doc.screeningSession')}: {new Date(activePatient.sessions[activeSessionIndex].timestamp).toLocaleDateString(dateLocale(lang))}</h3>
                       {activePatient.sessions.length > 1 && (
                         <select 
                           className="input" 
@@ -267,7 +272,7 @@ export default function DoctorPortal() {
                         >
                           {activePatient.sessions.map((s, idx) => (
                             <option key={s.id} value={idx}>
-                              {new Date(s.timestamp).toLocaleString('id-ID')} - Skor {Math.round(s.compositeScore)}
+                              {new Date(s.timestamp).toLocaleString(dateLocale(lang))} - {t('doc.scoreShort')} {Math.round(s.compositeScore)}
                             </option>
                           ))}
                         </select>
@@ -276,10 +281,10 @@ export default function DoctorPortal() {
                     
                     {activePatient.sessions[activeSessionIndex].mlPrediction?.predictedLabel && (
                       <div style={{ background: 'var(--bg-secondary)', padding: 16, borderRadius: 8, marginBottom: 24, borderLeft: '4px solid var(--purple)' }}>
-                        <h4 style={{ color: 'var(--purple)', marginBottom: 4, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Hasil Klasifikasi Klinis</h4>
-                        <p style={{ fontWeight: 600 }}>{activePatient.sessions[activeSessionIndex].mlPrediction.predictedLabel}</p>
+                        <h4 style={{ color: 'var(--purple)', marginBottom: 4, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('doc.clinicalClassification')}</h4>
+                        <p style={{ fontWeight: 600 }}>{translateServerLabel(activePatient.sessions[activeSessionIndex].mlPrediction.predictedLabel, lang)}</p>
                         <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: 4 }}>
-                          Keyakinan: {activePatient.sessions[activeSessionIndex].mlPrediction.confidence || '?'}%
+                          {t('doc.confidence')}: {activePatient.sessions[activeSessionIndex].mlPrediction.confidence || '?'}%
                         </p>
                       </div>
                     )}
@@ -312,29 +317,29 @@ export default function DoctorPortal() {
                     </div>
 
                     <div className={styles.noteSection}>
-                      <h3 style={{ marginBottom: 16 }}>Catatan Klinis Dokter</h3>
+                      <h3 style={{ marginBottom: 16 }}>{t('doc.clinicalNote')}</h3>
                       <textarea 
                         className="input" 
                         value={noteText}
                         onChange={e => setNoteText(e.target.value)}
-                        placeholder="Tulis hasil evaluasi dan rekomendasi medis untuk pasien..."
+                        placeholder={t('doc.notePlaceholder')}
                       />
                       <button className="btn btn-primary" onClick={saveNote} disabled={isSavingNote}>
-                        {isSavingNote ? 'Menyimpan...' : 'Simpan Catatan & Rekomendasi'}
+                        {isSavingNote ? t('doc.saving') : t('doc.saveNote')}
                       </button>
                     </div>
                   </div>
                 ) : (
                   <div className={styles.emptyState}>
-                    <p>Pasien ini belum melakukan skrining sama sekali.</p>
+                    <p>{t('doc.noSessions')}</p>
                   </div>
                 )}
               </>
             ) : (
               <div className={styles.emptyState}>
                 <div className={styles.emptyStateIcon}>📋</div>
-                <h3>Pilih Pasien</h3>
-                <p>Klik nama pasien di menu sebelah kiri untuk melihat detail klinis lengkap dan analisis biomarker.</p>
+                <h3>{t('doc.selectPatient')}</h3>
+                <p>{t('doc.selectPatientHint')}</p>
               </div>
             )}
           </div>

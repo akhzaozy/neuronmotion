@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useRef } from 'react';
+import { useI18n } from '@/lib/i18n';
 import styles from './ReportPrintHost.module.css';
 
 interface Props {
@@ -17,6 +18,7 @@ interface Props {
  * yang ikut, sehingga hasilnya rapi tanpa perlu pustaka PDF tambahan.
  */
 export default function ReportPrintHost({ open, onClose, children }: Props) {
+  const { t } = useI18n();
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -36,10 +38,10 @@ export default function ReportPrintHost({ open, onClose, children }: Props) {
   return (
     <div className={styles.backdrop}>
       <div className={styles.toolbar}>
-        <span className={styles.hint}>Pratinjau laporan. Simpan sebagai PDF melalui dialog cetak.</span>
+        <span className={styles.hint}>{t('report.previewHint')}</span>
         <div className={styles.actions}>
-          <button className="btn btn-outline btn-sm" onClick={onClose}>Tutup</button>
-          <button className="btn btn-primary btn-sm" onClick={() => window.print()}>Cetak / Simpan PDF</button>
+          <button className="btn btn-outline btn-sm" onClick={onClose}>{t('common.close')}</button>
+          <button className="btn btn-primary btn-sm" onClick={() => window.print()}>{t('report.print')}</button>
         </div>
       </div>
       <div className={styles.paperWrap} ref={ref}>
