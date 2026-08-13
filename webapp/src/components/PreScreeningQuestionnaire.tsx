@@ -137,6 +137,7 @@ export default function PreScreeningQuestionnaire({ onComplete, onSkip }: Props)
         {q.type === 'text' ? (
           <textarea
             className={styles.textarea}
+            aria-label={q.question}
             value={(currentAnswer as string) || ''}
             onChange={e => setAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
             placeholder="Contoh: Getaran muncul terutama saat pagi hari dan berkurang setelah beraktivitas..."

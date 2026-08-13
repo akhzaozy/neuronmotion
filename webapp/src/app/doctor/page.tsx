@@ -206,6 +206,7 @@ export default function DoctorPortal() {
               <input
                 className={styles.searchInput}
                 type="text"
+                aria-label={t('doc.searchPatient')}
                 placeholder={t('doc.searchPatient')}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
@@ -260,8 +261,9 @@ export default function DoctorPortal() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                       <h3>{t('doc.screeningSession')}: {new Date(activePatient.sessions[activeSessionIndex].timestamp).toLocaleDateString(dateLocale(lang))}</h3>
                       {activePatient.sessions.length > 1 && (
-                        <select 
-                          className="input" 
+                        <select
+                          className="input"
+                          aria-label={t('doc.screeningSession')}
                           style={{ width: 'auto', padding: '4px 8px' }}
                           value={activeSessionIndex}
                           onChange={e => {
@@ -318,8 +320,9 @@ export default function DoctorPortal() {
 
                     <div className={styles.noteSection}>
                       <h3 style={{ marginBottom: 16 }}>{t('doc.clinicalNote')}</h3>
-                      <textarea 
-                        className="input" 
+                      <textarea
+                        className="input"
+                        aria-label={t('doc.clinicalNote')}
                         value={noteText}
                         onChange={e => setNoteText(e.target.value)}
                         placeholder={t('doc.notePlaceholder')}

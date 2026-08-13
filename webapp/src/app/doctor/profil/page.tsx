@@ -130,19 +130,19 @@ export default function DoctorProfilPage() {
           {editing ? (
             <>
               <div className={styles.formGroup}>
-                <label className={styles.label}>Nama Lengkap</label>
-                <input className="input" value={name} onChange={e => setName(e.target.value)} />
+                <label className={styles.label} htmlFor="docprof-name">Nama Lengkap</label>
+                <input id="docprof-name" className="input" value={name} onChange={e => setName(e.target.value)} />
               </div>
               <div className={styles.formGroup}>
-                <label className={styles.label}>Profesi</label>
-                <select className="input" value={specialization} onChange={e => setSpecialization(e.target.value)}>
+                <label className={styles.label} htmlFor="docprof-specialization">Profesi</label>
+                <select id="docprof-specialization" className="input" value={specialization} onChange={e => setSpecialization(e.target.value)}>
                   <option value="">Pilih profesi</option>
                   {SPECIALIZATIONS.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
               <div className={styles.formGroup}>
-                <label className={styles.label}>Institusi / Tempat Praktik</label>
-                <input className="input" value={institution} onChange={e => setInstitution(e.target.value)}
+                <label className={styles.label} htmlFor="docprof-institution">Institusi / Tempat Praktik</label>
+                <input id="docprof-institution" className="input" value={institution} onChange={e => setInstitution(e.target.value)}
                   placeholder="Contoh: RS Siloam Jakarta" />
               </div>
 
@@ -192,13 +192,13 @@ export default function DoctorProfilPage() {
           {showPwForm ? (
             <>
               <div className={styles.formGroup}>
-                <label className={styles.label}>Password Saat Ini</label>
-                <input type="password" className="input" value={currentPassword}
+                <label className={styles.label} htmlFor="docprof-current-pw">Password Saat Ini</label>
+                <input id="docprof-current-pw" type="password" className="input" value={currentPassword}
                   onChange={e => setCurrentPassword(e.target.value)} />
               </div>
               <div className={styles.formGroup}>
-                <label className={styles.label}>Password Baru</label>
-                <input type="password" className="input" value={newPassword}
+                <label className={styles.label} htmlFor="docprof-new-pw">Password Baru</label>
+                <input id="docprof-new-pw" type="password" className="input" value={newPassword}
                   onChange={e => setNewPassword(e.target.value)} placeholder="Minimal 6 karakter" />
               </div>
               <div className={styles.actionRow}>

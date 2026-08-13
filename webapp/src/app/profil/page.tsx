@@ -210,13 +210,14 @@ export default function ProfilPage() {
           ) : (
             <>
               <div className={styles.formGroup}>
-                <label className={styles.label}>{t('prof.fullName')}</label>
-                <input className="input" value={name} onChange={e => setName(e.target.value)} />
+                <label className={styles.label} htmlFor="prof-name">{t('prof.fullName')}</label>
+                <input id="prof-name" className="input" value={name} onChange={e => setName(e.target.value)} />
               </div>
               {!isDoctor && (
                 <div className={styles.formGroup}>
-                  <label className={styles.label}>{t('prof.dob')}</label>
+                  <label className={styles.label} htmlFor="prof-dob">{t('prof.dob')}</label>
                   <input
+                    id="prof-dob"
                     type="date"
                     className="input"
                     value={dateOfBirth}
@@ -226,8 +227,8 @@ export default function ProfilPage() {
                 </div>
               )}
               <div className={styles.formGroup}>
-                <label className={styles.label}>{t('prof.gender')}</label>
-                <select className="input" value={gender} onChange={e => setGender(e.target.value)}>
+                <label className={styles.label} htmlFor="prof-gender">{t('prof.gender')}</label>
+                <select id="prof-gender" className="input" value={gender} onChange={e => setGender(e.target.value)}>
                   <option value="">{t('prof.preferNotSay')}</option>
                   <option value="M">{t('prof.male')}</option>
                   <option value="F">{t('prof.female')}</option>
@@ -236,15 +237,15 @@ export default function ProfilPage() {
               {isDoctor && (
                 <>
                   <div className={styles.formGroup}>
-                    <label className={styles.label}>{t('prof.profession')}</label>
-                    <select className="input" value={specialization} onChange={e => setSpecialization(e.target.value)}>
+                    <label className={styles.label} htmlFor="prof-specialization">{t('prof.profession')}</label>
+                    <select id="prof-specialization" className="input" value={specialization} onChange={e => setSpecialization(e.target.value)}>
                       <option value="">{t('prof.selectProfession')}</option>
                       {SPECIALIZATIONS.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </div>
                   <div className={styles.formGroup}>
-                    <label className={styles.label}>{t('prof.institutionLabel')}</label>
-                    <input className="input" value={institution} onChange={e => setInstitution(e.target.value)} />
+                    <label className={styles.label} htmlFor="prof-institution">{t('prof.institutionLabel')}</label>
+                    <input id="prof-institution" className="input" value={institution} onChange={e => setInstitution(e.target.value)} />
                   </div>
                 </>
               )}
@@ -280,8 +281,9 @@ export default function ProfilPage() {
           ) : (
             <>
               <div className={styles.formGroup}>
-                <label className={styles.label}>{t('prof.currentPassword')}</label>
+                <label className={styles.label} htmlFor="prof-current-pw">{t('prof.currentPassword')}</label>
                 <input
+                  id="prof-current-pw"
                   type={showPw ? 'text' : 'password'}
                   className="input"
                   value={currentPassword}
@@ -289,9 +291,10 @@ export default function ProfilPage() {
                 />
               </div>
               <div className={styles.formGroup}>
-                <label className={styles.label}>{t('prof.newPassword')}</label>
+                <label className={styles.label} htmlFor="prof-new-pw">{t('prof.newPassword')}</label>
                 <div style={{ position: 'relative' }}>
                   <input
+                    id="prof-new-pw"
                     type={showPw ? 'text' : 'password'}
                     className="input"
                     style={{ paddingRight: 44 }}

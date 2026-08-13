@@ -91,8 +91,9 @@ export default function RegisterPage() {
 
         <form className={styles.form} onSubmit={handleSubmit}>
           <div className={styles.formGroup}>
-            <label className={styles.label}>{t('auth.fullName')}</label>
+            <label className={styles.label} htmlFor="reg-name">{t('auth.fullName')}</label>
             <input
+              id="reg-name"
               type="text"
               className="input"
               value={name}
@@ -102,8 +103,9 @@ export default function RegisterPage() {
             />
           </div>
           <div className={styles.formGroup}>
-            <label className={styles.label}>{t('auth.email')}</label>
+            <label className={styles.label} htmlFor="reg-email">{t('auth.email')}</label>
             <input
+              id="reg-email"
               type="email"
               className="input"
               value={email}
@@ -113,9 +115,10 @@ export default function RegisterPage() {
             />
           </div>
           <div className={styles.formGroup}>
-            <label className={styles.label}>{t('auth.password')}</label>
+            <label className={styles.label} htmlFor="reg-password">{t('auth.password')}</label>
             <div className={styles.passwordWrap}>
               <input
+                id="reg-password"
                 type={showPassword ? 'text' : 'password'}
                 className="input"
                 value={password}
@@ -140,15 +143,15 @@ export default function RegisterPage() {
             )}
           </div>
           <div className={styles.formGroup}>
-            <label className={styles.label}>{lang === 'en' ? 'I am registering as:' : 'Saya mendaftar sebagai:'}</label>
-            <select className="input" value={role} onChange={(e) => setRole(e.target.value)}>
+            <label className={styles.label} htmlFor="reg-role">{lang === 'en' ? 'I am registering as:' : 'Saya mendaftar sebagai:'}</label>
+            <select id="reg-role" className="input" value={role} onChange={(e) => setRole(e.target.value)}>
               <option value="PATIENT">{t('auth.patient')}</option>
               <option value="DOCTOR">{t('auth.doctor')}</option>
             </select>
           </div>
           <div className={styles.formGroup}>
-            <label className={styles.label}>{t('auth.gender')}{lang === 'en' ? ' (optional)' : ' (opsional)'}</label>
-            <select className="input" value={gender} onChange={(e) => setGender(e.target.value)}>
+            <label className={styles.label} htmlFor="reg-gender">{t('auth.gender')}{lang === 'en' ? ' (optional)' : ' (opsional)'}</label>
+            <select id="reg-gender" className="input" value={gender} onChange={(e) => setGender(e.target.value)}>
               <option value="">{t('auth.preferNotSay')}</option>
               <option value="M">{t('auth.male')}</option>
               <option value="F">{t('auth.female')}</option>
@@ -157,8 +160,9 @@ export default function RegisterPage() {
 
           {!isDoctor && (
             <div className={styles.formGroup}>
-              <label className={styles.label}>{t('auth.dateOfBirth')}</label>
+              <label className={styles.label} htmlFor="reg-dob">{t('auth.dateOfBirth')}</label>
               <input
+                id="reg-dob"
                 type="date"
                 className="input"
                 value={dateOfBirth}
@@ -174,15 +178,16 @@ export default function RegisterPage() {
           {isDoctor && (
             <>
               <div className={styles.formGroup}>
-                <label className={styles.label}>{t('prof.profession')}</label>
-                <select className="input" value={specialization} onChange={(e) => setSpecialization(e.target.value)} required>
+                <label className={styles.label} htmlFor="reg-specialization">{t('prof.profession')}</label>
+                <select id="reg-specialization" className="input" value={specialization} onChange={(e) => setSpecialization(e.target.value)} required>
                   <option value="" disabled>{t('prof.selectProfession')}</option>
                   {SPECIALIZATIONS.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
               <div className={styles.formGroup}>
-                <label className={styles.label}>{t('prof.institutionLabel')}</label>
+                <label className={styles.label} htmlFor="reg-institution">{t('prof.institutionLabel')}</label>
                 <input
+                  id="reg-institution"
                   type="text"
                   className="input"
                   value={institution}

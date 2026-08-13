@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { COUNTRIES, REGIONS, getCountry } from '@/lib/countries';
 import { STATES_BY_COUNTRY } from '@/lib/states';
 import { useI18n } from '@/lib/i18n';
@@ -25,6 +25,9 @@ interface Props {
 
 export default function LocationFields({ value, onChange, required = false, title, hint }: Props) {
   const { t, lang } = useI18n();
+  // Komponen ini bisa muncul lebih dari sekali pada satu halaman, jadi id-nya
+  // dibuat unik agar pasangan label dan isian tidak saling tertukar.
+  const uid = useId();
   const [cities, setCities] = useState<string[]>([]);
   const [loadingCities, setLoadingCities] = useState(false);
 
@@ -71,8 +74,10 @@ export default function LocationFields({ value, onChange, required = false, titl
       {hint && <p className={styles.hint}>{hint}</p>}
 
       <div className={styles.field}>
-        <label className={styles.label}>{t('loc.country')} {required && <span className={styles.req}>*</span>}</label>
-        <select className="input" value={value.country || ''} onChange={e => selectCountry(e.target.value)} required={required}>
+        <label className={styles.label} htmlFor={`${uid}-country`}>
+          {t('loc.country')} {required && <span className={styles.req}>*</span>}
+        </label>
+        <select id={`${uid}-country`} className="input" value={value.country || ''} onChange={e => selectCountry(e.target.value)} required={required}>
           <option value="">{t('loc.selectCountry')}</option>
           {/* Nama negara, provinsi, dan kota adalah nama diri. Selain salah bila
               diterjemahkan, jumlahnya mencapai ribuan dan akan menghabiskan
@@ -82,8 +87,9 @@ export default function LocationFields({ value, onChange, required = false, titl
       </div>
 
       <div className={styles.field}>
-        <label className={styles.label}>{t('loc.region')}</label>
+        <label className={styles.label} htmlFor={`${uid}-region`}>{t('loc.region')}</label>
         <select
+          id={`${uid}-region`}
           className="input"
           value={value.region || ''}
           onChange={e => onChange({ ...value, region: e.target.value || undefined })}
@@ -96,9 +102,10 @@ export default function LocationFields({ value, onChange, required = false, titl
 
       <div className={styles.row}>
         <div className={styles.field}>
-          <label className={styles.label}>{t('loc.state')}</label>
+          <label className={styles.label} htmlFor={`${uid}-state`}>{t('loc.state')}</label>
           {states.length > 0 ? (
             <select
+              id={`${uid}-state`}
               className="input"
               value={value.state || ''}
               // Kota dikosongkan karena tidak lagi tentu berada di provinsi baru
@@ -112,6 +119,7 @@ export default function LocationFields({ value, onChange, required = false, titl
             // Sebagian negara tidak memiliki pembagian provinsi pada sumber data,
             // sehingga tetap disediakan isian bebas agar tidak menghalangi pengguna
             <input
+              id={`${uid}-state`}
               type="text"
               className="input"
               value={value.state || ''}
@@ -123,14 +131,15 @@ export default function LocationFields({ value, onChange, required = false, titl
         </div>
 
         <div className={styles.field}>
-          <label className={styles.label}>{t('loc.city')}</label>
+          <label className={styles.label} htmlFor={`${uid}-city`}>{t('loc.city')}</label>
           {/* Daftar kota bisa mencapai ribuan per negara, jadi memakai isian
               berpelengkap otomatis agar dapat dicari sambil mengetik, sekaligus
               tetap menerima nama kota yang belum ada di data */}
           <input
+            id={`${uid}-city`}
             type="text"
             className="input"
-            list="city-options"
+            list={`${uid}-cities`}
             value={value.city || ''}
             onChange={e => onChange({ ...value, city: e.target.value || undefined })}
             placeholder={
@@ -141,7 +150,7 @@ export default function LocationFields({ value, onChange, required = false, titl
             }
             disabled={!value.country}
           />
-          <datalist id="city-options" data-no-translate="">
+          <datalist id={`${uid}-cities`} data-no-translate="">
             {cities.map(c => <option key={c} value={c} />)}
           </datalist>
           {value.country && cities.length > 0 && (

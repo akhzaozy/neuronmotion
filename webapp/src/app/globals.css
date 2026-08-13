@@ -44,7 +44,10 @@
   --purple-dim: rgba(124, 58, 237, 0.1);
 
   /* Gradients */
-  --gradient-brand: linear-gradient(135deg, #2563eb, #0284c7);
+  /* Ujung terang gradien sebelumnya #0284c7, yang hanya memberi rasio 4,1:1
+     terhadap teks putih. Teks kecil di atasnya, seperti tombol ID/EN dan
+     baris status NeuroBot, jadi tidak memenuhi ambang 4,5:1. */
+  --gradient-brand: linear-gradient(135deg, #2563eb, #0369a1);
   --gradient-success: linear-gradient(135deg, #059669, #10b981);
   --gradient-danger: linear-gradient(135deg, #dc2626, #ef4444);
 

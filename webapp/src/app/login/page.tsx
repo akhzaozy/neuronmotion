@@ -120,8 +120,9 @@ export default function LoginPage() {
 
         <form className={styles.form} onSubmit={handleSubmit}>
           <div className={styles.formGroup}>
-            <label className={styles.label}>{t('auth.email')}</label>
+            <label className={styles.label} htmlFor="login-email">{t('auth.email')}</label>
             <input
+              id="login-email"
               type="email"
               className="input"
               value={email}
@@ -131,9 +132,10 @@ export default function LoginPage() {
             />
           </div>
           <div className={styles.formGroup}>
-            <label className={styles.label}>{t('auth.password')}</label>
+            <label className={styles.label} htmlFor="login-password">{t('auth.password')}</label>
             <div className={styles.passwordWrap}>
               <input
+                id="login-password"
                 type={showPassword ? 'text' : 'password'}
                 className="input"
                 value={password}
