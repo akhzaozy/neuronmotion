@@ -39,6 +39,11 @@ const DICT: Record<string, { id: string; en: string }> = {
   'bot.placeholder': { id: 'Ketik pertanyaan Anda... (Enter kirim)', en: 'Type your question... (Enter to send)' },
   'bot.messageLabel': { id: 'Pesan untuk NeuroBot', en: 'Message for NeuroBot' },
   'bot.send': { id: 'Kirim pesan', en: 'Send message' },
+  // Label penutur pada tiap giliran percakapan. Ia menggantikan avatar berikon
+  // dan sisi kiri kanan gelembung sebagai penanda siapa yang berbicara.
+  'bot.you': { id: 'Anda', en: 'You' },
+  // Penanda pesan yang belum dibaca, menggantikan titik warna pada tombol.
+  'bot.newMessage': { id: 'Pesan baru', en: 'New message' },
   'bot.disclaimer': {
     id: 'NeuroBot bukan dokter, selalu konsultasikan kondisi Anda ke tenaga medis',
     en: 'NeuroBot is not a doctor, always consult a healthcare professional about your condition',
@@ -139,6 +144,7 @@ const DICT: Record<string, { id: string; en: string }> = {
   'common.cancel': { id: 'Batal', en: 'Cancel' },
   'common.close': { id: 'Tutup', en: 'Close' },
   'common.edit': { id: 'Ubah', en: 'Edit' },
+  'common.delete': { id: 'Hapus', en: 'Delete' },
   'common.back': { id: 'Kembali', en: 'Back' },
   'common.next': { id: 'Lanjut', en: 'Next' },
   'common.loading': { id: 'Memuat...', en: 'Loading...' },

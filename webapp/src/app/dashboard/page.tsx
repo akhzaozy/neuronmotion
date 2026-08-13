@@ -223,7 +223,7 @@ export default function DashboardPage() {
             <div className={styles.historyHead}>
               <h2 className={styles.historyTitle}>{t('dash.recentHistory')}</h2>
               {history.length > 0 && (
-                <Link href="/riwayat" className="btn btn-sm">
+                <Link href="/riwayat" className="btn">
                   {t('dash.viewAll')}
                 </Link>
               )}

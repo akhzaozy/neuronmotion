@@ -43,7 +43,7 @@ export default function LandingPage() {
           <div className={styles.mastheadActions}>
             <LanguageToggle />
             <ThemeToggle size="sm" />
-            <Link href="/login" className="btn btn-sm">
+            <Link href="/login" className="btn">
               {t('land.login')}
             </Link>
           </div>

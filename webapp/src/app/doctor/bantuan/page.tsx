@@ -1,7 +1,7 @@
 'use client';
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import * as Accordion from '@radix-ui/react-accordion';
 import { useAuth } from '@/lib/auth';
 import DoctorNav from '@/components/DoctorNav';
 import styles from '../../bantuan/bantuan.module.css';
@@ -55,7 +55,6 @@ const FAQ = [
 export default function DoctorBantuanPage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   if (!isLoading && (!user || user.role !== 'DOCTOR')) {
     router.push('/login');
@@ -65,67 +64,95 @@ export default function DoctorBantuanPage() {
   return (
     <div className={styles.page}>
       <DoctorNav />
-      <div className={styles.container}>
-        <div className={styles.header}>
-          <h1>Bantuan</h1>
-          <p>Panduan penggunaan portal dan pertanyaan yang sering diajukan tenaga kesehatan.</p>
-        </div>
 
-        <div className={styles.card}>
-          <h2 className={styles.cardTitle}>Panduan Portal</h2>
-          <div className={styles.steps}>
-            {PORTAL_STEPS.map((s, i) => (
-              <div key={i} className={styles.step}>
-                <span className={styles.stepNum}>{i + 1}</span>
-                <div>
-                  <div className={styles.stepTitle}>{s.title}</div>
-                  <div className={styles.stepDesc}>{s.desc}</div>
-                </div>
+      <main className="sheet" id="main">
+        <div className={styles.pad}>
+          <header className="docHead">
+            <div className="docHead__meta">
+              <span>Panduan Nakes</span>
+              <span>{PORTAL_STEPS.length} langkah</span>
+              <span>{FAQ.length} pertanyaan</span>
+            </div>
+            <h1>Bantuan</h1>
+            <p className={styles.lead}>
+              Panduan penggunaan portal dan pertanyaan yang sering diajukan tenaga kesehatan.
+            </p>
+          </header>
+
+          {/* Batas kemampuan alat dibaca lebih dulu, sebelum panduan apa pun,
+              karena ia menentukan bagaimana seluruh angka di portal ini dibaca. */}
+          <section className={styles.disclaimer} aria-label="Batas kemampuan alat">
+            <p className={`label ${styles.disclaimerLabel}`}>Disclaimer</p>
+            <p className={styles.disclaimerBody}>
+              NeuronMotion adalah alat bantu skrining awal, bukan alat diagnosis. Model belum
+              divalidasi pada pasien nyata, sehingga seluruh temuan perlu dikonfirmasi melalui
+              pemeriksaan klinis langsung sebelum dijadikan dasar keputusan medis.
+            </p>
+          </section>
+
+          {/* ── Panduan portal ────────────────────────────────────────────── */}
+          <section className={styles.section}>
+            <h2 className={styles.sectionHead}>Panduan Portal</h2>
+            <ol className={styles.steps}>
+              {PORTAL_STEPS.map((step, i) => (
+                <li key={step.title} className={styles.step}>
+                  <span className={styles.stepNum}>{String(i + 1).padStart(2, '0')}</span>
+                  <div className={styles.stepText}>
+                    <h3 className={styles.stepTitle}>{step.title}</h3>
+                    <p className={styles.stepDesc}>{step.desc}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </section>
+
+          {/* ── Pertanyaan yang sering diajukan ───────────────────────────── */}
+          <section className={styles.section}>
+            <h2 className={styles.sectionHead}>Pertanyaan yang Sering Diajukan</h2>
+            {/* Radix menangani keadaan buka tutup dan atribut aria; keadaannya
+                dibawa kata, bukan tanda panah yang berputar. */}
+            <Accordion.Root type="single" collapsible className={styles.faq}>
+              {FAQ.map((item, i) => (
+                <Accordion.Item key={item.q} value={`faq-${i}`} className={styles.faqItem}>
+                  <Accordion.Header className={styles.faqHeader}>
+                    <Accordion.Trigger className={styles.faqTrigger}>
+                      <span className={styles.faqQuestion}>{item.q}</span>
+                      <span className={styles.faqState} aria-hidden="true">
+                        <span className={styles.faqStateClosed}>Buka</span>
+                        <span className={styles.faqStateOpen}>Tutup</span>
+                      </span>
+                    </Accordion.Trigger>
+                  </Accordion.Header>
+                  <Accordion.Content className={styles.faqContent}>
+                    <p className={styles.faqAnswer}>{item.a}</p>
+                  </Accordion.Content>
+                </Accordion.Item>
+              ))}
+            </Accordion.Root>
+          </section>
+
+          {/* ── Kontak ────────────────────────────────────────────────────── */}
+          <section className={styles.section}>
+            <h2 className={styles.sectionHead}>Kontak Tim</h2>
+            <dl className={styles.contactList}>
+              <div className={styles.contactRow}>
+                <dt className={`label ${styles.contactLabel}`}>Surel</dt>
+                <dd className={styles.contactValue} data-no-translate="">
+                  nakes@neuronmotion.id
+                </dd>
               </div>
-            ))}
-          </div>
-        </div>
-
-        <div className={styles.card}>
-          <h2 className={styles.cardTitle}>Pertanyaan yang Sering Diajukan</h2>
-          {FAQ.map((item, i) => (
-            <div key={i} className={styles.faqItem}>
-              <button
-                className={styles.faqQuestion}
-                onClick={() => setOpenIndex(openIndex === i ? null : i)}
-                aria-expanded={openIndex === i}
-              >
-                {item.q}
-                <span className={`${styles.faqIcon} ${openIndex === i ? styles.faqIconOpen : ''}`}>›</span>
-              </button>
-              {openIndex === i && <div className={styles.faqAnswer}>{item.a}</div>}
-            </div>
-          ))}
-        </div>
-
-        <div className={styles.card}>
-          <h2 className={styles.cardTitle}>Kontak Tim</h2>
-          <div className={styles.contactGrid}>
-            <div className={styles.contactItem}>
-              <div className={styles.contactLabel}>Surel</div>
-              <div className={styles.contactValue}>nakes@neuronmotion.id</div>
-            </div>
-            <div className={styles.contactItem}>
-              <div className={styles.contactLabel}>Dokumentasi metodologi</div>
-              <div className={styles.contactValue}>
-                <Link href="/doctor/edukasi" style={{ color: 'var(--brand-text)' }}>
-                  Halaman Edukasi
-                </Link>
+              <div className={styles.contactRow}>
+                <dt className={`label ${styles.contactLabel}`}>Dokumentasi metodologi</dt>
+                <dd className={styles.contactValue}>
+                  <Link href="/doctor/edukasi" className="linkAction">
+                    Halaman Edukasi
+                  </Link>
+                </dd>
               </div>
-            </div>
-          </div>
-          <div className={styles.disclaimer}>
-            NeuronMotion adalah alat bantu skrining awal, bukan alat diagnosis. Model belum divalidasi
-            pada pasien nyata, sehingga seluruh temuan perlu dikonfirmasi melalui pemeriksaan klinis
-            langsung sebelum dijadikan dasar keputusan medis.
-          </div>
+            </dl>
+          </section>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

@@ -40,8 +40,8 @@ export default function ReportPrintHost({ open, onClose, children }: Props) {
       <div className={styles.toolbar}>
         <span className={styles.hint}>{t('report.previewHint')}</span>
         <div className={styles.actions}>
-          <button className="btn btn-outline btn-sm" onClick={onClose}>{t('common.close')}</button>
-          <button className="btn btn-primary btn-sm" onClick={() => window.print()}>{t('report.print')}</button>
+          <button className="btn" onClick={onClose}>{t('common.close')}</button>
+          <button className="btn btn--primary" onClick={() => window.print()}>{t('report.print')}</button>
         </div>
       </div>
       <div className={styles.paperWrap} ref={ref}>
