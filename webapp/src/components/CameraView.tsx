@@ -113,14 +113,24 @@ export default function CameraView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isCapturing]);
 
-  /* ── Kegagalan kamera ─────────────────────────────────────────────────────
-     Setiap sebab punya layarnya sendiri dengan pemulihan yang benar. Versi
-     sebelumnya meringkas semuanya jadi satu kalimat dan menawarkan tombol
-     coba lagi yang, setelah blokir permanen, tidak melakukan apa pun. */
+  /* Keadaan sebelum panggung siap.
+     Ketiganya dulu berupa return terpisah, dan itulah sumber kemacetannya:
+     elemen video baru dipasang pada cabang terakhir, padahal startCamera
+     memasang aliran kamera ke videoRef.current segera setelah izin
+     diberikan. Ref-nya masih null pada saat dibutuhkan, sehingga izin sudah
+     diberikan, lampu kamera menyala, tetapi layar berhenti di ajakan
+     mengaktifkan kamera tanpa pesan galat apa pun.
+
+     Sekarang cabangnya hanya menentukan pesan yang tampil. Elemen video dan
+     kanvas berada di luar percabangan supaya React tidak pernah
+     membongkarnya, sebab elemen yang dibongkar akan kehilangan srcObject
+     yang sudah terpasang padanya. */
+  const canRetry = fault === 'inUse' || fault === 'modelTimeout' || fault === 'modelFailed';
+
+  let stateBox = null;
   if (fault) {
-    const canRetry = fault === 'inUse' || fault === 'modelTimeout' || fault === 'modelFailed';
-    return (
-      <section className={styles.stateBox} role="alert">
+    stateBox = (
+      <div className={styles.stateBox} role="alert">
         <h2 className={styles.stateTitle}>{t(`cam.fault.${fault}.title`)}</h2>
         <p className={styles.stateBody}>{t(`cam.fault.${fault}.body`)}</p>
         {canRetry && (
@@ -128,38 +138,37 @@ export default function CameraView({
             {t('cam.retry')}
           </button>
         )}
-      </section>
+      </div>
     );
-  }
-
-  /* ── Sebelum izin diberikan ───────────────────────────────────────────────
-     Layar ini menyebut bahwa video tidak pernah diunggah. Itu pembeda utama
-     produk ini, dan sebelumnya justru absen persis di titik pengguna
-     memutuskan untuk percaya atau tidak. */
-  if (!cameraReady) {
-    return (
-      <section className={styles.stateBox}>
+  } else if (!cameraReady) {
+    /* Layar ini menyebut bahwa video tidak pernah diunggah. Itu pembeda utama
+       produk ini, dan sebelumnya justru absen persis di titik pengguna
+       memutuskan untuk percaya atau tidak. */
+    stateBox = (
+      <div className={styles.stateBox}>
         <h2 className={styles.stateTitle}>{t('cam.enable')}</h2>
         <p className={styles.stateBody}>{t('cam.enableBody')}</p>
         <button type="button" className="btn btn--primary btn--lg" onClick={onStart}>
           {t('cam.allow')}
         </button>
-      </section>
+      </div>
     );
-  }
-
-  if (!poseReady) {
-    return (
-      <section className={styles.stateBox} aria-live="polite">
+  } else if (!poseReady) {
+    stateBox = (
+      <div className={styles.stateBox} aria-live="polite">
         <h2 className={styles.stateTitle}>{t('cam.loading')}</h2>
         <p className={styles.stateBody}>{t('cam.loadingBody')}</p>
-      </section>
+      </div>
     );
   }
 
+  const ready = stateBox === null;
+
   return (
-    <section className={styles.stage} data-capturing={isCapturing ? '' : undefined}>
-      <div className={styles.frame}>
+    <section className={styles.stage} data-capturing={isCapturing && ready ? '' : undefined}>
+      {stateBox}
+
+      <div className={ready ? styles.frame : styles.offstage} aria-hidden={ready ? undefined : true}>
         <video ref={videoRef} className={styles.video} playsInline muted />
         <canvas
           ref={canvasRef}
@@ -170,7 +179,7 @@ export default function CameraView({
 
         {/* Peringatan kondisi. Keduanya ditumpuk di satu jalur supaya tidak
             saling menimpa, dan keduanya diumumkan ke pembaca layar. */}
-        {(lightingWarning || detectionWarning) && (
+        {ready && (lightingWarning || detectionWarning) && (
           <div className={styles.warnStack} aria-live="polite">
             {lightingWarning && <p className={styles.warn}>{lightingWarning}</p>}
             {detectionWarning && <p className={styles.warn}>{detectionWarning}</p>}
@@ -178,7 +187,7 @@ export default function CameraView({
         )}
 
         {/* Pita instruksi. Inilah yang dulu dihapus tepat saat dibutuhkan. */}
-        {isCapturing && (
+        {ready && isCapturing && (
           <div className={styles.cueBand}>
             <p className={styles.cueText}>{t(test.cueKey)}</p>
             <p className={styles.cueCount} aria-live="assertive">
@@ -188,7 +197,7 @@ export default function CameraView({
           </div>
         )}
 
-        {isCapturing && (
+        {ready && isCapturing && (
           <p className={styles.recFlag}>
             <span className={styles.recDot} aria-hidden="true" />
             {t('scr.recording')}
@@ -199,7 +208,7 @@ export default function CameraView({
       {/* Bilah metrik mentah. Tersembunyi dari pasien secara bawaan: angka
           tanpa satuan dan tanpa rentang normal, yang berubah merah saat tubuh
           pengguna diukur, hanya menambah kecemasan tanpa memberi informasi. */}
-      {showMetrics && (
+      {ready && showMetrics && (
         <dl className={styles.metrics}>
           {liveMetrics.tremorAmp !== undefined && (
             <div className={styles.metric}>
@@ -240,7 +249,7 @@ export default function CameraView({
         </dl>
       )}
 
-      {isCapturing && (
+      {ready && isCapturing && (
         <button type="button" className="btn btn--danger btn--lg btn--block" onClick={onStop}>
           {t('scr.stop')}
         </button>

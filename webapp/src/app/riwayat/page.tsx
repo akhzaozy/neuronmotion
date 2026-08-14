@@ -7,6 +7,7 @@ import { api, Session } from '@/lib/api';
 import AppNav from '@/components/AppNav';
 import ReportTemplate from '@/components/ReportTemplate';
 import ReportPrintHost from '@/components/ReportPrintHost';
+import LoadFailure from '@/components/LoadFailure';
 import * as Dialog from '@radix-ui/react-dialog';
 import { useI18n, translateServerLabel, dateLocale, type Lang } from '@/lib/i18n';
 import styles from './riwayat.module.css';
@@ -146,19 +147,26 @@ export default function RiwayatPage() {
   const [detail, setDetail] = useState<Session | null>(null);
   const [shareCode, setShareCode] = useState<string | null>(null);
   const [codeCopied, setCodeCopied] = useState(false);
+  // Lihat catatan yang sama di beranda pasien: riwayat yang gagal diambil
+  // tidak boleh tampil sebagai riwayat yang memang kosong.
+  const [failed, setFailed] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (isLoading) return;
     if (!user || user.role !== 'PATIENT') { router.push('/login'); return; }
 
+    let alive = true;
+
     // Kode berbagi dibuatkan saat pertama diminta, jadi pemanggilannya
     // sekaligus menjadi penyiapan untuk pasien yang belum pernah punya.
     api.getShareCode(user.id, token!)
-      .then(res => setShareCode(res.shareCode))
-      .catch(() => setShareCode(null));
+      .then(res => { if (alive) setShareCode(res.shareCode); })
+      .catch(() => { if (alive) setShareCode(null); });
 
     api.getHistory(user.id, token!)
       .then(res => {
+        if (!alive) return;
         const list = res.sessions || [];
         setSessions(list);
         if (list.length >= 2) {
@@ -166,9 +174,15 @@ export default function RiwayatPage() {
           setCompareB(list[0].id);
         }
       })
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, [user, token, isLoading, router]);
+      .catch(e => {
+        if (!alive) return;
+        console.error(e);
+        setFailed(e instanceof Error ? e.message : String(e));
+      })
+      .finally(() => { if (alive) setLoading(false); });
+
+    return () => { alive = false; };
+  }, [user, token, isLoading, router, attempt]);
 
   const sessionA = useMemo(() => sessions.find(s => s.id === compareA) || null, [sessions, compareA]);
   const sessionB = useMemo(() => sessions.find(s => s.id === compareB) || null, [sessions, compareB]);
@@ -264,6 +278,35 @@ export default function RiwayatPage() {
         <AppNav />
         <main className="sheet">
           <p className={styles.loading} role="status" aria-live="polite">{t('hist.loading')}</p>
+        </main>
+      </div>
+    );
+  }
+
+  // Halaman berhenti sebelum kop dokumen dan kode berbagi, sebab keduanya
+  // menyiratkan bahwa isi berkas di bawahnya sudah lengkap.
+  if (failed) {
+    return (
+      <div className={styles.page}>
+        <AppNav />
+        <main className="sheet" id="main">
+          <div className={styles.pad}>
+            <header className="docHead">
+              <div className="docHead__meta">
+                <span>{t('hist.title')}</span>
+                <span data-no-translate="">{user?.name}</span>
+              </div>
+              <h1>{t('hist.title')}</h1>
+            </header>
+            <LoadFailure
+              detail={failed}
+              onRetry={() => {
+                setLoading(true);
+                setFailed(null);
+                setAttempt(n => n + 1);
+              }}
+            />
+          </div>
         </main>
       </div>
     );
@@ -516,7 +559,7 @@ export default function RiwayatPage() {
                 {/* Analisis AI yang tersimpan dari sesi ini, supaya rekomendasinya
                     masih bisa dibaca ulang kapan saja, bukan hanya sekali saat selesai tes */}
                 {detail.aiAnalysis?.available && (
-                  <div className={styles.aiBox}>
+                  <div className={`field ${styles.aiBox}`}>
                     <div className={styles.aiHeader}>
                       <span className={styles.aiTitle}>{t('hist.aiCombined')}</span>
                       {detail.aiAnalysis.tingkatKeyakinan && (
@@ -568,8 +611,8 @@ export default function RiwayatPage() {
                 )}
 
                 {detail.doctorNote && (
-                  <div className={styles.doctorNoteBox}>
-                    <strong className={styles.doctorNoteLabel}>{t('hist.doctorNote')}</strong>
+                  <div className={`field ${styles.doctorNoteBox}`}>
+                    <strong className={`label ${styles.doctorNoteLabel}`}>{t('hist.doctorNote')}</strong>
                     <p className={styles.doctorNoteText} data-no-translate="">{detail.doctorNote}</p>
                   </div>
                 )}

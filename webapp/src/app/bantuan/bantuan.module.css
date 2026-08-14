@@ -22,22 +22,14 @@
    Garis kiri tebal di atas ground inset. Tidak bisa ditutup, tidak bersyarat,
    dan duduk sebelum isi supaya terbaca lebih dulu. */
 
+/* Tampilannya datang dari .note di globals.css. Yang tersisa di sini hanya
+   jarak, sebab itu memang urusan halaman ini. */
 .disclaimer {
   margin-bottom: var(--s7);
-  padding: var(--s4) var(--s5);
-  background: var(--inset);
-  border-left: 3px solid var(--ink);
 }
 
 .disclaimerLabel {
-  color: var(--ink);
   margin-bottom: var(--s2);
-}
-
-.disclaimerBody {
-  max-width: 78ch;
-  color: var(--ink);
-  font-weight: 600;
 }
 
 /* Gejala darurat memakai bahasa tingkat tinggi: label garis kiri 6px dan

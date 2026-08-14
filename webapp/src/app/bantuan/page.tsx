@@ -85,9 +85,9 @@ export default function BantuanPage() {
           {/* Batas kemampuan alat ditempatkan di atas isi, bukan di kaki halaman,
               supaya terbaca sebelum pengguna menarik kesimpulan dari hasilnya.
               Blok ini tidak punya syarat dan tidak bisa ditutup. */}
-          <section className={styles.disclaimer} aria-label="Batas kemampuan alat">
+          <section className={`note note--lead ${styles.disclaimer}`} aria-label="Batas kemampuan alat">
             <p className={`label ${styles.disclaimerLabel}`}>Disclaimer</p>
-            <p className={styles.disclaimerBody}>
+            <p>
               NeuronMotion adalah alat bantu skrining awal berbasis analisis gerakan, bukan alat
               diagnosis medis dan bukan pengganti pemeriksaan tenaga kesehatan. Model klasifikasi saat
               ini divalidasi menggunakan dataset sintetis berbasis literatur klinis, bukan uji klinis

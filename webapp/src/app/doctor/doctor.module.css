@@ -311,12 +311,12 @@
   max-width: 100%;
 }
 
-/* Klasifikasi pola. Blok penekanan bergaris kiri, bukan kartu berlatar penuh. */
+/* Klasifikasi pola. Bidang isi bergaris penuh dengan label kolom di atasnya,
+   memakai primitif .field dari globals.css. Isinya bermakna, jadi ia memang
+   layak jadi bidang tersendiri; yang tidak layak adalah garis tepi kiri,
+   sebab ketebalan garis kiri di produk ini menyandikan tingkat pengukuran. */
 .classification {
   margin-top: var(--s5);
-  padding: var(--s4) var(--s5);
-  background: var(--inset);
-  border-left: 3px solid var(--ink);
 }
 
 .classificationValue {

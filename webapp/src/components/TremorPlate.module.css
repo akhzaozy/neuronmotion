@@ -1,0 +1,62 @@
+/* Panel bawah dari plat di hero: jejak rekaman tremor.
+   Dipisahkan dari panel gambar di atasnya oleh satu garis rambut, sama seperti
+   dua panel pada satu gambar di lembar dokumentasi. */
+
+.panel {
+  border-top: 1px solid var(--rule-hair);
+  padding-top: var(--s3);
+  margin-top: var(--s3);
+}
+
+.chart {
+  display: block;
+  width: 100%;
+  height: 74px;
+}
+
+.baseline {
+  stroke: var(--rule-hair);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Jejak menggambar dirinya dari kiri ke kanan, berhenti sejenak di ujung,
+   lalu mengulang. pathLength=1 pada elemennya membuat panjang lintasan
+   dinormalkan, sehingga satu nilai dasharray bekerja untuk rekaman sepanjang
+   apa pun tanpa perlu mengukur lintasan lewat JavaScript.
+
+   vector-effect menjaga tebal garis tetap sama meski viewBox diregangkan oleh
+   preserveAspectRatio="none". Tanpa itu garisnya menggemuk di layar lebar. */
+.trace {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 7s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes draw {
+  0% {
+    stroke-dashoffset: 1;
+  }
+  /* Penarikan selesai pada 70%, sisanya jeda baca sebelum mengulang. */
+  70%,
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Tanpa gerak, jejaknya tampil utuh. Isinya tetap terbaca penuh, yang hilang
+   hanya cara ia muncul. Diredam juga oleh blok global di globals.css, tetapi
+   dinyatakan di sini supaya keadaan akhirnya eksplisit dan tidak bergantung
+   pada durasi 0.01ms yang tetap menjalankan animasi. */
+@media (prefers-reduced-motion: reduce) {
+  .trace {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}

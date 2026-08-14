@@ -42,6 +42,24 @@ export default function DemoPage() {
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzeError, setAnalyzeError] = useState('');
 
+  /* Ekspor rekaman untuk plat di halaman depan.
+     Digerbangi ?export=1 supaya tidak pernah tampil kepada pengguna biasa
+     maupun saat produk ini diperagakan. Membaca dari window.location alih-alih
+     useSearchParams agar halaman ini tetap bisa dirender statis. */
+  const [canExport, setCanExport] = useState(false);
+  const [exportState, setExportState] = useState<'idle' | 'copied' | 'downloaded'>('idle');
+
+  useEffect(() => {
+    // Ditunda satu bingkai agar tidak menetapkan keadaan secara sinkron di
+    // dalam efek. Nilainya tidak bisa dihitung saat inisialisasi useState
+    // karena window belum ada saat prarender, dan menebaknya di sana akan
+    // membuat hasil server dan klien berbeda.
+    const frame = requestAnimationFrame(() =>
+      setCanExport(new URLSearchParams(window.location.search).get('export') === '1'),
+    );
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
   useEffect(() => {
     if (capturedData?.testType === 'tremor') {
       setAnalyzing(true);
@@ -54,6 +72,47 @@ export default function DemoPage() {
   }, [capturedData]);
 
   const level = result ? (result.score >= 65 ? 'high' : result.score >= 35 ? 'mid' : 'low') : 'low';
+
+  /** Menyusun rekaman dalam bentuk yang dipakai src/data/tremorTrace.ts. */
+  const buildTraceJson = () => {
+    const raw = (capturedData?.payload as { samples?: Array<{ timestamp: number; x: number; y: number }> })?.samples;
+    if (!raw?.length || !result) return null;
+
+    const t0 = raw[0].timestamp;
+    const round = (n: number, d: number) => Number(n.toFixed(d));
+
+    return JSON.stringify(
+      {
+        capturedAt: new Date().toISOString().slice(0, 10),
+        durationSec: round((raw[raw.length - 1].timestamp - t0) / 1000, 1),
+        dominantFrequencyHz: result.dominantFrequencyHz,
+        amplitudeMillimeter: result.amplitudeMillimeter,
+        // Empat desimal sudah jauh melampaui ketelitian pelacak, dan menahan
+        // berkasnya tetap kecil karena ia ikut terkirim ke setiap pengunjung.
+        samples: raw.map(s => ({ t: Math.round(s.timestamp - t0), x: round(s.x, 4), y: round(s.y, 4) })),
+      },
+      null,
+      2,
+    );
+  };
+
+  const exportTrace = async () => {
+    const json = buildTraceJson();
+    if (!json) return;
+    try {
+      await navigator.clipboard.writeText(json);
+      setExportState('copied');
+    } catch {
+      // Papan klip bisa ditolak peramban. Berkasnya tetap harus bisa diambil.
+      const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'tremorTrace.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      setExportState('downloaded');
+    }
+  };
 
   return (
     <div className={styles.page}>
@@ -153,7 +212,22 @@ export default function DemoPage() {
                 </tbody>
               </table>
 
-              <p className={styles.disclaimer}>{t('res.notDiagnosis')}</p>
+              {canExport && (
+                <div className={styles.exportRow}>
+                  <button type="button" className="btn" onClick={exportTrace}>
+                    Salin rekaman (JSON)
+                  </button>
+                  {exportState !== 'idle' && (
+                    <span role="status" className={styles.exportOk}>
+                      {exportState === 'copied'
+                        ? 'Tersalin. Tempel ke src/data/tremorTrace.ts'
+                        : 'Terunduh sebagai tremorTrace.json'}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              <p className="note note--lead">{t('res.notDiagnosis')}</p>
 
               <section className={styles.invite}>
                 <h2>{t('demo.oneOfSix')}</h2>

@@ -64,12 +64,7 @@
   margin: 0;
 }
 
-.disclaimer {
-  padding: var(--s3) var(--s4);
-  background: var(--inset);
-  border-left: 3px solid var(--ink);
-  font-weight: 600;
-}
+/* Tampilannya datang dari .note--lead di globals.css. */
 
 .invite {
   display: flex;
@@ -85,6 +80,21 @@
 }
 
 .footnote {
+  font-size: var(--t-record);
+  color: var(--ink-muted);
+}
+
+/* Baris ekspor rekaman. Hanya tampil pada /demo?export=1, dipakai untuk
+   mengambil data plat di halaman depan. Bukan bagian dari alur pengguna. */
+.exportRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.exportOk {
+  font-family: var(--font-mono), ui-monospace, monospace;
   font-size: var(--t-record);
   color: var(--ink-muted);
 }

@@ -1,0 +1,43 @@
+/* Blok gagal muat.
+   Bentuknya mengikuti layar keadaan kamera di Camera.module.css: lembar
+   dengan garis aksen di atas. Keduanya pekerjaan yang sama, yaitu menjelaskan
+   mengapa isi yang diharapkan tidak ada, jadi keduanya harus berwujud sama.
+
+   Sebelumnya blok ini memakai garis di tepi kiri, dan itu keliru: garis kiri
+   adalah milik tingkat pengukuran, dan menambah satu pemakaian lagi justru
+   memperbesar persoalan yang sedang dibereskan. */
+
+.block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s3);
+  padding: var(--s6);
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-top: 3px solid var(--accent);
+  border-radius: var(--radius);
+}
+
+.title {
+  font-size: var(--t-head);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.body {
+  color: var(--ink-secondary);
+  max-width: 60ch;
+}
+
+/* Sebab teknis ditulis dengan huruf mesin, sejalan dengan cara berkas ini
+   menampilkan nilai terukur di tempat lain. Ia keterangan tambahan, jadi
+   ukurannya kecil dan warnanya diredam. */
+.detail {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: var(--t-record);
+  letter-spacing: 0.04em;
+  color: var(--ink-muted);
+  max-width: 60ch;
+  word-break: break-word;
+}

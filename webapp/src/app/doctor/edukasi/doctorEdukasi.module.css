@@ -138,11 +138,7 @@
 }
 
 /* Blok penekanan: garis kiri tebal di atas ground inset, bukan latar penuh. */
+/* Tampilannya datang dari .note di globals.css. */
 .disclaimer {
   margin-bottom: var(--s5);
-  padding: var(--s3) var(--s4);
-  background: var(--inset);
-  border-left: 3px solid var(--ink);
-  font-size: var(--t-record);
-  color: var(--ink-secondary);
 }

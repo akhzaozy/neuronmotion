@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth';
 import { api, Session } from '@/lib/api';
 import AppNav from '@/components/AppNav';
 import LiveChat from '@/components/LiveChat';
+import LoadFailure from '@/components/LoadFailure';
 import { useI18n, translateServerLabel, dateLocale } from '@/lib/i18n';
 import styles from './dashboard.module.css';
 
@@ -101,6 +102,11 @@ export default function DashboardPage() {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [history, setHistory] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
+  // Gagal mengambil data bukan hal yang sama dengan tidak punya data. Selama
+  // ini keduanya berakhir di tampilan kosong yang sama, sehingga pasien yang
+  // riwayatnya utuh bisa diberi tahu bahwa ia belum pernah diperiksa.
+  const [failed, setFailed] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (isLoading) return;
@@ -109,21 +115,30 @@ export default function DashboardPage() {
       return;
     }
 
+    let alive = true;
+
     (async () => {
       try {
         const [sumRes, histRes] = await Promise.all([
           api.getPatientSummary(user.id, token!),
           api.getHistory(user.id, token!),
         ]);
+        if (!alive) return;
         setSummary(sumRes as Summary);
         setHistory(histRes.sessions || []);
       } catch (e) {
+        if (!alive) return;
         console.error(e);
+        setFailed(e instanceof Error ? e.message : String(e));
       } finally {
-        setLoading(false);
+        if (alive) setLoading(false);
       }
     })();
-  }, [user, token, isLoading, router]);
+
+    return () => {
+      alive = false;
+    };
+  }, [user, token, isLoading, router, attempt]);
 
   if (isLoading || loading) {
     return (
@@ -133,6 +148,36 @@ export default function DashboardPage() {
           <p className={styles.loading} role="status" aria-live="polite">
             {t('dash.loading')}
           </p>
+        </main>
+      </div>
+    );
+  }
+
+  // Bila pengambilan gagal, halaman berhenti di sini. Menampilkan kop
+  // dokumen lalu tabel kosong di bawahnya akan membuat kegagalan terbaca
+  // sebagai hasil pemeriksaan yang nihil.
+  if (failed) {
+    return (
+      <div className={styles.page}>
+        <AppNav />
+        <main className="sheet" id="main">
+          <div className={styles.pad}>
+            <header className="docHead">
+              <div className="docHead__meta">
+                <span>{t('dash.registeredPatient')}</span>
+                <span data-no-translate="">{user?.name}</span>
+              </div>
+              <h1>{t('dash.recentHistory')}</h1>
+            </header>
+            <LoadFailure
+              detail={failed}
+              onRetry={() => {
+                setLoading(true);
+                setFailed(null);
+                setAttempt(n => n + 1);
+              }}
+            />
+          </div>
         </main>
       </div>
     );

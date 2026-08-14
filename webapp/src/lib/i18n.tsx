@@ -782,6 +782,45 @@ const DICT: Record<string, { id: string; en: string }> = {
     id: 'Karena itu NeuronMotion tidak butuh server GPU dan tetap berjalan di ponsel biasa. Itulah yang membuatnya bisa dipakai di daerah yang tidak punya akses ke dokter saraf.',
     en: 'That is why NeuronMotion needs no GPU server and still runs on an ordinary phone. It is what makes the tool usable in places with no access to a neurologist.',
   },
+  // Plat instruksional di hero. Keterangannya menyebut ini posisi tangan,
+  // bukan hasil pengukuran, sebab gambarnya memang ilustrasi cara memakai dan
+  // bukan rekaman siapa pun.
+  'land.plateFigure': { id: 'Gbr. 1', en: 'Fig. 1' },
+  'land.plateCaption': {
+    id: 'Posisi tangan saat tes tremor istirahat. Kamera membaca 21 titik pada satu tangan.',
+    en: 'Hand position during the rest tremor test. The camera reads 21 landmarks on one hand.',
+  },
+  // Dua keterangan untuk panel jejak, dipilih oleh medan `kind` pada datanya.
+  // Yang satu menyebut rekaman sungguhan, yang lain menyebut contoh pola.
+  // Memisahkannya begini membuat label tidak mungkin tertinggal saat datanya
+  // berganti.
+  'land.plateCaptionRecording': {
+    id: 'Atas, posisi tangan saat tes tremor istirahat. Bawah, simpangan pergelangan yang terekam pada satu sesi sungguhan.',
+    en: 'Top, hand position during the rest tremor test. Bottom, the wrist displacement recorded in one actual session.',
+  },
+  'land.plateCaptionIllustration': {
+    id: 'Atas, posisi tangan saat tes tremor istirahat. Bawah, contoh pola tremor istirahat, bukan pengukuran seseorang.',
+    en: 'Top, hand position during the rest tremor test. Bottom, an illustrative rest tremor pattern, not anyone’s measurement.',
+  },
+  'land.plateAlt': {
+    id: 'Sebuah tangan menghadap kamera dengan jari terbuka, dicetak sebagai raster titik dua warna.',
+    en: 'A hand facing the camera with fingers apart, printed as a two-colour halftone screen.',
+  },
+  // Plat rekaman tremor. Keterangannya menegaskan ini rekaman sungguhan,
+  // sebab itulah yang membedakannya dari grafik hiasan.
+  'land.traceFigure': { id: 'Gbr. 2', en: 'Fig. 2' },
+  'land.traceTitle': {
+    id: 'Simpangan pergelangan tangan terhadap waktu',
+    en: 'Wrist displacement over time',
+  },
+  'land.traceCaption': {
+    id: 'Rekaman sungguhan dari satu sesi tes tremor istirahat, bukan gambar contoh. Nilai terukur:',
+    en: 'An actual recording from one rest tremor session, not a sample illustration. Measured values:',
+  },
+  'land.traceAlt': {
+    id: 'Grafik garis memperlihatkan getaran halus pergelangan tangan naik turun di sekitar garis nol.',
+    en: 'A line chart showing fine wrist tremor oscillating above and below the zero line.',
+  },
   'land.provenance': { id: 'Asal-usul model', en: 'Model provenance' },
   'land.testProfiles': { id: 'Profil uji terpisah', en: 'Held-out test profiles' },
   'land.referenceLead': { id: 'Rentang klinis mengacu pada', en: 'Clinical ranges reference' },
@@ -852,6 +891,16 @@ const DICT: Record<string, { id: string; en: string }> = {
     id: 'Hasil peragaan ini tidak disimpan di mana pun.',
     en: 'This demonstration result is not stored anywhere.',
   },
+
+  // ── Gagal muat ─────────────────────────────────────────────────────────────
+  // Kalimatnya sengaja menegaskan bahwa data pasien tetap utuh. Yang gagal
+  // adalah pengambilannya, bukan datanya, dan pasien berhak tahu bedanya.
+  'err.loadTitle': { id: 'Data tidak berhasil dimuat', en: 'Could not load your data' },
+  'err.loadBody': {
+    id: 'Sambungan ke server terputus, jadi riwayat pemeriksaan Anda belum bisa ditampilkan. Data Anda tetap tersimpan dan tidak ada yang hilang. Periksa sambungan internet Anda, lalu coba lagi.',
+    en: 'The connection to the server failed, so your examination history cannot be shown yet. Your data is still stored and nothing has been lost. Check your internet connection, then try again.',
+  },
+  'err.retry': { id: 'Coba lagi', en: 'Try again' },
 
   // Bahasa
   'lang.switch': { id: 'Bahasa', en: 'Language' },

@@ -377,7 +377,7 @@ export default function DoctorPortal() {
                       </div>
 
                       {session.mlPrediction?.predictedLabel && (
-                        <div className={styles.classification}>
+                        <div className={`field ${styles.classification}`}>
                           <h4 className="label">{t('doc.clinicalClassification')}</h4>
                           <p className={styles.classificationValue}>
                             {translateServerLabel(session.mlPrediction.predictedLabel, lang)}

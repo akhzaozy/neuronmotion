@@ -203,7 +203,7 @@ export default function EdukasiPage() {
                 <Dialog.Description className={styles.readerLead}>{active.excerpt}</Dialog.Description>
                 <hr className="rule" />
                 <div className={styles.readerBody}>{active.body}</div>
-                <p className={styles.disclaimer}>
+                <p className={`note ${styles.disclaimer}`}>
                   Artikel ini bersifat edukatif dan bukan pengganti nasihat medis. Untuk keputusan terkait
                   kondisi Anda, konsultasikan dengan dokter atau tenaga kesehatan.
                 </p>

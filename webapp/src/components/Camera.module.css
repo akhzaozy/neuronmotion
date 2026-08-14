@@ -5,6 +5,7 @@
    justru bagian yang dibaca biomarker gait dan rentang gerak. */
 
 .stage {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--s4);
@@ -41,6 +42,26 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* Panggung tunggu.
+   Elemen video dan kanvas harus sudah ada di DOM sebelum izin kamera
+   diminta, sebab aliran video dipasang ke elemen itu tepat setelah izin
+   diberikan. Sebelumnya keduanya baru dipasang setelah kamera siap, padahal
+   kamera hanya bisa siap kalau elemennya sudah ada, dan alur itu tidak
+   pernah bisa selesai.
+
+   Tidak memakai display:none atau atribut hidden, karena peramban boleh
+   menghentikan pemutaran video yang tidak dirender, sehingga play() dapat
+   menggantung. Jadi elemennya tetap dirender, hanya dipindah keluar
+   pandangan. */
+.offstage {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
 }
 
 /* ── Pita instruksi ─────────────────────────────────────────────────────────

@@ -270,11 +270,11 @@
 
 /* ── Analisis AI tersimpan ──────────────────────────────────────────────── */
 
+/* Bidang isi, memakai primitif .field dari globals.css. Kepala blok di
+   bawahnya sudah membawa garis pemisahnya sendiri, jadi tidak perlu garis
+   tepi kiri untuk menandai bahwa ini satuan tersendiri. */
 .aiBox {
   margin-bottom: var(--s5);
-  padding: var(--s4) var(--s5);
-  background: var(--inset);
-  border-left: 3px solid var(--ink);
 }
 
 .aiHeader {
@@ -371,21 +371,14 @@
   font-weight: 700;
 }
 
+/* Catatan tenaga kesehatan. Bidang isi dengan label kolom, memakai primitif
+   .field dan kelas .label dari globals.css. Aturan .doctorNoteLabel dulu
+   menyalin seluruh isi .label baris demi baris. */
 .doctorNoteBox {
   margin-bottom: var(--s5);
-  padding: var(--s3) var(--s4);
-  background: var(--field);
-  border-left: 3px solid var(--accent);
 }
 
 .doctorNoteLabel {
-  display: block;
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: var(--t-record);
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ink-muted);
   margin-bottom: var(--s2);
 }
 

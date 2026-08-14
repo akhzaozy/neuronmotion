@@ -270,7 +270,7 @@ export default function DoctorEdukasiPage() {
                 <Dialog.Title className={styles.readerTitle}>{reading.title}</Dialog.Title>
                 <p className={styles.readerMeta}>{reading.tag} &bull; {reading.readTime}</p>
                 <div className={styles.readerBody}>{reading.body}</div>
-                <p className={styles.disclaimer}>
+                <p className={`note ${styles.disclaimer}`}>
                   Materi ini bersifat edukatif dan tidak menggantikan penilaian klinis langsung.
                 </p>
                 <Dialog.Close asChild>

@@ -163,13 +163,7 @@
 
 /* Catatan edukatif: blok bergaris kiri tebal di atas ground inset, bukan kotak
    kuning berbingkai. */
+/* Tampilannya datang dari .note di globals.css. */
 .disclaimer {
   margin: var(--s6) 0 var(--s5);
-  padding: var(--s4);
-  background: var(--inset);
-  border-left: 3px solid var(--ink);
-  font-size: var(--t-record);
-  line-height: 1.6;
-  color: var(--ink-secondary);
-  max-width: 78ch;
 }

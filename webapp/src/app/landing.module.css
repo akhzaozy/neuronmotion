@@ -42,6 +42,24 @@
   }
 }
 
+/* Hero bertumpu dua kolom. Judul sudah dibatasi 18ch, jadi kolom kanan
+   menempati ruang yang memang tidak pernah dipakai teks, bukan merampasnya. */
+.heroGrid {
+  display: grid;
+  /* Kolom kanan sedikit dilebarkan sejak plat berisi dua panel. Jejak rekaman
+     butuh ruang mendatar untuk terbaca sebagai getaran, bukan sebagai coretan. */
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 360px);
+  gap: var(--s7);
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .heroGrid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s6);
+  }
+}
+
 .heroTitle {
   font-size: clamp(2.5rem, 7vw, 5rem);
   font-weight: 800;
@@ -72,6 +90,98 @@
   max-width: 60ch;
 }
 
+/* ── Plat instruksional ─────────────────────────────────────────────────────
+   Bentuknya plat dokumentasi: garis tebal di atas, tanda registrasi di sudut,
+   keterangan bernomor di bawah. Sama seperti .docHead, garis atas itulah yang
+   menyatakan "ini satuan tersendiri", jadi tidak perlu kotak. */
+
+.plate {
+  margin: 0;
+  /* Item grid bawaannya min-width: auto, artinya ia menolak menyempit di bawah
+     lebar min-content isinya. Keterangan di bawah gambar karena itu meluber
+     melewati lebar kolom 320px dan tampil lebih lebar daripada gambarnya
+     sendiri. min-width: 0 mengizinkannya membungkus. */
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .plate {
+    max-width: 260px;
+  }
+}
+
+.plateFrame {
+  position: relative;
+  border-top: 2px solid var(--rule-heavy);
+  padding-top: var(--s3);
+}
+
+/* Tanda registrasi cetak. Digambar di sini, bukan di dalam berkas gambarnya,
+   supaya warnanya benar-benar --accent dan ikut berubah bersama tema. */
+.plateMark {
+  position: absolute;
+  top: var(--s3);
+  right: 0;
+  width: 9px;
+  height: 9px;
+  border-top: 2px solid var(--accent);
+  border-right: 2px solid var(--accent);
+}
+
+/* Latar gambar dilarutkan dengan multiply sehingga ia mengambil warna kertas
+   halaman berapa pun nilainya.
+
+   Ini hanya bekerja karena titik putih berkasnya sudah dinaikkan ke putih
+   murni saat pengolahan. Multiply melarutkan putih murni, bukan krem; pada
+   berkas aslinya yang berlatar 241..246 ia justru menyisakan petak lebih
+   gelap dari halaman, lengkap dengan gradasi antar sudutnya. */
+/* Tingginya dibatasi lalu dipusatkan, bukan dibiarkan memenuhi lebar kolom.
+   Sejak plat berisi dua panel, gambar tangan setinggi kolom penuh menenggelamkan
+   jejak di bawahnya, padahal jejak itulah yang membawa datanya. Garis atas plat
+   tetap selebar kolom sehingga komposisinya tetap terbaca sebagai satu plat
+   dengan spesimen di tengah, persis cara lembar dokumentasi menaruh figur. */
+.plateImg {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  max-height: 230px;
+  height: auto;
+  margin: 0 auto;
+  mix-blend-mode: multiply;
+}
+
+/* Pada tema gelap, gambar berlatar terang akan menyilaukan seperti tambalan
+   putih. Warnanya dibalik sehingga raster titik menjadi terang di atas tinta,
+   lalu screen melarutkan latarnya yang setelah pembalikan menjadi hitam
+   murni. Berkasnya skala abu murni, jadi pembalikan ini tidak memunculkan
+   warna palsu. */
+:global([data-theme='dark']) .plateImg {
+  filter: invert(1);
+  mix-blend-mode: screen;
+}
+
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme='light'])) .plateImg {
+    filter: invert(1);
+    mix-blend-mode: screen;
+  }
+}
+
+.plateCaption {
+  margin-top: var(--s3);
+  font-size: var(--t-record);
+  line-height: 1.5;
+  color: var(--ink-muted);
+}
+
+.plateFigure {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink);
+  margin-right: var(--s2);
+}
+
 /* ── Bagian ─────────────────────────────────────────────────────────────── */
 
 .section {
@@ -89,6 +199,57 @@
   font-size: clamp(1.75rem, 4vw, 2.75rem);
   letter-spacing: -0.03em;
   max-width: 22ch;
+}
+
+/* ── Gerak ──────────────────────────────────────────────────────────────────
+   Satu pola dipakai berulang: blok mulai sedikit turun dan pudar, lalu naik
+   ke tempatnya saat masuk layar. Baris tabel memakai pola yang sama dengan
+   jeda bertingkat lewat --i, sehingga tabel terbaca sebagai catatan yang
+   sedang ditulis, bukan sebagai dinding data yang muncul sekaligus.
+
+   Semua durasi diredam oleh blok prefers-reduced-motion global di
+   globals.css. Yang penting, keadaan diam adalah keadaan terlihat, jadi
+   tanpa JavaScript sekalipun isinya tetap terbaca. */
+
+.reveal > * {
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.revealShown > * {
+  opacity: 1;
+  transform: none;
+}
+
+.revealRow {
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 0.42s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: calc(var(--i, 0) * 70ms);
+}
+
+.revealRowShown {
+  opacity: 1;
+  transform: none;
+}
+
+/* Garis aksen yang melebar di bawah judul bagian. Perannya menandai awal
+   bagian, jadi ia dekoratif dan disembunyikan dari pembaca layar. */
+.rule {
+  height: 2px;
+  width: 0;
+  margin-top: var(--s4);
+  background: var(--accent);
+  transition: width 0.62s cubic-bezier(0.16, 1, 0.3, 1) 0.1s;
+}
+
+.ruleShown {
+  width: 72px;
 }
 
 .sectionLead {
@@ -210,13 +371,7 @@
   padding: var(--s7) 0 var(--s8);
 }
 
-.disclaimer {
-  font-weight: 600;
-  padding: var(--s3) var(--s4);
-  background: var(--inset);
-  border-left: 3px solid var(--ink);
-  max-width: 78ch;
-}
+/* Tampilannya datang dari .note--lead di globals.css. */
 
 .references {
   margin-top: var(--s4);

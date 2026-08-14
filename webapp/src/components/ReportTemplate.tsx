@@ -1,5 +1,6 @@
 'use client';
 import { Session } from '@/lib/api';
+import Logo from './Logo';
 import styles from './ReportTemplate.module.css';
 
 export interface ReportPatient {
@@ -57,23 +58,23 @@ function TrendChart({ sessions }: { sessions: Session[] }) {
   return (
     <svg viewBox={`0 0 ${w} ${h}`} className={styles.chart}>
       {/* Pita kategori risiko sebagai latar */}
-      <rect x={padL} y={yFor(100)} width={w - padL - padR} height={yFor(65) - yFor(100)} fill="#fdecea" />
-      <rect x={padL} y={yFor(65)} width={w - padL - padR} height={yFor(35) - yFor(65)} fill="#fdf6e3" />
-      <rect x={padL} y={yFor(35)} width={w - padL - padR} height={yFor(0) - yFor(35)} fill="#eaf7ee" />
+      <rect x={padL} y={yFor(100)} width={w - padL - padR} height={yFor(65) - yFor(100)} className={styles.bandHigh} />
+      <rect x={padL} y={yFor(65)} width={w - padL - padR} height={yFor(35) - yFor(65)} className={styles.bandMid} />
+      <rect x={padL} y={yFor(35)} width={w - padL - padR} height={yFor(0) - yFor(35)} className={styles.bandLow} />
 
       {[0, 35, 65, 100].map(v => (
         <g key={v}>
-          <line x1={padL} y1={yFor(v)} x2={w - padR} y2={yFor(v)} stroke="#cbd5e1" strokeWidth="0.5" strokeDasharray="3 3" />
-          <text x={padL - 6} y={yFor(v) + 3} textAnchor="end" fontSize="8" fill="#64748b">{v}</text>
+          <line x1={padL} y1={yFor(v)} x2={w - padR} y2={yFor(v)} className={styles.gridLine} />
+          <text x={padL - 6} y={yFor(v) + 3} textAnchor="end" fontSize="8" className={styles.axisText}>{v}</text>
         </g>
       ))}
 
-      <path d={path} fill="none" stroke="#2563eb" strokeWidth="2" strokeLinejoin="round" />
+      <path d={path} className={styles.trendLine} />
       {points.map((p, i) => (
         <g key={p.id}>
           <circle cx={padL + i * xStep} cy={yFor(p.compositeScore)} r="3"
-            fill={p.riskCategory === 'HIGH' ? '#dc2626' : p.riskCategory === 'MEDIUM' ? '#d97706' : '#059669'} />
-          <text x={padL + i * xStep} y={h - 8} textAnchor="middle" fontSize="7" fill="#64748b">
+            className={styles[`dot${p.riskCategory}` as keyof typeof styles] ?? styles.dotLOW} />
+          <text x={padL + i * xStep} y={h - 8} textAnchor="middle" fontSize="7" className={styles.axisText}>
             #{p.id}
           </text>
         </g>
@@ -99,18 +100,14 @@ export default function ReportTemplate({ patient, sessions, meta }: Props) {
     <div className={styles.sheet} id="neuronmotion-report">
       {/* ── Kop laporan ── */}
       <header className={styles.head}>
+        {/* Tanda nama yang sama dengan seluruh produk. Sebelumnya di sini ada
+            ikon kotak biru bersudut membulat, padahal Logo.tsx menyatakan
+            bahwa dunia visual ini tidak memakai ikon dan tandanya adalah
+            namanya sendiri. Laporan adalah berkas yang paling sering dilihat
+            di luar aplikasi, jadi justru di sinilah tandanya harus benar. */}
         <div className={styles.brandBlock}>
-          <div className={styles.logoMark}>
-            <svg viewBox="0 0 56 56" width="34" height="34">
-              <rect width="56" height="56" rx="14" fill="#2563eb" />
-              <path d="M11 30h7l4-11 6 20 4-14 4 5h9" stroke="#fff" strokeWidth="3"
-                strokeLinecap="round" strokeLinejoin="round" fill="none" />
-            </svg>
-          </div>
-          <div>
-            <div className={styles.brandName}>NeuronMotion</div>
-            <div className={styles.brandSub}>Laporan Skrining Biomarker Motorik</div>
-          </div>
+          <Logo size={17} />
+          <div className={styles.brandSub}>Laporan Skrining Biomarker Motorik</div>
         </div>
         <div className={styles.printedAt}>
           <div>Dicetak</div>

@@ -251,12 +251,7 @@
   color: var(--ink-secondary);
 }
 
-.disclaimer {
-  padding: var(--s3) var(--s4);
-  background: var(--inset);
-  border-left: 3px solid var(--ink);
-  font-weight: 600;
-}
+/* Tampilannya datang dari .note--lead di globals.css. */
 
 .block {
   display: flex;

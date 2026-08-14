@@ -379,7 +379,7 @@ export default function ScreeningPage() {
                     Sebelumnya ia hidup di dalam blok analisis AI, sehingga
                     ketika layanan AI mati pengguna melihat angka merah dan
                     nama kondisi tanpa satu pun peringatan. */}
-                <p className={styles.disclaimer}>{t('res.notDiagnosis')}</p>
+                <p className="note note--lead">{t('res.notDiagnosis')}</p>
 
                 <hr className="rule" />
 

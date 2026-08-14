@@ -122,11 +122,7 @@
   font-weight: 600;
 }
 
+/* Tampilannya datang dari .note di globals.css. */
 .disclaimer {
   margin-top: var(--s6);
-  padding: var(--s4);
-  background: var(--inset);
-  border-left: 3px solid var(--ink);
-  font-size: var(--t-record);
-  color: var(--ink-secondary);
 }
