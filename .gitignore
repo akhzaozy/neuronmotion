@@ -25,3 +25,7 @@ prisma/dev.db
 # Cache terjemahan DeepL. Berisi potongan teks yang pernah diterjemahkan,
 # termasuk ringkasan AI milik pasien, jadi tidak ikut masuk repositori.
 data/translation-cache.json
+
+# Keluaran alat desain. Sekelas .claude dan .agents di atas: berguna saat
+# bekerja, tetapi bukan bagian dari produk.
+.impeccable
