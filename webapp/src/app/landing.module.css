@@ -1,79 +1,194 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   HALAMAN DEPAN, RUANG PERIKSA TERANG
+
+   Susunannya sengaja tidak mengikuti templat pemasaran rumah sakit yang jadi
+   rujukan tim, meski dunia visualnya iya. Templat itu membuka dengan potret
+   dokter dan sebaris angka bangga (4500+ pasien, 200 kamar, 2500+ dokter
+   daring). NeuronMotion tidak punya satu pun angka semacam itu, dan mengarang
+   angka klinis adalah hal yang paling cepat dibongkar penilai.
+
+   Jadi yang menempati posisi angka bangga itu di sini adalah mekanismenya
+   sendiri: jejak tremor sungguhan yang menggambar dirinya, beserta frekuensi
+   dan amplitudo yang benar-benar terukur darinya. Itu satu-satunya bukti di
+   halaman ini yang tidak bisa disalin pesaing dengan menempel kalimat.
+   ══════════════════════════════════════════════════════════════════════════ */
+
 .page {
   min-height: 100vh;
   background: var(--sheet);
+  overflow-x: clip;
 }
 
-/* ── Kop halaman ────────────────────────────────────────────────────────── */
+/* ── Kop halaman ────────────────────────────────────────────────────────────
+   Bilah mengambang, bukan kop yang menempel di tepi layar. Ia melayang di atas
+   ground biru pucat dengan sudut penuh, sehingga sejak piksel pertama halaman
+   ini menyatakan bahwa dunianya permukaan yang melayang, bukan lembar. */
 
 .masthead {
-  border-bottom: 2px solid var(--rule-heavy);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  padding: var(--s3) 0;
+  background: color-mix(in srgb, var(--sheet) 82%, transparent);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease-out;
+}
+
+.mastheadStuck {
+  border-bottom-color: var(--rule-hair);
 }
 
 .mastheadInner {
   width: 100%;
   max-width: 1180px;
   margin: 0 auto;
-  padding: var(--s3) var(--s5);
+  padding: 0 var(--s5);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--s4);
-  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .mastheadInner {
+    padding: 0 var(--s4);
+  }
+}
+
+/* Tautan bagian. Isinya nyata, ketiganya menuju bagian yang benar-benar ada di
+   halaman ini, jadi ia navigasi dan bukan hiasan yang meniru templat. */
+.mastheadNav {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.navLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+  padding: 0 var(--s4);
+  border-radius: var(--radius-pill);
+  font-size: var(--t-body);
+  font-weight: 500;
+  color: var(--ink-secondary);
+  text-decoration: none;
+  transition: background-color 0.18s ease-out, color 0.18s ease-out;
+}
+
+.navLink:hover {
+  background: var(--accent-wash);
+  color: var(--accent);
+}
+
+@media (max-width: 900px) {
+  .mastheadNav {
+    display: none;
+  }
 }
 
 .mastheadActions {
   display: flex;
   align-items: center;
-  gap: var(--s3);
+  gap: var(--s2);
 }
 
-/* ── Tesis ──────────────────────────────────────────────────────────────────
-   Judul dibiarkan besar dan rata kiri, tanpa label kecil di atasnya. Dalam
-   sistem dokumen, judul membawa bobotnya sendiri. */
+/* Di ponsel, kedua tombol akun dilepas dari kop.
+   Diukur pada lebar 390px, isi kop menuntut 459px: tanda nama 150, pengalih
+   bahasa 64, pengalih tema 72, tombol Masuk 78, tombol utama 114, ditambah
+   jarak dan padding. Ia tidak membungkus karena barisnya flex tanpa wrap, jadi
+   yang terjadi bukan tata letak yang menyempit melainkan isi yang terpotong.
+
+   Yang dilepas adalah dua tombol akun, bukan pengalih bahasa dan tema, karena
+   keduanya tidak punya duplikat di tempat lain sedangkan kedua tombol akun
+   punya: aksi yang sama muncul di hero sekitar 200px di bawahnya, masih dalam
+   satu layar, dan sekali lagi di blok penutup. */
+@media (max-width: 560px) {
+  .mastheadLogin,
+  .mastheadCta {
+    display: none;
+  }
+}
+
+/* ── Hero ───────────────────────────────────────────────────────────────────
+   Dua kolom. Kiri membawa kalimatnya, kanan membawa buktinya. */
 
 .hero {
+  position: relative;
   padding: var(--s9) 0 var(--s8);
-  border-bottom: 1px solid var(--rule-hair);
 }
 
 @media (max-width: 720px) {
   .hero {
-    padding: var(--s7) 0 var(--s6);
+    padding: var(--s7) 0 var(--s7);
   }
 }
 
-/* Hero bertumpu dua kolom. Judul sudah dibatasi 18ch, jadi kolom kanan
-   menempati ruang yang memang tidak pernah dipakai teks, bukan merampasnya. */
+/* Bidang biru lembut yang jatuh di belakang panel bukti. Bentuknya organik,
+   bukan lingkaran sempurna, dan ia disembunyikan dari pembaca layar karena ia
+   memang tidak membawa informasi. Ini satu-satunya bentuk dekoratif murni di
+   halaman ini, dan ia ada karena bidang warna utuh di belakang subjek adalah
+   gerakan komposisi yang paling dikenali dari rujukan tim. */
+.heroBlob {
+  position: absolute;
+  z-index: 0;
+  top: -6%;
+  right: -14%;
+  width: min(760px, 68vw);
+  aspect-ratio: 1 / 0.92;
+  background: var(--accent-soft);
+  opacity: 0.5;
+  border-radius: 58% 42% 46% 54% / 52% 48% 52% 48%;
+  pointer-events: none;
+}
+
+@media (max-width: 900px) {
+  .heroBlob {
+    top: auto;
+    bottom: 4%;
+    right: -30%;
+    width: 120vw;
+    opacity: 0.34;
+  }
+}
+
 .heroGrid {
+  position: relative;
+  z-index: 1;
   display: grid;
-  /* Kolom kanan sedikit dilebarkan sejak plat berisi dua panel. Jejak rekaman
-     butuh ruang mendatar untuk terbaca sebagai getaran, bukan sebagai coretan. */
-  grid-template-columns: minmax(0, 1fr) minmax(240px, 360px);
-  gap: var(--s7);
-  align-items: start;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr);
+  gap: var(--s8);
+  align-items: center;
 }
 
 @media (max-width: 900px) {
   .heroGrid {
     grid-template-columns: minmax(0, 1fr);
-    gap: var(--s6);
+    gap: var(--s7);
   }
 }
 
 .heroTitle {
-  font-size: clamp(2.5rem, 7vw, 5rem);
-  font-weight: 800;
-  line-height: 1.02;
-  letter-spacing: -0.04em;
-  max-width: 18ch;
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  max-width: 15ch;
+}
+
+/* Kata terakhir judul diberi warna merek. Hanya satu kata, dan hanya karena ia
+   menyebut alat yang dipakai, yaitu kameranya sendiri. */
+.heroTitleAccent {
+  color: var(--accent);
 }
 
 .heroLead {
   margin-top: var(--s5);
-  font-size: clamp(1.125rem, 2.2vw, 1.5rem);
-  line-height: 1.45;
+  font-size: clamp(1.0625rem, 1.6vw, 1.25rem);
+  line-height: 1.6;
   color: var(--ink-secondary);
-  max-width: 46ch;
+  max-width: 52ch;
 }
 
 .heroActions {
@@ -84,139 +199,293 @@
 }
 
 .heroNote {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
   margin-top: var(--s4);
   font-size: var(--t-record);
   color: var(--ink-muted);
   max-width: 60ch;
 }
 
-/* ── Plat instruksional ─────────────────────────────────────────────────────
-   Bentuknya plat dokumentasi: garis tebal di atas, tanda registrasi di sudut,
-   keterangan bernomor di bawah. Sama seperti .docHead, garis atas itulah yang
-   menyatakan "ini satuan tersendiri", jadi tidak perlu kotak. */
+.heroNoteIcon {
+  flex: none;
+  color: var(--accent);
+}
 
-.plate {
+/* ── Figur hero ─────────────────────────────────────────────────────────────
+   Foto di dalam bidang biru, dengan kartu pengukuran melayang menimpanya. Ini
+   gerakan komposisi rujukan tim, dengan satu perbedaan yang menentukan: kartu
+   yang melayang di sana adalah kotak pencarian, di sini ia pengukuran
+   sungguhan. */
+
+.heroFigure {
+  position: relative;
+  min-width: 0;
+  /* Ruang bawah untuk bagian kartu yang menjorok keluar foto. Diukur: kartu
+     setinggi sekitar 250px, jadi 130px di sini menyisakan sekitar 120px yang
+     menimpa foto, kira-kira seperempat tingginya. */
+  padding-bottom: 130px;
+}
+
+.heroPhoto {
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-raised);
+  /* Rasio dikunci supaya tinggi kolom kanan tidak ikut berubah bersama panjang
+     judul di kolom kiri, yang berubah antar bahasa. Potret, bukan 4:3: pada
+     4:3 fotonya hanya 384px sementara kartunya 312px, sehingga kartu menutupi
+     lebih dari separuh subjeknya. */
+  aspect-ratio: 4 / 5;
+}
+
+/* Titik jangkar dinaikkan ke atas tengah. Fotonya potret dan wajahnya ada di
+   sepertiga atas, jadi pemotongan dari tengah, yang merupakan bawaan
+   object-fit, memenggal kepalanya. */
+.heroPhotoImg {
+  object-position: 50% 18%;
+}
+
+/* Di bawah 900px kartu berhenti menimpa dan turun ke bawah foto.
+   Diukur pada 390px: fotonya 269px sedangkan kartunya 346px, jadi kartu yang
+   melayang bukan menimpa sebagian foto melainkan menutupinya sama sekali.
+   Tumpang tindih adalah gerakan komposisi untuk layar lebar; di kolom sempit
+   ia hanya menghapus salah satu dari dua isinya. */
+@media (max-width: 900px) {
+  .heroFigure {
+    padding-bottom: 0;
+    max-width: 560px;
+    margin: 0 auto;
+  }
+
+  .heroPhoto {
+    aspect-ratio: 16 / 10;
+  }
+}
+
+.heroPhotoImg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ── Panel bukti ────────────────────────────────────────────────────────────
+   Kartu putih berisi jejak tremor, melayang menimpa sudut bawah foto. */
+
+.panel {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  right: 18%;
+  bottom: 0;
   margin: 0;
-  /* Item grid bawaannya min-width: auto, artinya ia menolak menyempit di bawah
-     lebar min-content isinya. Keterangan di bawah gambar karena itu meluber
-     melewati lebar kolom 320px dan tampil lebih lebar daripada gambarnya
-     sendiri. min-width: 0 mengizinkannya membungkus. */
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-raised);
+  padding: var(--s4) var(--s5);
   min-width: 0;
 }
 
 @media (max-width: 900px) {
-  .plate {
-    max-width: 260px;
+  .panel {
+    position: static;
+    margin-top: var(--s4);
+    padding: var(--s5);
   }
 }
 
-.plateFrame {
-  position: relative;
-  border-top: 2px solid var(--rule-heavy);
-  padding-top: var(--s3);
+.panelHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s4);
+  margin-bottom: var(--s4);
 }
 
-/* Tanda registrasi cetak. Digambar di sini, bukan di dalam berkas gambarnya,
-   supaya warnanya benar-benar --accent dan ikut berubah bersama tema. */
-.plateMark {
-  position: absolute;
-  top: var(--s3);
-  right: 0;
-  width: 9px;
-  height: 9px;
-  border-top: 2px solid var(--accent);
-  border-right: 2px solid var(--accent);
+.panelTitle {
+  font-size: var(--t-record);
+  font-weight: 600;
+  color: var(--ink-secondary);
 }
 
-/* Latar gambar dilarutkan dengan multiply sehingga ia mengambil warna kertas
-   halaman berapa pun nilainya.
-
-   Ini hanya bekerja karena titik putih berkasnya sudah dinaikkan ke putih
-   murni saat pengolahan. Multiply melarutkan putih murni, bukan krem; pada
-   berkas aslinya yang berlatar 241..246 ia justru menyisakan petak lebih
-   gelap dari halaman, lengkap dengan gradasi antar sudutnya. */
-/* Tingginya dibatasi lalu dipusatkan, bukan dibiarkan memenuhi lebar kolom.
-   Sejak plat berisi dua panel, gambar tangan setinggi kolom penuh menenggelamkan
-   jejak di bawahnya, padahal jejak itulah yang membawa datanya. Garis atas plat
-   tetap selebar kolom sehingga komposisinya tetap terbaca sebagai satu plat
-   dengan spesimen di tengah, persis cara lembar dokumentasi menaruh figur. */
-.plateImg {
-  display: block;
-  width: auto;
-  max-width: 100%;
-  max-height: 230px;
-  height: auto;
-  margin: 0 auto;
-  mix-blend-mode: multiply;
+/* Penanda "contoh pola" atau "rekaman". Bentuknya pil kecil, dan teksnya
+   selalu penuh, tidak pernah hanya titik warna. */
+.panelTag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: var(--s1) var(--s3);
+  border-radius: var(--radius-pill);
+  background: var(--accent-wash);
+  color: var(--accent);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: var(--t-record);
+  font-weight: 500;
+  letter-spacing: 0.02em;
 }
 
-/* Pada tema gelap, gambar berlatar terang akan menyilaukan seperti tambalan
-   putih. Warnanya dibalik sehingga raster titik menjadi terang di atas tinta,
-   lalu screen melarutkan latarnya yang setelah pembalikan menjadi hitam
-   murni. Berkasnya skala abu murni, jadi pembalikan ini tidak memunculkan
-   warna palsu. */
-:global([data-theme='dark']) .plateImg {
-  filter: invert(1);
-  mix-blend-mode: screen;
-}
-
-@media (prefers-color-scheme: dark) {
-  :global(:root:not([data-theme='light'])) .plateImg {
-    filter: invert(1);
-    mix-blend-mode: screen;
-  }
-}
-
-.plateCaption {
+/* Tiga bacaan yang diambil dari jejak yang sama. Angka tabular, satuan selalu
+   ikut, dan nilainya benar-benar dihitung dari datanya, bukan ditulis tangan. */
+.panelReadout {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s3);
   margin-top: var(--s3);
+  padding-top: var(--s3);
+  border-top: 1px solid var(--rule-hair);
+}
+
+.readoutValue {
+  display: block;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(1.125rem, 2.4vw, 1.5rem);
+  font-weight: 500;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Satuan diset relatif terhadap angkanya supaya proporsinya tetap saat angka
+   itu mengecil di layar sempit, tetapi dengan lantai --t-record. Tanpa lantai
+   itu, pada 390px angkanya turun ke 18px dan satuannya ikut turun ke 12,6px,
+   yang menembus lantai 14px yang dipegang produk ini justru karena pengguna
+   utamanya lansia. */
+.readoutUnit {
+  font-size: max(0.7em, var(--t-record));
+  color: var(--ink-muted);
+  margin-left: 0.15em;
+}
+
+.readoutLabel {
+  display: block;
+  margin-top: var(--s1);
+  font-size: var(--t-record);
+  color: var(--ink-muted);
+}
+
+.panelCaption {
+  margin-top: var(--s3);
+  padding-top: var(--s3);
+  border-top: 1px solid var(--rule-hair);
   font-size: var(--t-record);
   line-height: 1.5;
   color: var(--ink-muted);
 }
 
-.plateFigure {
-  font-family: var(--font-mono), ui-monospace, monospace;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ink);
-  margin-right: var(--s2);
+/* ── Pita mekanisme ─────────────────────────────────────────────────────────
+   Tiga fakta yang menempati posisi "4500+ pasien" pada rujukan. Ketiganya
+   pernyataan tentang cara kerja, bukan tentang popularitas, karena yang kedua
+   belum ada dan tidak boleh dikarang. */
+
+.assurance {
+  position: relative;
+  z-index: 1;
+  padding-bottom: var(--s7);
+}
+
+.assuranceGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s4);
+}
+
+@media (max-width: 860px) {
+  .assuranceGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.assuranceItem {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s4);
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--s5);
+}
+
+.assuranceIcon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-pill);
+  background: var(--accent-wash);
+  color: var(--accent);
+}
+
+.assuranceTitle {
+  font-size: var(--t-body);
+  font-weight: 700;
+  letter-spacing: -0.005em;
+}
+
+.assuranceText {
+  margin-top: var(--s1);
+  font-size: var(--t-record);
+  line-height: 1.55;
+  color: var(--ink-secondary);
 }
 
 /* ── Bagian ─────────────────────────────────────────────────────────────── */
 
 .section {
-  padding: var(--s8) 0;
-  border-bottom: 1px solid var(--rule-hair);
+  padding: var(--s9) 0;
 }
 
 @media (max-width: 720px) {
   .section {
-    padding: var(--s7) 0;
+    padding: var(--s8) 0;
   }
 }
 
 .sectionTitle {
-  font-size: clamp(1.75rem, 4vw, 2.75rem);
-  letter-spacing: -0.03em;
-  max-width: 22ch;
+  font-size: clamp(1.875rem, 3.6vw, 2.75rem);
+  letter-spacing: -0.02em;
+  max-width: 20ch;
+}
+
+.sectionLead {
+  margin-top: var(--s3);
+  font-size: var(--t-lead);
+  line-height: 1.6;
+  color: var(--ink-secondary);
+  max-width: 58ch;
+}
+
+/* Judul bagian yang dipusatkan, meniru cara rujukan membuka setiap bagiannya.
+   Dipakai hanya di dua bagian; sisanya tetap rata kiri supaya halaman tidak
+   berubah jadi kolom tengah sepanjang enam layar. */
+.sectionHeadCenter {
+  text-align: center;
+  margin-bottom: var(--s7);
+}
+
+.sectionHeadCenter .sectionTitle,
+.sectionHeadCenter .sectionLead {
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* ── Gerak ──────────────────────────────────────────────────────────────────
-   Satu pola dipakai berulang: blok mulai sedikit turun dan pudar, lalu naik
-   ke tempatnya saat masuk layar. Baris tabel memakai pola yang sama dengan
-   jeda bertingkat lewat --i, sehingga tabel terbaca sebagai catatan yang
-   sedang ditulis, bukan sebagai dinding data yang muncul sekaligus.
+   Satu pola dipakai berulang: blok mulai sedikit turun dan pudar, lalu naik ke
+   tempatnya saat masuk layar. Baris tabel memakai pola yang sama dengan jeda
+   bertingkat lewat --i.
 
-   Semua durasi diredam oleh blok prefers-reduced-motion global di
-   globals.css. Yang penting, keadaan diam adalah keadaan terlihat, jadi
-   tanpa JavaScript sekalipun isinya tetap terbaca. */
+   Semua durasi diredam oleh blok prefers-reduced-motion global di globals.css.
+   Yang penting, keadaan diam adalah keadaan terlihat, jadi tanpa JavaScript
+   sekalipun isinya tetap terbaca. */
 
 .reveal > * {
   opacity: 0;
-  transform: translateY(10px);
+  transform: translateY(14px);
   transition:
-    opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .revealShown > * {
@@ -226,10 +495,10 @@
 
 .revealRow {
   opacity: 0;
-  transform: translateY(8px);
+  transform: translateY(10px);
   transition:
-    opacity 0.42s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+    opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
   transition-delay: calc(var(--i, 0) * 70ms);
 }
 
@@ -238,144 +507,468 @@
   transform: none;
 }
 
-/* Garis aksen yang melebar di bawah judul bagian. Perannya menandai awal
-   bagian, jadi ia dekoratif dan disembunyikan dari pembaca layar. */
-.rule {
-  height: 2px;
-  width: 0;
-  margin-top: var(--s4);
-  background: var(--accent);
-  transition: width 0.62s cubic-bezier(0.16, 1, 0.3, 1) 0.1s;
+/* ── Tabel biomarker ────────────────────────────────────────────────────────
+   Rujukan menaruh enam kotak ikon berjajar di posisi ini. Yang dipakai di sini
+   tetap tabel, karena keenam tes punya durasi dan besaran ukur yang berbeda,
+   dan itu informasi yang hilang begitu ia jadi kotak ikon. Tabelnya duduk di
+   dalam kartu putih, jadi ia tetap ikut dunia ini. */
+
+.tableCard {
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--s3) var(--s5) var(--s4);
+  margin-top: var(--s6);
 }
 
-.ruleShown {
-  width: 72px;
-}
-
-.sectionLead {
-  margin-top: var(--s3);
-  font-size: var(--t-lead);
-  color: var(--ink-secondary);
-}
-
-/* Tabel lebar menggulir di dalam wadahnya sendiri, badan halaman tidak
-   pernah menggulir mendatar. */
 .tableScroll {
   overflow-x: auto;
-  margin-top: var(--s5);
 }
 
-.rowName {
+/* Di ponsel kolom durasi dilepas.
+   Pada 390px tabel menuntut 446px, dan yang mengalah adalah kolom "Mengukur":
+   ia menyusut ke 109px sehingga deskripsinya membungkus satu kata per baris.
+   Durasi per tes adalah informasi sekunder di halaman depan, dan total 75 detik
+   sudah disebut di kepala bagian, jadi melepasnya tidak menghilangkan apa pun
+   yang tidak masih ada di layar. Yang tersisa dua kolom, dan keduanya muat.
+
+   Kolomnya dilepas dari tata letak, bukan digulir mendatar: pengguna produk ini
+   bisa punya tremor atau gerak jari yang terbatas, dan menggeser tabel dengan
+   satu jari adalah gerakan presisi yang justru sedang diukur. */
+/* `.dataTable` ditulis dengan :global karena ia kelas dari globals.css. Di
+   dalam berkas modul, nama kelas biasa ikut di-hash, sehingga `.dataTable`
+   polos di sini merujuk kelas lokal yang tidak pernah ada di markup dan
+   aturannya diam-diam tidak pernah berlaku. */
+@media (max-width: 640px) {
+  .testsCard :global(.dataTable) th:last-child,
+  .testsCard :global(.dataTable) td:last-child {
+    display: none;
+  }
+
+  .rowNameInner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--s2);
+  }
+}
+
+/* Kelasnya ditulis dua kali dengan sengaja.
+   Nama tes adalah prosa, bukan label kolom, jadi ia harus tampil dalam huruf
+   biasa dengan kapitalisasi kalimat. Tetapi ia berada di dalam `th`, dan aturan
+   `.dataTable th` di globals.css yang membuat seluruh kepala tabel jadi mono
+   huruf besar berkekhususan 0,1,1, sementara `.rowName` hanya 0,1,0. Tanpa
+   penggandaan ini nama tes muncul sebagai TREMOR dan KETUKAN JARI dalam
+   monospace, yaitu justru kostum teknis yang tidak boleh dipakai untuk prosa. */
+.rowName.rowName {
   white-space: nowrap;
   font-weight: 700;
   text-transform: none;
-  letter-spacing: 0;
+  letter-spacing: -0.005em;
   font-family: inherit;
   font-size: var(--t-body);
   color: var(--ink);
   border-bottom: 1px solid var(--rule-hair);
-  padding: var(--s3);
+  padding: var(--s4);
 }
 
-/* ── Blok dua kolom ─────────────────────────────────────────────────────── */
+.rowNameInner {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
 
-.split {
+.rowIcon {
+  flex: none;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
-  gap: var(--s7);
-  align-items: start;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-pill);
+  background: var(--accent-wash);
+  color: var(--accent);
+}
+
+/* Pembagian kolom di ponsel.
+   ─────────────────────────────────────────────────────────────────────────
+   Blok ini duduk di sini, sesudah aturan dasar .rowName, dan bukan di dalam
+   blok media di dekat .tableScroll di atas. Alasannya kekhususan: kedua
+   pemilih sama-sama 0,2,0 karena nama kelasnya digandakan, jadi yang menang
+   adalah yang belakangan. Ketika override ini ditaruh di atas, ia kalah dari
+   `white-space: nowrap` milik aturan dasar dan diam-diam tidak berlaku.
+
+   table-layout: fixed dipakai karena tata letak otomatis tetap memberi kolom
+   nama 181px dari 308px meski isinya sudah ditumpuk dan pembungkusnya sudah
+   diizinkan; dengan otomatis, `width` pada sel hanya usulan. Deskripsi adalah
+   isi yang harus terbaca, jadi ia yang mendapat bagian terbesar. */
+@media (max-width: 640px) {
+  .testsCard :global(.dataTable) {
+    table-layout: fixed;
+  }
+
+  /* Pada table-layout: fixed, lebar kolom diambil dari baris pertama tabel,
+     yaitu baris kepala, bukan dari sel mana pun di badan. Menaruh width pada
+     .rowName di tbody karena itu tidak berpengaruh dan kolomnya terbagi rata
+     50/50. */
+  .testsCard :global(.dataTable) thead th:first-child {
+    width: 36%;
+  }
+
+  .testsCard .rowName.rowName {
+    white-space: normal;
+    padding: var(--s3);
+  }
+
+  .testsCard :global(.dataTable) td {
+    padding: var(--s3);
+  }
+}
+
+/* Durasi ditampilkan sebagai chip mono, bukan angka telanjang, supaya kolom
+   paling kanan terbaca sebagai besaran waktu sekilas. */
+.durationChip {
+  display: inline-block;
+  padding: var(--s1) var(--s3);
+  border-radius: var(--radius-pill);
+  background: var(--inset);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: var(--t-record);
+  font-weight: 500;
+  color: var(--ink-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Pita biru: cara kerja ──────────────────────────────────────────────────
+   Bidang warna utuh selebar layar dengan kartu putih melayang di atasnya. Ini
+   gerakan komposisi yang paling dikenali dari rujukan tim, dan ia dipakai
+   tepat sekali di halaman ini supaya tetap berarti. */
+
+.band {
+  position: relative;
+  background: var(--accent-soft);
+  padding: var(--s9) 0;
+  overflow: hidden;
+}
+
+@media (max-width: 720px) {
+  .band {
+    padding: var(--s8) 0;
+  }
+}
+
+/* Jejak gelombang tipis yang melintas di dasar pita, digambar dari data tremor
+   yang sama dengan panel hero. Ia dekoratif di sini, jadi ia disembunyikan
+   dari pembaca layar. */
+.bandTrace {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: var(--s6);
+  width: 100%;
+  height: 120px;
+  opacity: 0.45;
+  color: #ffffff;
+  pointer-events: none;
+}
+
+.bandInner {
+  position: relative;
+  z-index: 1;
+}
+
+/* Teks di atas bidang biru. Warnanya diturunkan dari birunya sendiri, bukan
+   abu netral, dan dipilih pekat supaya lolos ambang kontras di atas #8ebfd2. */
+.bandTitle {
+  color: #06303d;
+  font-size: clamp(1.875rem, 3.6vw, 2.75rem);
+  letter-spacing: -0.02em;
+  max-width: 18ch;
+}
+
+.bandLead {
+  margin-top: var(--s3);
+  font-size: var(--t-lead);
+  line-height: 1.6;
+  color: #0d4152;
+  max-width: 54ch;
+}
+
+:global([data-theme='dark']) .bandTitle {
+  color: #eaf6fb;
+}
+
+:global([data-theme='dark']) .bandLead {
+  color: #c3dde8;
+}
+
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme='light'])) .bandTitle {
+    color: #eaf6fb;
+  }
+  :global(:root:not([data-theme='light'])) .bandLead {
+    color: #c3dde8;
+  }
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s5);
+  margin-top: var(--s7);
 }
 
 @media (max-width: 860px) {
-  .split {
+  .steps {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--s4);
   }
 }
 
-.splitBody {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s4);
+/* Ketiga kartu langkah sengaja tidak sama tingginya di layar lebar: yang di
+   tengah naik sedikit, seperti kartu tengah pada rujukan. Ini menandai bahwa
+   langkah kedua, yaitu pengukuran, adalah tempat produk ini benar-benar
+   bekerja. */
+.step {
+  background: var(--field);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-raised);
+  padding: var(--s6);
+}
+
+@media (min-width: 861px) {
+  .step:nth-child(2) {
+    transform: translateY(-24px);
+  }
+}
+
+.stepIcon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius);
+  background: var(--accent-wash);
+  color: var(--accent);
+  margin-bottom: var(--s4);
+}
+
+.stepTitle {
   font-size: var(--t-lead);
-  line-height: 1.55;
+  font-weight: 700;
+}
+
+.stepText {
+  margin-top: var(--s2);
+  font-size: var(--t-record);
+  line-height: 1.6;
+  color: var(--ink-secondary);
+}
+
+/* ── Bukti dan asal-usul ────────────────────────────────────────────────── */
+
+/* Kolom kiri lebih lebar karena ia membawa tabel bernilai; kolom kanan hanya
+   empat pil nama kondisi, dan memberinya setengah lebar penuh meninggalkan
+   lubang kosong di bawahnya. */
+.provenanceGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: var(--s7);
+  align-items: start;
+  margin-top: var(--s6);
+}
+
+@media (max-width: 860px) {
+  .provenanceGrid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s5);
+  }
 }
 
 .provenanceNote {
   margin-top: var(--s4);
   font-size: var(--t-record);
+  line-height: 1.6;
   color: var(--ink-muted);
   max-width: 70ch;
 }
 
 .conditionList {
   list-style: none;
-  margin: var(--s6) 0 0;
+  margin: 0;
   padding: 0;
-  border-top: 2px solid var(--rule-heavy);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
 }
 
+/* Kondisi ditampilkan sebagai pil, bukan baris tabel. Keempatnya nama kondisi
+   tanpa besaran apa pun yang menyertainya, jadi memberi mereka baris tabel
+   menjanjikan kolom data yang tidak pernah datang. */
 .conditionRow {
-  padding: var(--s3) 0;
-  border-bottom: 1px solid var(--rule-hair);
-  font-size: var(--t-lead);
+  padding: var(--s3) var(--s5);
+  border-radius: var(--radius-pill);
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  box-shadow: var(--shadow-card);
+  font-size: var(--t-body);
   font-weight: 600;
 }
 
-/* ── Penutup ────────────────────────────────────────────────────────────── */
+/* ── Penutup ────────────────────────────────────────────────────────────────
+   Satu kartu biru pekat, sudut besar, duduk di tengah ground pucat. Dunia
+   sebelumnya memakai bidang tinta selebar layar di sini; kartu bersudut
+   membaca lebih ramah dan tetap sama tegasnya. */
 
 .closing {
-  padding: var(--s9) 0;
-  background: var(--ink);
-  color: var(--sheet);
+  padding: var(--s8) 0 var(--s10);
 }
 
-.closing :global(.btn) {
-  border-color: rgba(255, 255, 255, 0.4);
-  color: var(--sheet);
+@media (max-width: 720px) {
+  .closing {
+    padding: var(--s7) 0 var(--s8);
+  }
 }
 
-.closing :global(.btn):hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: var(--sheet);
+.closingCard {
+  position: relative;
+  overflow: hidden;
+  background: var(--cta-field);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-raised);
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr);
+  gap: var(--s8);
+  align-items: center;
+  padding: var(--s8);
 }
 
-.closing :global(.btn--primary) {
-  background: var(--sheet);
-  border-color: var(--sheet);
-  color: var(--ink);
+@media (max-width: 860px) {
+  .closingCard {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s6);
+    padding: var(--s6);
+  }
 }
 
-.closing :global(.btn--primary):hover {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
+.closingPhoto {
+  position: relative;
+  z-index: 1;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18), 0 24px 56px rgba(0, 0, 0, 0.22);
+  aspect-ratio: 4 / 3;
+}
+
+.closingPhotoImg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.closingBody {
+  position: relative;
+  z-index: 1;
 }
 
 .closingTitle {
-  font-size: clamp(2rem, 5vw, 3.5rem);
-  letter-spacing: -0.03em;
-  max-width: 20ch;
+  color: var(--cta-ink);
+  font-size: clamp(1.875rem, 3.6vw, 2.75rem);
+  letter-spacing: -0.02em;
+  max-width: 16ch;
 }
 
 .closingLead {
   margin-top: var(--s4);
   font-size: var(--t-lead);
-  color: rgba(242, 241, 236, 0.78);
-  max-width: 52ch;
+  line-height: 1.6;
+  color: color-mix(in srgb, var(--cta-ink) 88%, transparent);
+  max-width: 42ch;
+}
+
+.closingActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
+  margin-top: var(--s6);
+}
+
+/* Tombol dibalik di atas bidang biru: yang utama menjadi putih penuh. */
+.closingCard :global(.btn) {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--cta-ink) 50%, transparent);
+  color: var(--cta-ink);
+  box-shadow: none;
+}
+
+.closingCard :global(.btn):hover {
+  background: color-mix(in srgb, var(--cta-ink) 14%, transparent);
+  border-color: var(--cta-ink);
+  color: var(--cta-ink);
+}
+
+/* Aksi utama dibalik: bidang terang penuh dengan teks sewarna kartunya.
+   Warnanya var(--cta-field), bukan var(--accent), karena --accent di tema
+   gelap adalah biru muda dan di atas bidang terang ia hanya 1,98:1. */
+.closingCard :global(.btn--primary) {
+  background: var(--cta-ink);
+  border-color: var(--cta-ink);
+  color: var(--cta-field);
+}
+
+.closingCard :global(.btn--primary):hover {
+  background: var(--cta-ink);
+  border-color: var(--cta-ink);
+  color: var(--cta-field);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+}
+
+/* Jejak gelombang yang sama, kali ini melintas di dalam kartu penutup. Ia
+   menutup halaman dengan bentuk yang sama seperti yang membukanya. */
+.closingTrace {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  width: 100%;
+  height: 140px;
+  opacity: 0.22;
+  color: var(--cta-ink);
+  pointer-events: none;
 }
 
 /* ── Kaki ───────────────────────────────────────────────────────────────── */
 
 .footer {
-  padding: var(--s7) 0 var(--s8);
+  padding: 0 0 var(--s8);
 }
 
-/* Tampilannya datang dari .note--lead di globals.css. */
+.footerInner {
+  border-top: 1px solid var(--rule-hair);
+  padding-top: var(--s6);
+}
+
+.footerDisclaimer {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s3);
+  font-size: var(--t-body);
+  font-weight: 600;
+  color: var(--ink);
+  max-width: 78ch;
+}
+
+.footerDisclaimerIcon {
+  flex: none;
+  margin-top: 2px;
+  color: var(--accent);
+}
 
 .references {
   margin-top: var(--s4);
   font-size: var(--t-record);
+  line-height: 1.6;
   color: var(--ink-muted);
   max-width: 78ch;
 }

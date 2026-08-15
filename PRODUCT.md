@@ -50,7 +50,7 @@ No install, no app store, no sensor, no wearable. A camera and a browser.
 ## Brand Commitments
 
 - Name: **NeuronMotion**. Existing mark at `webapp/src/components/Logo.tsx` and `webapp/src/app/icon.svg`.
-- Fonts already committed and self-hosted: **Plus Jakarta Sans** (UI) and **JetBrains Mono** (numeric/technical readouts), in `webapp/src/app/fonts/`.
+- Fonts already committed and self-hosted, in `webapp/src/app/fonts/`: **Gabarito** (headings), **Hanken Grotesk** (UI/body), and **JetBrains Mono** (numeric/technical readouts). Plus Jakarta Sans was used until the Ruang Periksa Terang redesign and was dropped at the team's request; its file may still be present but nothing imports it.
 - Built by **Last Dance Teams**; project lead Muhammad Akhza Fachrozy.
 - Voice: Indonesian-first, plain, calm, clinically careful. It explains what a number means rather than asserting a verdict.
 

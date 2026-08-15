@@ -1,6 +1,7 @@
 /* Pengalih tema dan pengalih bahasa memakai bentuk yang sama: label teks
-   pendek di dalam kotak bergaris. Keduanya duduk berdampingan di kepala
-   dokumen, jadi bentuknya harus identik. */
+   pendek di dalam pil bergaris. Keduanya duduk berdampingan di kop halaman,
+   jadi bentuknya harus identik, dan keduanya mengikuti bentuk pil yang dipakai
+   seluruh kontrol dunia ini. */
 
 .toggle {
   display: inline-flex;
@@ -17,14 +18,14 @@
   color: var(--ink-secondary);
   background: transparent;
   border: 1px solid var(--rule-hair);
-  border-radius: var(--radius);
+  border-radius: var(--radius-pill);
   white-space: nowrap;
-  transition: color 0.14s ease-out, border-color 0.14s ease-out,
-    background-color 0.14s ease-out;
+  transition: color 0.18s ease-out, border-color 0.18s ease-out,
+    background-color 0.18s ease-out;
 }
 
 .toggle:hover {
-  color: var(--ink);
-  border-color: var(--rule);
-  background: var(--inset);
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-wash);
 }

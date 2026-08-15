@@ -825,6 +825,90 @@ const DICT: Record<string, { id: string; en: string }> = {
   'land.testProfiles': { id: 'Profil uji terpisah', en: 'Held-out test profiles' },
   'land.referenceLead': { id: 'Rentang klinis mengacu pada', en: 'Clinical ranges reference' },
 
+  // ── Halaman depan, Ruang Periksa Terang ────────────────────────────────────
+  // Tautan bagian pada kop. Ketiganya menuju bagian yang benar-benar ada.
+  'land.navMeasured': { id: 'Yang diukur', en: 'What we measure' },
+  'land.navHow': { id: 'Cara kerja', en: 'How it works' },
+  'land.navEvidence': { id: 'Bukti', en: 'Evidence' },
+
+  // Panel bukti di hero.
+  'land.panelTitle': { id: 'Tes tremor istirahat', en: 'Rest tremor test' },
+  'land.tagRecording': { id: 'Rekaman', en: 'Recording' },
+  'land.tagIllustration': { id: 'Contoh pola', en: 'Sample pattern' },
+  'land.readDuration': { id: 'Durasi rekam', en: 'Capture length' },
+  'land.readFrequency': { id: 'Frekuensi dominan', en: 'Dominant frequency' },
+  'land.readAmplitude': { id: 'Amplitudo', en: 'Amplitude' },
+
+  // Tiga jaminan yang menempati posisi angka pemasaran pada templat rujukan.
+  // Ketiganya pernyataan tentang cara kerja, bukan tentang popularitas: produk
+  // ini belum punya pengguna, mitra, atau validasi klinis untuk diakui.
+  'land.assurePrivacyTitle': { id: 'Video tidak keluar dari perangkat', en: 'Video never leaves your device' },
+  'land.assurePrivacyText': {
+    id: 'Deteksi titik tubuh berjalan di dalam browser. Yang terkirim hanya angka hasil pengukuran.',
+    en: 'Keypoint detection runs inside the browser. Only the resulting numbers are sent.',
+  },
+  'land.assureGearTitle': { id: 'Tanpa alat tambahan', en: 'No extra hardware' },
+  'land.assureGearText': {
+    id: 'Cukup kamera dan browser. Tidak ada sensor, tidak ada jam tangan pintar, tidak ada pemasangan aplikasi.',
+    en: 'A camera and a browser is enough. No sensors, no smartwatch, no app install.',
+  },
+  'land.assureTimeTitle': { id: 'Enam tes, 75 detik rekam', en: 'Six tests, 75 seconds of capture' },
+  'land.assureTimeText': {
+    id: 'Setiap tes dipandu satu kalimat di layar, dan hasilnya bisa dibandingkan antar sesi.',
+    en: 'Each test is guided by one on-screen line, and results can be compared across sessions.',
+  },
+
+  // Tiga langkah pada pita biru.
+  'land.step1Title': { id: 'Rekam', en: 'Capture' },
+  'land.step1Text': {
+    id: 'Ikuti satu instruksi gerakan di layar. Kamera membaca titik tubuh dan tangan Anda selama beberapa detik.',
+    en: 'Follow one movement instruction on screen. The camera reads your body and hand landmarks for a few seconds.',
+  },
+  'land.step2Title': { id: 'Ukur', en: 'Measure' },
+  'land.step2Text': {
+    id: 'Dari titik-titik itu dihitung frekuensi, amplitudo, simetri, dan kecepatan gerak. Semuanya di perangkat Anda.',
+    en: 'From those landmarks it derives frequency, amplitude, symmetry, and movement speed. All on your device.',
+  },
+  'land.step3Title': { id: 'Baca artinya', en: 'Read what it means' },
+  'land.step3Text': {
+    id: 'Setiap angka tampil bersama rentang normalnya dan asal rentang itu, jadi Anda tahu apa yang sedang dibandingkan.',
+    en: 'Every number appears with its normal range and where that range comes from, so you know what is being compared.',
+  },
+
+  // Keterangan pendek untuk panel jejak di hero. Versi panjangnya
+  // (land.plateCaption*) menerangkan dua panel sekaligus, dan sejak panel itu
+  // hanya berisi jejak, kalimatnya menyebut gambar yang tidak ada lagi.
+  'land.traceCaptionShort': {
+    id: 'Simpangan pergelangan tangan dari satu sesi tes sungguhan.',
+    en: 'Wrist displacement from one actual test session.',
+  },
+  'land.traceCaptionShortIllustration': {
+    id: 'Contoh pola tremor istirahat, bukan pengukuran seseorang.',
+    en: 'An illustrative rest tremor pattern, not anyone’s measurement.',
+  },
+
+  // Teks alternatif foto. Ditulis menerangkan isi fotonya, bukan perannya di
+  // halaman, karena pembaca layar butuh yang pertama.
+  'land.heroPhotoAlt': {
+    id: 'Seorang dokter berjas putih dengan stetoskop tersenyum sambil memegang tablet.',
+    en: 'A doctor in a white coat with a stethoscope smiling while holding a tablet.',
+  },
+  'land.consultAlt': {
+    id: 'Seorang perempuan lanjut usia berbincang dengan dokter di meja periksa yang terang.',
+    en: 'An older woman talking with a doctor at a brightly lit consultation desk.',
+  },
+  'land.photoCredit': {
+    id: 'Foto: StockSnap.io, lisensi CC0',
+    en: 'Photos: StockSnap.io, CC0 licence',
+  },
+
+  // Bagian bukti.
+  'land.evidenceTitle': { id: 'Dari mana angkanya datang', en: 'Where the numbers come from' },
+  'land.evidenceLead': {
+    id: 'Halaman ini tidak menampilkan satu pun angka yang tidak bisa ditelusuri asalnya.',
+    en: 'This page shows no number whose origin cannot be traced.',
+  },
+
   // ── Kuesioner ──────────────────────────────────────────────────────────────
   'quest.cat.MOTORIK': { id: 'Gejala gerakan', en: 'Movement symptoms' },
   'quest.cat.NON_MOTORIK': { id: 'Gejala non-gerakan', en: 'Non-movement symptoms' },

@@ -1,22 +1,27 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   LEMBAR KLINIS BASEL
-   Sistem visual NeuronMotion, diturunkan dari dokumentasi farmasi Swiss
-   era Geigy (1955-1970).
+   RUANG PERIKSA TERANG
+   Sistem visual NeuronMotion.
 
-   Tiga aturan yang mengikat seluruh berkas ini:
+   Dunia sebelumnya, Lembar Klinis Basel, memperlakukan produk ini sebagai
+   dokumen cetak: kertas hangat, tinta near-black, nol ikon, sudut tajam. Ia
+   rapi, tetapi ia terbaca sebagai arsip. Produk ini dipakai orang yang sedang
+   khawatir tentang tubuhnya sendiri, di rumah, sering sendirian, dan yang
+   dibutuhkannya bukan arsip melainkan ruang periksa yang terang dan tenang.
 
-   1. TIDAK ADA IKON. Hierarki dibawa bobot huruf, ukuran, dan garis rule.
-      Status dibawa label teks penuh. Sistem Geigy membangun seluruh
-      informasinya dari tipografi, garis, dan angka tabular, jadi larangan
-      ikon di sini bukan pembatasan yang ditempelkan, melainkan tata bahasa
-      aslinya.
+   Tiga aturan yang mengikat berkas ini:
 
-   2. DOKUMEN, BUKAN KARTU. Bidang dipisahkan garis rambut dan pergeseran
-      ground, bukan sudut membulat dan bayangan. Radius mendekati nol karena
-      lembar cetak tidak punya sudut membulat.
+   1. BIRU ADALAH BIDANG, BUKAN AKSEN. Warna merek menempati wilayah utuh
+      (pita ajakan, panel bukti, kop kartu), bukan dipercik sebagai garis dan
+      titik di atas ground netral.
 
-   3. ANGKA ADALAH MATERI UTAMA. Pengukuran diperlakukan sebagai isi, bukan
-      hiasan: tabular, rata kanan pada kolom, dengan satuan yang selalu ikut.
+   2. PERMUKAAN MELAYANG, BUKAN GARIS MEMBAGI. Blok dipisahkan oleh kartu
+      putih membulat dengan bayangan lembut yang punya offset dan blur.
+      Garis rambut hanya untuk pemisah di dalam satu kartu.
+
+   3. ANGKA TETAP MATERI UTAMA. Ini satu-satunya aturan yang diwarisi utuh
+      dari dunia sebelumnya, dan ia yang menjaga halaman tetap terbaca sebagai
+      alat ukur alih-alih brosur rumah sakit. Tabular, rata kanan pada kolom,
+      satuan selalu ikut.
 
    Skala terkecil di sini 0.875rem (14px). Tidak ada teks di bawah itu, karena
    pengguna utama produk ini lansia yang membaca dari jarak jauh.
@@ -26,51 +31,64 @@
   color-scheme: light;
 
   /* ── Ground ────────────────────────────────────────────────────────────────
-     Kertas dokumen, bukan putih layar. Ada tiga tingkat: lembar (ground
-     halaman), bidang (blok isi yang diangkat sedikit), dan margin (area
-     paling tenang, dipakai untuk kepala dokumen dan catatan kaki). */
-  --sheet: #f2f1ec;
-  --field: #fbfaf7;
-  --margin-ground: #e7e5dd;
-  --inset: #e2e0d7;
+     Bukan putih layar, melainkan putih yang sudah dilewati cahaya siang lewat
+     jendela. Tiga tingkat: langit (ground halaman), permukaan (kartu yang
+     melayang di atasnya), dan cekung (isian dan bidang tenang). */
+  --sheet: #eef4f8;
+  --field: #ffffff;
+  --margin-ground: #e2edf3;
+  --inset: #dbe9f0;
 
   /* ── Tinta ─────────────────────────────────────────────────────────────────
-     Near-black bernuansa dingin, bukan hitam murni: tinta cetak di atas
-     kertas tidak pernah mencapai #000. */
-  --ink: #17181c;
-  --ink-secondary: #454a52;
-  --ink-muted: #5f656e;
+     Bukan hitam. Biru tua yang sangat gelap, sehingga teks duduk di dalam
+     keluarga warna yang sama dengan bidang mereknya alih-alih menabraknya. */
+  --ink: #12313d;
+  --ink-secondary: #38596a;
+  --ink-muted: #4d6b78;
 
-  /* ── Aksen ─────────────────────────────────────────────────────────────────
-     Vermilion Geigy. Dipakai sebagai penanda struktur (garis kepala, penanda
-     bagian aktif, aturan tebal), bukan sebagai alarm. Alarm punya bahasanya
-     sendiri di bawah. */
-  --accent: #c8402a;
-  --accent-deep: #9c2f1e;
-  --accent-wash: rgba(200, 64, 42, 0.09);
+  /* ── Merek ─────────────────────────────────────────────────────────────────
+     Biru medis. --accent adalah versi pekat yang dipakai untuk teks, tombol,
+     dan garis; --accent-soft adalah biru bubuk yang mengisi bidang besar; dua
+     nama warisan (-deep, -wash) dipertahankan supaya seluruh berkas modul yang
+     sudah ada tetap berjalan. */
+  --accent: #1d6d86;
+  --accent-deep: #145266;
+  --accent-soft: #8ebfd2;
+  --accent-soft-deep: #6ba7be;
+  --accent-wash: #dcecf3;
+
+  /* ── Bidang ajakan ─────────────────────────────────────────────────────────
+     Bidang biru penuh yang membawa teks di atasnya: kartu penutup dan tautan
+     lewati-ke-isi. Ia perlu tokennya sendiri dan tidak boleh memakai --accent
+     langsung, karena --accent dibalik terangnya di tema gelap. Di sana
+     --accent menjadi #6ec4dd, dan teks putih di atasnya hanya 1,98:1. Token
+     ini justru tetap gelap di tema gelap, sehingga pasangan bidang dan teks
+     lolos ambang kontras di kedua tema. */
+  --cta-field: #1d6d86;
+  --cta-ink: #ffffff;
 
   /* ── Garis ─────────────────────────────────────────────────────────────────
-     Empat bobot, meniru rule cetak. Hairline untuk pemisah dalam satu blok,
-     rule untuk batas bidang, heavy untuk kepala dokumen, dan aksen untuk
-     penanda aktif. */
-  --rule-hair: rgba(23, 24, 28, 0.14);
-  --rule: rgba(23, 24, 28, 0.28);
-  --rule-heavy: rgba(23, 24, 28, 0.72);
+     Peran garis menyusut drastis dibanding dunia sebelumnya. Ia sekarang hanya
+     pemisah di dalam kartu dan batas isian; pekerjaan memisahkan blok diambil
+     alih oleh permukaan dan bayangan. */
+  --rule-hair: rgba(18, 49, 61, 0.10);
+  --rule: rgba(18, 49, 61, 0.20);
+  --rule-heavy: rgba(18, 49, 61, 0.42);
 
   /* ── Tingkat pengukuran ────────────────────────────────────────────────────
      Tiga tingkat risiko. Warna TIDAK PERNAH jadi penanda tunggal: setiap
      tempat yang memakainya wajib menyertakan label teks, dan bobot garis
      ikut berubah. Lihat .level-* di bawah. */
-  --level-low: #2f6b4f;
-  --level-low-wash: rgba(47, 107, 79, 0.10);
-  --level-mid: #8a5a12;
-  --level-mid-wash: rgba(138, 90, 18, 0.10);
-  --level-high: #a32d1c;
-  --level-high-wash: rgba(163, 45, 28, 0.10);
+  --level-low: #1f7a55;
+  --level-low-wash: #dff2e9;
+  --level-mid: #9a6410;
+  --level-mid-wash: #fbeed6;
+  --level-high: #b83f2f;
+  --level-high-wash: #fbe4e0;
 
   /* ── Ukuran ────────────────────────────────────────────────────────────────
-     Skala dokumen. Langkah besar antar tingkat supaya hierarki terbaca
-     sekilas, bukan gradasi halus yang harus dibandingkan. */
+     Skala yang sama seperti sebelumnya. Yang berubah adalah cara memakainya:
+     judul tidak lagi diset serapat dan seberat mungkin. */
   --t-record: 0.875rem;   /* 14px, label kolom dan catatan kaki  */
   --t-body: 1rem;         /* 16px, isi                            */
   --t-lead: 1.125rem;     /* 18px, paragraf pembuka               */
@@ -79,7 +97,8 @@
   --t-display: 3.5rem;    /* 56px, angka pengukuran               */
 
   /* ── Ruang ─────────────────────────────────────────────────────────────────
-     Satu irama, kelipatan 4. */
+     Satu irama, kelipatan 4. Dunia ini bernapas lebih lega, jadi dua langkah
+     teratas ditambah. */
   --s1: 4px;
   --s2: 8px;
   --s3: 12px;
@@ -89,84 +108,108 @@
   --s7: 48px;
   --s8: 64px;
   --s9: 96px;
+  --s10: 128px;
 
   /* ── Sasaran sentuh ────────────────────────────────────────────────────────
-     Lantai 44px, tanpa perkecualian. Temuan kritik mencatat tombol 39px dan
-     tautan 23px pada bangunan sebelumnya. */
+     Lantai 44px, tanpa perkecualian. */
   --touch: 44px;
   --touch-lg: 56px;
 
-  /* Dokumen tidak punya sudut membulat. Nilai ini ada supaya konsisten,
-     bukan supaya dipakai besar-besar. */
-  --radius: 2px;
+  /* ── Bentuk ────────────────────────────────────────────────────────────────
+     Sudut membulat adalah bagian dari sikap dunia ini, bukan hiasan yang
+     ditempel. --radius untuk kontrol dan isian, --radius-lg untuk kartu dan
+     panel, --radius-pill untuk tombol dan chip. */
+  --radius: 12px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-pill: 999px;
 
-  /* Bayangan hanya untuk lapisan yang benar-benar melayang di atas lembar,
-     yaitu dialog. Selebihnya memakai garis. */
-  --lift: 0 2px 4px rgba(23, 24, 28, 0.08), 0 12px 32px rgba(23, 24, 28, 0.16);
+  /* ── Bayangan ──────────────────────────────────────────────────────────────
+     Semuanya berwarna tinta encer, bukan hitam netral, dan semuanya punya
+     offset ke bawah beserta blur. Cahaya datang dari atas. */
+  --shadow-card: 0 1px 2px rgba(18, 49, 61, 0.05), 0 10px 28px rgba(18, 49, 61, 0.07);
+  --shadow-raised: 0 2px 6px rgba(18, 49, 61, 0.07), 0 18px 44px rgba(18, 49, 61, 0.11);
+  --lift: 0 4px 10px rgba(18, 49, 61, 0.10), 0 32px 72px rgba(18, 49, 61, 0.18);
 }
 
 [data-theme='dark'] {
   color-scheme: dark;
 
-  /* Malam hari, lampu kamar redup, layar HP dekat wajah. Ground dibalik jadi
-     tinta, kertas jadi cahaya. Aksen dinaikkan terangnya supaya tetap lewat
-     ambang kontras di atas ground gelap. */
-  --sheet: #16171a;
-  --field: #1e2024;
-  --margin-ground: #101114;
-  --inset: #0c0d0f;
+  /* Malam hari, lampu kamar redup, layar HP dekat wajah. Ground menjadi biru
+     tua pekat, bukan abu netral, supaya keluarga warnanya tetap sama. Biru
+     merek dinaikkan terangnya agar tetap lewat ambang kontras. */
+  --sheet: #0d1c23;
+  --field: #162b34;
+  --margin-ground: #0a161c;
+  --inset: #1d3742;
 
-  --ink: #f0efe9;
-  --ink-secondary: #b6b9c0;
-  --ink-muted: #969aa3;
+  --ink: #e8f2f6;
+  --ink-secondary: #a9c3ce;
+  --ink-muted: #8faebc;
 
-  --accent: #f0674c;
-  --accent-deep: #ff8168;
-  --accent-wash: rgba(240, 103, 76, 0.14);
+  --accent: #6ec4dd;
+  --accent-deep: #9adcef;
+  --accent-soft: #2f647c;
+  --accent-soft-deep: #3d7f97;
+  --accent-wash: #1b3a47;
 
-  --rule-hair: rgba(240, 239, 233, 0.14);
-  --rule: rgba(240, 239, 233, 0.26);
-  --rule-heavy: rgba(240, 239, 233, 0.66);
+  /* Tetap gelap di tema gelap; lihat catatan di :root. */
+  --cta-field: #12455a;
+  --cta-ink: #eef8fc;
 
-  --level-low: #6fc99b;
-  --level-low-wash: rgba(111, 201, 155, 0.14);
-  --level-mid: #e0b062;
-  --level-mid-wash: rgba(224, 176, 98, 0.14);
-  --level-high: #f5836c;
-  --level-high-wash: rgba(245, 131, 108, 0.14);
+  --rule-hair: rgba(232, 242, 246, 0.12);
+  --rule: rgba(232, 242, 246, 0.22);
+  --rule-heavy: rgba(232, 242, 246, 0.44);
 
-  --lift: 0 2px 4px rgba(0, 0, 0, 0.4), 0 12px 32px rgba(0, 0, 0, 0.55);
+  --level-low: #64d3a2;
+  --level-low-wash: #16382b;
+  --level-mid: #e5bc6d;
+  --level-mid-wash: #3a2f16;
+  --level-high: #f79683;
+  --level-high-wash: #40211c;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35), 0 10px 28px rgba(0, 0, 0, 0.42);
+  --shadow-raised: 0 2px 6px rgba(0, 0, 0, 0.4), 0 18px 44px rgba(0, 0, 0, 0.5);
+  --lift: 0 4px 10px rgba(0, 0, 0, 0.45), 0 32px 72px rgba(0, 0, 0, 0.6);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
     color-scheme: dark;
 
-    --sheet: #16171a;
-    --field: #1e2024;
-    --margin-ground: #101114;
-    --inset: #0c0d0f;
+    --sheet: #0d1c23;
+    --field: #162b34;
+    --margin-ground: #0a161c;
+    --inset: #1d3742;
 
-    --ink: #f0efe9;
-    --ink-secondary: #b6b9c0;
-    --ink-muted: #969aa3;
+    --ink: #e8f2f6;
+    --ink-secondary: #a9c3ce;
+    --ink-muted: #8faebc;
 
-    --accent: #f0674c;
-    --accent-deep: #ff8168;
-    --accent-wash: rgba(240, 103, 76, 0.14);
+    --accent: #6ec4dd;
+    --accent-deep: #9adcef;
+    --accent-soft: #2f647c;
+    --accent-soft-deep: #3d7f97;
+    --accent-wash: #1b3a47;
 
-    --rule-hair: rgba(240, 239, 233, 0.14);
-    --rule: rgba(240, 239, 233, 0.26);
-    --rule-heavy: rgba(240, 239, 233, 0.66);
+    /* Tetap gelap di tema gelap; lihat catatan di :root. */
+    --cta-field: #12455a;
+    --cta-ink: #eef8fc;
 
-    --level-low: #6fc99b;
-    --level-low-wash: rgba(111, 201, 155, 0.14);
-    --level-mid: #e0b062;
-    --level-mid-wash: rgba(224, 176, 98, 0.14);
-    --level-high: #f5836c;
-    --level-high-wash: rgba(245, 131, 108, 0.14);
+    --rule-hair: rgba(232, 242, 246, 0.12);
+    --rule: rgba(232, 242, 246, 0.22);
+    --rule-heavy: rgba(232, 242, 246, 0.44);
 
-    --lift: 0 2px 4px rgba(0, 0, 0, 0.4), 0 12px 32px rgba(0, 0, 0, 0.55);
+    --level-low: #64d3a2;
+    --level-low-wash: #16382b;
+    --level-mid: #e5bc6d;
+    --level-mid-wash: #3a2f16;
+    --level-high: #f79683;
+    --level-high-wash: #40211c;
+
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35), 0 10px 28px rgba(0, 0, 0, 0.42);
+    --shadow-raised: 0 2px 6px rgba(0, 0, 0, 0.4), 0 18px 44px rgba(0, 0, 0, 0.5);
+    --lift: 0 4px 10px rgba(0, 0, 0, 0.45), 0 32px 72px rgba(0, 0, 0, 0.6);
   }
 }
 
@@ -191,7 +234,7 @@ body {
 body {
   font-family: var(--font-sans), system-ui, sans-serif;
   font-size: var(--t-body);
-  line-height: 1.55;
+  line-height: 1.6;
   background: var(--sheet);
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
@@ -200,8 +243,11 @@ body {
 }
 
 /* ── Tipografi ──────────────────────────────────────────────────────────────
-   Judul diset rapat dan berat. Dalam sistem Geigy, judul bukan dekorasi, ia
-   penanda bagian dokumen, jadi ia besar dan tegas tanpa perlu ornamen. */
+   Judul memakai Gabarito, huruf tanpa kait yang terminalnya membulat dan
+   perutnya lebar. Ia dipilih justru karena keluhan tim terhadap dunia
+   sebelumnya: judul Basel diset serapat dan seberat mungkin sehingga terbaca
+   tegang. Di sini judul tetap tegas tetapi tidak mengepal, dan tracking-nya
+   dilonggarkan dari -0.03em ke -0.015em. */
 
 h1,
 h2,
@@ -209,15 +255,16 @@ h3,
 h4,
 h5,
 h6 {
+  font-family: var(--font-display), var(--font-sans), system-ui, sans-serif;
   font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
   text-wrap: balance;
 }
 
 h1 {
   font-size: var(--t-title);
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
 }
 
 h2 {
@@ -268,10 +315,10 @@ select {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   PRIMITIF DOKUMEN
+   PRIMITIF
    ══════════════════════════════════════════════════════════════════════════ */
 
-/* Lembar: kolom isi utama dengan margin dokumen. */
+/* Kolom isi utama. */
 .sheet {
   width: 100%;
   max-width: 1180px;
@@ -285,11 +332,11 @@ select {
   }
 }
 
-/* Kepala dokumen: garis tebal di atas, label arsip di bawahnya. Ini pengganti
-   breadcrumb dan eyebrow, dan ia membawa informasi nyata, bukan hiasan. */
+/* Kepala bagian. Dalam dunia sebelumnya ini garis tebal 3px dengan label arsip
+   mono di bawahnya. Garis itu dilepas: yang menyatakan "bagian baru" sekarang
+   adalah ruang kosong di atasnya. Label arsipnya dipertahankan karena ia
+   membawa informasi nyata, tetapi ia turun jadi teks biasa berwarna merek. */
 .docHead {
-  border-top: 3px solid var(--rule-heavy);
-  padding-top: var(--s3);
   margin-bottom: var(--s6);
 }
 
@@ -299,25 +346,30 @@ select {
   gap: var(--s2) var(--s5);
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: var(--t-record);
+  font-weight: 500;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--ink-muted);
-  margin-bottom: var(--s4);
+  color: var(--accent);
+  margin-bottom: var(--s3);
 }
 
-/* Bidang: blok isi. Dibatasi garis, bukan sudut membulat dan bayangan. */
+/* Kartu. Ini primitif utama dunia ini, menggantikan .field yang dulu berupa
+   bidang bergaris. Namanya dipertahankan supaya seluruh halaman yang belum
+   digarap ulang ikut berubah bentuk tanpa disentuh. */
 .field {
   background: var(--field);
   border: 1px solid var(--rule-hair);
-  border-radius: var(--radius);
-  padding: var(--s5);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--s6);
 }
 
 .field--flush {
   padding: 0;
+  overflow: hidden;
 }
 
-/* Garis pemisah dalam satu bidang. */
+/* Garis pemisah di dalam satu kartu. */
 .rule {
   border: 0;
   border-top: 1px solid var(--rule-hair);
@@ -325,12 +377,11 @@ select {
 }
 
 .rule--heavy {
-  border-top: 2px solid var(--rule-heavy);
+  border-top-color: var(--rule);
 }
 
-/* Label kolom: penanda tipe dokumen, memakai mono karena ia data, bukan
-   prosa. Craft floor melarang mono sebagai kostum "teknis"; di sini ia
-   dipakai untuk pengukuran dan label arsip, yang memang tugasnya. */
+/* Label kolom. Mono dipakai untuk pengukuran dan label arsip, yang memang
+   tugasnya, bukan sebagai kostum teknis untuk prosa. */
 .label {
   display: block;
   font-family: var(--font-mono), ui-monospace, monospace;
@@ -343,57 +394,47 @@ select {
 
 /* Catatan: keterangan batasan dan sangkalan.
    ─────────────────────────────────────────────────────────────────────────
-   Bentuknya catatan kaki, bukan kartu: garis rambut di atas, tanpa bidang
-   berwarna, tanpa garis tepi kiri. Dua alasan.
-
-   Pertama, pada lembar klinis sungguhan keterangan batasan memang muncul
-   sebagai catatan di kaki halaman. Membungkusnya jadi kotak berwarna
-   menaikkannya ke derajat isi utama, padahal ia keterangan.
-
-   Kedua, dan ini yang menentukan: garis tepi kiri dikembalikan menjadi milik
-   eksklusif tingkat pengukuran di bawah. Selama ia juga dipakai untuk kotak
-   catatan, penanda item aktif, dan sangkalan, ketebalannya berhenti berarti
-   apa pun. Satu bentuk hanya boleh punya satu makna.
-
-   Sebelumnya blok ini disalin dengan aturan nyaris identik di tujuh berkas
-   modul yang berbeda. */
+   Tetap catatan, bukan kartu peringatan berwarna. Alasannya sama seperti
+   sebelumnya: membungkus keterangan batasan jadi kotak berwarna menaikkannya
+   ke derajat isi utama, padahal ia keterangan. Yang berubah hanya bahwa
+   pemisahnya kini garis rambut lembut, bukan rule cetak. */
 .note {
-  padding-top: var(--s3);
+  padding-top: var(--s4);
   border-top: 1px solid var(--rule-hair);
   font-size: var(--t-record);
-  line-height: 1.6;
+  line-height: 1.65;
   color: var(--ink-secondary);
   max-width: 78ch;
 }
 
-/* Varian bersuara penuh. Dipakai ketika kalimatnya bukan keterangan pinggir
-   melainkan syarat pemahaman, misalnya "ini bukan diagnosis" pada halaman
-   hasil. Bentuknya tetap satu keluarga dengan catatan biasa, hanya berbobot,
-   sehingga tidak lahir jadi kotak yang berdiri sendiri. */
+/* Varian bersuara penuh, untuk kalimat yang bukan keterangan pinggir melainkan
+   syarat pemahaman, misalnya "ini bukan diagnosis" pada halaman hasil. */
 .note--lead {
   font-size: var(--t-body);
   font-weight: 600;
   color: var(--ink);
-  border-top-color: var(--rule-heavy);
-  border-top-width: 2px;
+  border-top-color: var(--rule);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   TINGKAT PENGUKURAN, TANPA IKON DAN TANPA WARNA SEBAGAI PENANDA TUNGGAL
+   TINGKAT PENGUKURAN, TANPA WARNA SEBAGAI PENANDA TUNGGAL
 
    Setiap tingkat membawa tiga penanda sekaligus: label teks penuh, bobot
    garis kiri yang berbeda, dan warna. Pengguna yang tidak bisa membedakan
    warna tetap membaca tingkatnya dari label dan dari ketebalan garis.
+
+   Bentuknya kini pil, mengikuti dunia ini, tetapi ketiga penanda itu utuh.
    ══════════════════════════════════════════════════════════════════════════ */
 
 .level {
   display: inline-flex;
   align-items: baseline;
   gap: var(--s2);
-  padding: var(--s2) var(--s3);
+  padding: var(--s2) var(--s4);
+  border-radius: var(--radius-pill);
   font-size: var(--t-record);
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
   border-left-style: solid;
 }
@@ -421,18 +462,15 @@ select {
 
 /* ═══════════════════════════════════════════════════════════════════════════
    KONTROL
-   Tombol adalah baris teks bergaris, bukan pil berwarna. Lantai 44px.
+   Tombol adalah pil. Lantai 44px.
    ══════════════════════════════════════════════════════════════════════════ */
 
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  /* Tautan prosa memang bergaris bawah dan itu disengaja, tetapi tombol tidak.
-     Aturan a di atas hanya mengatur ketebalan garis bawah tanpa pernah
-     mematikannya, sehingga setiap Link berkelas btn tampil bergaris bawah.
-     Yang bergaris bawah dan berbingkai sekaligus terbaca sebagai dua hal
-     bertumpuk, bukan satu tombol. */
+  gap: var(--s2);
+  /* Tautan prosa memang bergaris bawah dan itu disengaja, tetapi tombol tidak. */
   text-decoration: none;
   min-height: var(--touch);
   padding: var(--s3) var(--s5);
@@ -441,41 +479,56 @@ select {
   line-height: 1.25;
   text-align: center;
   border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  background: transparent;
+  border-radius: var(--radius-pill);
+  background: var(--field);
   color: var(--ink);
-  transition: background-color 0.14s ease-out, border-color 0.14s ease-out,
-    color 0.14s ease-out;
+  box-shadow: 0 1px 2px rgba(18, 49, 61, 0.04);
+  transition: background-color 0.18s ease-out, border-color 0.18s ease-out,
+    color 0.18s ease-out, box-shadow 0.18s ease-out, transform 0.18s ease-out;
 }
 
 .btn:hover {
-  background: var(--inset);
-  border-color: var(--rule-heavy);
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: var(--shadow-card);
 }
 
 .btn:active {
-  background: var(--margin-ground);
+  transform: translateY(1px);
+  box-shadow: 0 1px 2px rgba(18, 49, 61, 0.04);
 }
 
-/* Aksi utama: bidang tinta penuh. Dalam dokumen cetak, yang paling penting
-   adalah yang paling gelap, bukan yang paling berwarna. */
+/* Aksi utama: bidang biru merek penuh. Dalam dunia sebelumnya aksi utama
+   adalah bidang tinta, karena di lembar cetak yang paling penting adalah yang
+   paling gelap. Di sini yang paling penting adalah yang paling berwarna. */
 .btn--primary {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: var(--sheet);
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+  box-shadow: 0 1px 2px rgba(18, 49, 61, 0.08), 0 8px 20px rgba(29, 109, 134, 0.24);
 }
 
 .btn--primary:hover {
   background: var(--accent-deep);
   border-color: var(--accent-deep);
-  color: #fff;
+  color: #ffffff;
+  box-shadow: 0 2px 4px rgba(18, 49, 61, 0.1), 0 14px 30px rgba(29, 109, 134, 0.3);
 }
 
+[data-theme='dark'] .btn--primary,
 [data-theme='dark'] .btn--primary:hover {
-  color: var(--sheet);
+  color: #06222c;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .btn--primary,
+  :root:not([data-theme='light']) .btn--primary:hover {
+    color: #06222c;
+  }
 }
 
 .btn--danger {
+  background: var(--field);
   border-color: var(--level-high);
   color: var(--level-high);
 }
@@ -483,13 +536,14 @@ select {
 .btn--danger:hover {
   background: var(--level-high-wash);
   border-color: var(--level-high);
+  color: var(--level-high);
 }
 
 /* Ukuran besar dipakai untuk aksi yang ditekan dari jarak jauh atau oleh
    tangan yang tidak stabil. */
 .btn--lg {
   min-height: var(--touch-lg);
-  padding: var(--s4) var(--s6);
+  padding: var(--s4) var(--s7);
   font-size: var(--t-lead);
 }
 
@@ -501,24 +555,25 @@ select {
 .btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
-/* Tautan teks tetap wajib memenuhi lantai sentuh. Temuan kritik mencatat
-   tautan 23px yang konsekuensinya memulai perekaman. */
+/* Tautan teks tetap wajib memenuhi lantai sentuh. */
 .linkAction {
   display: inline-flex;
   align-items: center;
+  gap: var(--s2);
   min-height: var(--touch);
   padding: var(--s2) var(--s3);
   font-size: var(--t-body);
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 0.25em;
-  color: var(--ink-secondary);
+  color: var(--accent);
 }
 
 .linkAction:hover {
-  color: var(--accent);
+  color: var(--accent-deep);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -529,12 +584,12 @@ select {
   display: block;
   width: 100%;
   min-height: var(--touch);
-  padding: var(--s3) var(--s3);
+  padding: var(--s3) var(--s4);
   background: var(--field);
   color: var(--ink);
   border: 1px solid var(--rule);
   border-radius: var(--radius);
-  transition: border-color 0.14s ease-out, box-shadow 0.14s ease-out;
+  transition: border-color 0.18s ease-out, box-shadow 0.18s ease-out;
 }
 
 .input::placeholder {
@@ -545,16 +600,19 @@ select {
   border-color: var(--rule-heavy);
 }
 
+/* Fokus isian: cincin biru lembut di luar batas, bukan garis bawah di dalam
+   kotak. Cincin terbaca sebagai "kotak ini sedang aktif" pada bentuk membulat,
+   sedangkan garis bawah dalam kotak adalah kosakata dunia dokumen. */
 .input:focus {
   border-color: var(--accent);
-  box-shadow: inset 0 -2px 0 var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-wash);
   outline: none;
 }
 
 textarea.input {
   min-height: 120px;
   resize: vertical;
-  line-height: 1.55;
+  line-height: 1.6;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -565,7 +623,7 @@ textarea.input {
 
 :focus-visible {
   outline: 3px solid var(--accent);
-  outline-offset: 2px;
+  outline-offset: 3px;
   border-radius: var(--radius);
 }
 
@@ -578,19 +636,20 @@ textarea.input {
   min-height: var(--touch);
   display: inline-flex;
   align-items: center;
-  padding: var(--s3) var(--s4);
-  background: var(--ink);
-  color: var(--sheet);
+  padding: var(--s3) var(--s5);
+  border-radius: var(--radius-pill);
+  background: var(--cta-field);
+  color: var(--cta-ink);
   font-weight: 600;
-  transition: top 0.16s ease-out;
+  box-shadow: var(--shadow-raised);
+  transition: top 0.18s ease-out;
 }
 
 .skipToContent:focus {
   top: var(--s4);
 }
 
-/* Hanya untuk pembaca layar. Dipakai memberi nama pada wilayah dan
-   mengumumkan perubahan keadaan yang tidak punya teks tampak. */
+/* Hanya untuk pembaca layar. */
 .srOnly {
   position: absolute;
   width: 1px;
@@ -607,7 +666,8 @@ textarea.input {
 /* ═══════════════════════════════════════════════════════════════════════════
    TABEL PENGUKURAN
    Riwayat dan hasil biomarker hidup di sini. Angka rata kanan, satuan selalu
-   ikut, baris dipisah garis rambut.
+   ikut. Ini komponen yang paling sedikit berubah, karena aturan ketiga dunia
+   ini sama dengan aturan ketiga dunia sebelumnya.
    ══════════════════════════════════════════════════════════════════════════ */
 
 .dataTable {
@@ -631,13 +691,18 @@ textarea.input {
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--ink-muted);
-  padding: var(--s2) var(--s3);
-  border-bottom: 2px solid var(--rule-heavy);
+  padding: var(--s3) var(--s4);
+  border-bottom: 1px solid var(--rule);
 }
 
 .dataTable td {
-  padding: var(--s3);
+  padding: var(--s4);
   border-bottom: 1px solid var(--rule-hair);
+}
+
+.dataTable tbody tr:last-child td,
+.dataTable tbody tr:last-child th {
+  border-bottom: 0;
 }
 
 .dataTable .num {
@@ -648,19 +713,19 @@ textarea.input {
 /* ═══════════════════════════════════════════════════════════════════════════
    DIALOG (Radix)
    Radix menangani jebakan fokus, tombol Escape, dan atribut aria. Berkas ini
-   hanya memberi tampilannya. Temuan kritik mencatat empat overlay yang bukan
-   dialog pada bangunan sebelumnya.
+   hanya memberi tampilannya.
    ══════════════════════════════════════════════════════════════════════════ */
 
 .dialogScrim {
   position: fixed;
   inset: 0;
-  background: rgba(23, 24, 28, 0.55);
+  background: rgba(18, 49, 61, 0.5);
+  backdrop-filter: blur(3px);
   z-index: 60;
 }
 
 [data-theme='dark'] .dialogScrim {
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.66);
 }
 
 .dialogSheet {
@@ -673,11 +738,10 @@ textarea.input {
   max-height: calc(100vh - var(--s7));
   overflow-y: auto;
   background: var(--field);
-  border: 1px solid var(--rule);
-  border-top: 3px solid var(--rule-heavy);
-  border-radius: var(--radius);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-xl);
   box-shadow: var(--lift);
-  padding: var(--s6);
+  padding: var(--s7);
 }
 
 @media (max-width: 640px) {
@@ -690,8 +754,8 @@ textarea.input {
     left: 0;
     transform: none;
     border: 0;
-    border-top: 3px solid var(--rule-heavy);
-    padding: var(--s5) var(--s4) var(--s7);
+    border-radius: 0;
+    padding: var(--s6) var(--s4) var(--s8);
   }
 }
 
@@ -705,7 +769,7 @@ textarea.input {
 @keyframes riseIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -714,12 +778,11 @@ textarea.input {
 }
 
 .riseIn {
-  animation: riseIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: riseIn 0.48s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* Hormati setelan sistem. Temuan kritik mencatat 31 deklarasi gerak tanpa
-   satu pun blok ini, termasuk figur bergetar 8Hz yang ditunjukkan kepada
-   orang yang sedang diskrining tremornya. */
+/* Hormati setelan sistem. Penting secara khusus di sini: produk ini diskrining
+   ke orang yang bisa punya gangguan vestibular atau Parkinson. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -733,8 +796,8 @@ textarea.input {
 
 /* ═══════════════════════════════════════════════════════════════════════════
    CETAK
-   Laporan untuk rekam medis. Dunia visual ini memang lahir sebagai cetakan,
-   jadi versi cetaknya bukan penyesuaian, melainkan bentuk aslinya.
+   Laporan untuk rekam medis. Warna bidang dilepas supaya tinta printer tidak
+   habis dan supaya hasilnya terbaca sebagai dokumen.
    ══════════════════════════════════════════════════════════════════════════ */
 
 @media print {
@@ -745,6 +808,12 @@ textarea.input {
 
   body.printing-report > *:not([data-report-host]) {
     display: none !important;
+  }
+
+  .field,
+  .dialogSheet {
+    box-shadow: none;
+    border-color: #999;
   }
 
   @page {

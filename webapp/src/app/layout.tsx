@@ -6,26 +6,42 @@ import { I18nProvider, LANG_INIT_SCRIPT } from '@/lib/i18n';
 import './globals.css';
 
 /**
- * Plus Jakarta Sans dipakai menggantikan Inter.
+ * Dua huruf, dua pekerjaan.
  *
- * Inter adalah pilihan bawaan hampir semua templat, sehingga antarmuka yang
- * memakainya cenderung terbaca seragam dan tanpa sikap. Plus Jakarta Sans
- * dirancang Tokotype untuk identitas kota Jakarta, hurufnya sedikit lebih
- * hangat dan terbuka, dan sebagai karya Indonesia pilihannya punya alasan,
- * bukan sekadar bawaan.
+ * Hanken Grotesk membawa seluruh isi. Ia grotesk humanis dengan tinggi-x besar
+ * dan bukaan lebar, yang artinya huruf seperti a, e, dan s tidak menutup saat
+ * ukurannya kecil atau saat pembacanya melihat dari jarak jauh. Untuk produk
+ * yang penggunanya lansia, itu bukan urusan selera.
  *
- * Berkasnya disimpan di dalam repositori dan dimuat lewat next/font/local,
- * bukan diambil dari Google Fonts saat halaman dibuka. Dengan begitu tidak ada
- * permintaan ke domain luar yang menahan render, tidak ada pergeseran tata
+ * Gabarito hanya untuk judul. Terminalnya membulat dan perutnya lebar,
+ * sehingga judul bisa tetap besar dan tegas tanpa terbaca mengepal. Ini
+ * jawaban langsung atas keluhan bahwa dunia sebelumnya terasa kaku: di sana
+ * judul diset serapat mungkin dengan tracking -0.03em dan bobot 800, dan
+ * ketegangan itu memang disengaja oleh sistem dokumen. Dunia ini tidak
+ * menginginkannya.
+ *
+ * JetBrains Mono tetap, dan tetap hanya untuk pengukuran, label arsip, dan
+ * data. Ia tidak pernah dipakai sebagai kostum teknis untuk prosa.
+ *
+ * Ketiganya font variabel dan disimpan di dalam repositori, dimuat lewat
+ * next/font/local, bukan diambil dari Google Fonts saat halaman dibuka. Tidak
+ * ada permintaan ke domain luar yang menahan render, tidak ada pergeseran tata
  * letak saat font selesai dimuat, dan tampilan tetap sama meski jaringan ke
- * layanan itu terhalang. Keduanya berupa font variabel, jadi seluruh ketebalan
- * 400 sampai 800 berasal dari satu berkas 27 kB.
+ * layanan itu terhalang.
  */
-const jakarta = localFont({
-  src: './fonts/PlusJakartaSans-latin.woff2',
-  weight: '400 800',
+const hanken = localFont({
+  src: './fonts/HankenGrotesk-latin.woff2',
+  weight: '300 800',
   style: 'normal',
   variable: '--font-sans',
+  display: 'swap',
+});
+
+const gabarito = localFont({
+  src: './fonts/Gabarito-latin.woff2',
+  weight: '400 900',
+  style: 'normal',
+  variable: '--font-display',
   display: 'swap',
 });
 
@@ -43,25 +59,30 @@ const mono = localFont({
  * visualnya bisa diaudit dari halaman yang sudah jadi, bukan hanya dari repo.
  */
 const DIRECTION_CONTRACT = `<!--
-THESIS: Pengukuran tubuh disajikan sebagai dokumen klinis yang jujur. Menolak
-susunan bawaan kategori, yaitu kartu membulat, biru teal lembut, badge pil, dan
-ilustrasi ramah aplikasi telehealth.
+THESIS: Skrining gerak sebagai ruang periksa yang terang dan tenang, bukan
+sebagai arsip. Menolak dua susunan sekaligus: lembar dokumen bertinta gelap
+dengan sudut tajam yang dipakai dunia sebelumnya, dan templat pemasaran rumah
+sakit yang menjual angka bangga (jumlah pasien, jumlah dokter, jumlah kamar)
+yang produk ini tidak punya dan tidak boleh mengarang.
 
-OWN-WORLD: Dokumentasi farmasi Swiss era Geigy. Ground kertas #f2f1ec, tinta
-near-black #17181c, satu aksen vermilion #c8402a sebagai struktur bukan alarm.
-Garis rambut dan grid asimetris menggantikan kartu dan bayangan. Nol ikon:
-hierarki dari bobot huruf, status dari label teks penuh. Angka tabular adalah
-materi utama.
+OWN-WORLD: Ruang Periksa Terang. Ground biru sangat pucat #eef4f8, permukaan
+kartu putih membulat 24px dengan bayangan lembut ber-offset, biru medis pekat
+#1d6d86 untuk aksi dan teks, biru bubuk #8ebfd2 mengisi bidang utuh. Tinta
+adalah biru tua #12313d, bukan hitam. Gabarito untuk judul, Hanken Grotesk
+untuk isi, JetBrains Mono hanya untuk pengukuran. Tanda tangan visualnya jejak
+tremor sungguhan yang digambar ulang di beberapa tempat.
 
 STORY: Pengunjung memahami bahwa alat ini mengukur dan bukan mendiagnosis,
 mempercayainya karena perhitungan terjadi di perangkatnya sendiri, lalu
 menyelesaikan satu tes gerakan dan membaca artinya.
 
-FIRST VIEWPORT: Kepala dokumen bergaris tebal, judul tes rata kiri, satu bidang
-pengukuran menempati dua pertiga layar. Aksi utama sebagai baris bergaris di
-bawah bidang, terbaca dari dua meter.
+FIRST VIEWPORT: Judul rata kiri di kolom kiri dengan dua aksi berbentuk pil di
+bawahnya; kolom kanan berisi panel putih melayang yang memutar jejak tremor
+sungguhan beserta frekuensi dan amplitudonya. Di bawah keduanya, satu baris
+kartu berisi tiga fakta mekanisme, bukan angka pemasaran.
 
-FORM: Lembar Klinis Basel, kandidat 7 dari daftar grounded, seed 69d13ede.
+FORM: Ruang Periksa Terang, arah yang dipin tim lewat gambar referensi;
+tidak ada roll konsep karena brief yang dipin mengalahkan roll.
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the
 finish review, the verdict, and DESIGN.md
@@ -75,7 +96,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="id" className={`${jakarta.variable} ${mono.variable}`} suppressHydrationWarning>
+    <html
+      lang="id"
+      className={`${hanken.variable} ${gabarito.variable} ${mono.variable}`}
+      suppressHydrationWarning
+    >
       <head>
         {/* Terapkan tema sebelum paint pertama agar tidak ada kedipan warna */}
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
