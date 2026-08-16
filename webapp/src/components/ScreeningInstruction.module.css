@@ -1,255 +1,268 @@
-/* ScreeningInstruction.module.css */
+/* Lembar instruksi.
+   Pada layar sempit ia mengambil seluruh layar, bukan bersarang di dalam kotak
+   video. Versi sebelumnya menaruh kartu berisi judul, figur 128px, empat
+   langkah, dan tombol di dalam letterbox setinggi 200px, lalu memasang
+   scrollbar alih-alih memperbaiki tata letaknya, sehingga tombol utamanya ada
+   di bawah lipatan. */
 
-.overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 20;
+.sheet {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  /* Padding atas lebih besar agar kartu instruksi turun sedikit dan tidak
-     menempel ke tepi atas video, sehingga tombolnya lebih mudah terlihat. */
-  padding: 56px 24px 28px;
-  animation: fadeIn 0.3s ease-out;
-  overflow-y: auto;
+  gap: var(--s5);
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--s6);
 }
 
-/* Kartu instruksi bisa lebih tinggi dari video container di layar pendek ,
-   tanpa scroll, tombol "Mulai"/"Lewati" di bagian bawah jadi terpotong dan
-   tidak bisa diklik sama sekali. */
-.overlay::-webkit-scrollbar { width: 5px; }
-.overlay::-webkit-scrollbar-thumb { background: rgba(37,99,235,0.3); border-radius: 3px; }
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+@media (max-width: 720px) {
+  .sheet {
+    padding: var(--s5) var(--s4);
+    gap: var(--s4);
+  }
 }
 
-.card {
+.head {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  max-width: 420px;
-  width: 100%;
-  text-align: center;
-  margin: auto 0;
-  flex-shrink: 0;
+  gap: var(--s2);
 }
 
-.badge {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+.kind {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: var(--t-record);
+  font-weight: 500;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--brand);
-  background: rgba(37, 99, 235, 0.1);
-  border: 1px solid rgba(37, 99, 235, 0.2);
-  padding: 4px 14px;
-  border-radius: 99px;
+  color: var(--accent);
 }
 
-/* Kartu ini SELALU berlatar terang (glassmorphism putih) walau situs dalam
-   dark mode, jadi warna teks di sini sengaja tetap (bukan var(--text-*))
-   supaya tidak jadi putih-di-atas-putih yang tidak terbaca. */
 .title {
-  font-size: 1.35rem;
-  font-weight: 800;
-  color: #334155;
-  letter-spacing: -0.01em;
-  margin: 0;
+  font-size: var(--t-title);
+  line-height: 1.1;
 }
 
-/* Animated figure area */
-.figureWrap {
-  position: relative;
-  width: 110px;
-  height: 128px;
-  flex-shrink: 0;
+.desc {
+  font-size: var(--t-lead);
+  color: var(--ink-secondary);
+  max-width: 52ch;
 }
 
-/* Steps list */
+.body {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: var(--s6);
+  align-items: start;
+  padding-top: var(--s4);
+  border-top: 1px solid var(--rule-hair);
+}
+
+@media (max-width: 720px) {
+  .body {
+    grid-template-columns: 120px 1fr;
+    gap: var(--s4);
+  }
+}
+
+.figureBox {
+  background: var(--accent-wash);
+  border-radius: var(--radius-lg);
+  padding: var(--s3);
+}
+
+.figure {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
 .steps {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  text-align: left;
-  width: 100%;
+  gap: var(--s3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 .step {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  font-size: 0.85rem;
-  color: #475569;
-  line-height: 1.5;
-  animation: slideIn 0.3s ease-out both;
+  gap: var(--s3);
+  align-items: baseline;
+  font-size: var(--t-lead);
+  line-height: 1.45;
 }
 
-.step:nth-child(1) { animation-delay: 0.05s; }
-.step:nth-child(2) { animation-delay: 0.15s; }
-.step:nth-child(3) { animation-delay: 0.25s; }
-.step:nth-child(4) { animation-delay: 0.35s; }
-
-@keyframes slideIn {
-  from { opacity: 0; transform: translateX(-8px); }
-  to   { opacity: 1; transform: translateX(0); }
+@media (max-width: 720px) {
+  .step {
+    font-size: var(--t-body);
+  }
 }
 
+/* Nomor langkah adalah informasi urutan yang nyata, bukan ornamen bernomor. */
 .stepNum {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  min-width: 22px;
-  background: rgba(37, 99, 235, 0.1);
-  border: 1px solid rgba(37, 99, 235, 0.3);
-  border-radius: 50%;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--brand);
   flex-shrink: 0;
-  margin-top: 1px;
+  width: 1.6em;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: var(--t-record);
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
 }
 
-/* Countdown button */
-.countdownWrap {
+.safety {
+  font-size: var(--t-body);
+  color: var(--ink-secondary);
+  border-left: 2px solid var(--accent);
+  padding-left: var(--s3);
+  max-width: 60ch;
+}
+
+/* ── Hitung mundur ──────────────────────────────────────────────────────────
+   Besar, karena pengguna sedang menjauh dari perangkat sambil membacanya. */
+
+.countdown {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  margin-top: 4px;
-}
-
-.countdownBar {
-  width: 100%;
-  height: 4px;
-  /* Kartu instruksi selalu berlatar terang, jadi track-nya harus gelap
-     transparan agar terlihat (sebelumnya putih transparan = nyaris hilang). */
-  background: rgba(15, 23, 42, 0.12);
-  border-radius: 99px;
-  overflow: hidden;
-}
-
-.countdownFill {
-  height: 100%;
-  background: var(--gradient-brand);
-  border-radius: 99px;
-  transition: width 1s linear;
-}
-
-.countdownRow {
-  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
+  gap: var(--s4);
+  padding-top: var(--s4);
+  border-top: 1px solid var(--rule-hair);
 }
 
-.countdownLabel {
-  font-size: 0.8rem;
-  color: #64748b;
+.countdownValue {
+  font-size: var(--t-head);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  margin: 0;
 }
 
-.skipLink {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #64748b;
-  background: transparent;
-  padding: 4px 8px;
-  border-radius: 6px;
-  transition: color 0.15s, background 0.15s;
+.countdownControls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
 }
 
-.skipLink:hover {
-  color: #334155;
-  background: rgba(100, 116, 139, 0.1);
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
 }
 
-.startBtn {
-  margin-top: 4px;
+.actions > :global(.btn) {
+  flex: 1 1 220px;
 }
 
-/* ─── SVG Figure animations per test ─── */
-
-/* Tremor: hand oscillating */
-.figureTremor {
-  animation: tremble 0.12s ease-in-out infinite alternate;
-  transform-origin: center;
-}
-@keyframes tremble {
-  from { transform: translate(-2px, -1px) rotate(-3deg); }
-  to   { transform: translate(2px, 1px) rotate(3deg); }
+.cancel {
+  align-self: flex-start;
+  min-height: var(--touch);
+  padding: var(--s2) var(--s3);
+  font-size: var(--t-body);
+  color: var(--ink-muted);
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
 }
 
-/* Tapping: finger going up/down */
-.figureTapping {
-  animation: tap 0.5s ease-in-out infinite;
-  transform-origin: bottom center;
-}
-@keyframes tap {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(14px); }
+.cancel:hover {
+  color: var(--ink);
 }
 
-/* Gait: badan & lengan sedikit ayun mengikuti langkah */
-.figureGaitBody {
-  animation: walk 0.8s ease-in-out infinite alternate;
-  transform-origin: center bottom;
-}
-@keyframes walk {
-  from { transform: rotate(-3deg); }
-  to   { transform: rotate(3deg); }
+/* ── Gerak figur ────────────────────────────────────────────────────────────
+   Semua diredam oleh blok prefers-reduced-motion global di globals.css.
+   Getaran tremor sengaja dibuat pelan, 3Hz, bukan 8Hz seperti sebelumnya:
+   figur yang berkedip cepat ditunjukkan kepada orang yang sedang diskrining
+   tremornya adalah pilihan yang keliru. */
+
+@keyframes trembleShift {
+  from {
+    transform: translateX(-1.5px);
+  }
+  to {
+    transform: translateX(1.5px);
+  }
 }
 
-/* Gait: kaki depan & belakang bergantian, siklus melangkah yang jelas */
-.figureLegFront {
-  animation: legForward 0.8s ease-in-out infinite alternate;
-}
-.figureLegBack {
-  animation: legBackward 0.8s ease-in-out infinite alternate;
-}
-@keyframes legForward {
-  from { transform: rotate(-14deg); }
-  to   { transform: rotate(14deg); }
-}
-@keyframes legBackward {
-  from { transform: rotate(14deg); }
-  to   { transform: rotate(-14deg); }
+.tremble {
+  animation: trembleShift 0.34s ease-in-out infinite alternate;
 }
 
-/* Arm swing: arm swinging */
-.figureArm {
-  animation: swing 0.7s ease-in-out infinite alternate;
-  transform-origin: top center;
-}
-@keyframes swing {
-  from { transform: rotate(-25deg); }
-  to   { transform: rotate(25deg); }
-}
-
-/* Posture: subtle sway */
-.figurePosture {
-  animation: sway 2.5s ease-in-out infinite alternate;
-  transform-origin: bottom center;
-}
-@keyframes sway {
-  from { transform: rotate(-2deg); }
-  to   { transform: rotate(2deg); }
+@keyframes tapSwing {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-26deg);
+  }
 }
 
-/* ROM: knee bending */
-.figureLeg {
-  animation: bend 1.2s ease-in-out infinite alternate;
-  transform-origin: top center;
+.tap {
+  transform-origin: 70px 46px;
+  animation: tapSwing 0.62s ease-in-out infinite alternate;
 }
-@keyframes bend {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(55deg); }
+
+@keyframes strideFront {
+  from {
+    transform: rotate(-13deg);
+  }
+  to {
+    transform: rotate(13deg);
+  }
+}
+
+.legFront {
+  transform-origin: 60px 68px;
+  animation: strideFront 0.82s ease-in-out infinite alternate;
+}
+
+.legBack {
+  transform-origin: 60px 68px;
+  animation: strideFront 0.82s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes swingArm {
+  from {
+    transform: rotate(-16deg);
+  }
+  to {
+    transform: rotate(16deg);
+  }
+}
+
+.armLeft {
+  transform-origin: 60px 44px;
+  animation: swingArm 0.78s ease-in-out infinite alternate;
+}
+
+.armRight {
+  transform-origin: 60px 44px;
+  animation: swingArm 0.78s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes swayBody {
+  from {
+    transform: rotate(-1.6deg);
+  }
+  to {
+    transform: rotate(1.6deg);
+  }
+}
+
+.sway {
+  transform-origin: 60px 100px;
+  animation: swayBody 2.4s ease-in-out infinite alternate;
+}
+
+@keyframes flexShin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-58deg);
+  }
+}
+
+.shin {
+  animation: flexShin 1.5s ease-in-out infinite alternate;
 }

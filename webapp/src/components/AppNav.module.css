@@ -1,146 +1,164 @@
+/* Bilah navigasi mengambang, sejalan dengan kop halaman depan.
+   ─────────────────────────────────────────────────────────────────────────────
+   Sebelumnya berkas ini adalah kepala dokumen: menempel di lembar, dipisahkan
+   garis tebal 2px, tanpa blur dan tanpa bayangan. Ia sengaja dibuat begitu di
+   dunia Basel. Tetapi halaman depan kini membuka dengan bilah yang melayang di
+   atas ground biru pucat, dan pengguna yang masuk lewat halaman itu menemukan
+   dunia yang berbeda satu klik kemudian.
+
+   Yang dipertahankan utuh dari versi sebelumnya: keadaan aktif tetap membawa
+   dua penanda selain warna, yaitu bobot huruf dan bidang latar, sehingga
+   tautan yang sedang dibuka tetap terbaca tanpa membedakan warna. */
+
 .nav {
   position: sticky;
   top: 0;
-  z-index: 50;
-  background: var(--nav-bg);
+  z-index: 40;
+  padding: var(--s3) 0;
+  background: color-mix(in srgb, var(--sheet) 82%, transparent);
   backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--rule-hair);
 }
 
 .inner {
-  max-width: 1200px;
+  width: 100%;
+  max-width: 1180px;
   margin: 0 auto;
-  padding: 0 5%;
-  height: 64px;
+  padding: 0 var(--s5);
   display: flex;
   align-items: center;
-  gap: 40px;
+  gap: var(--s5);
+  min-height: var(--touch);
 }
 
 .brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
   flex-shrink: 0;
-}
-
-.brandText {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.01em;
-  white-space: nowrap;
-}
-
-.brandSuffix {
-  color: var(--brand-text);
-  font-weight: 800;
-}
-
-/* Penanda peran.
-   Sebelumnya ungu pekat, sehingga satu bilah navigasi memuat tiga warna aksen
-   sekaligus: biru untuk menu aktif, biru untuk pilihan bahasa, dan ungu di
-   sini. Warna aksen yang saling bersaing membuat bilahnya terbaca seperti
-   rakitan komponen. Penanda ini keterangan, bukan tindakan, jadi dikembalikan
-   ke warna netral. */
-.roleBadge {
-  padding: 5px 11px;
-  border-radius: 7px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  color: var(--text-secondary);
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-@media (max-width: 820px) {
-  .roleBadge { display: none; }
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
 }
 
 .links {
   display: flex;
   align-items: center;
-  gap: 4px;
-  overflow-x: auto;
-  flex: 1;
-  /* Menu bergeser mendatar di layar sempit. Tanpa penanda apa pun pengguna
-     tidak tahu masih ada menu di sebelah kanan, jadi tepi kanan dibuat memudar
-     dan bilah geser disembunyikan agar tidak memakan tinggi bar. */
-  scrollbar-width: none;
-  scroll-snap-type: x proximity;
+  gap: var(--s1);
+  margin-left: auto;
 }
 
-.links::-webkit-scrollbar { display: none; }
+/* Tautan adalah pil, sama seperti .navLink di halaman depan. Huruf besar mono
+   dilepas: nama halaman adalah prosa, dan menyetelnya sebagai label arsip
+   adalah kostum teknis yang persis dikeluhkan sebagai kaku. */
+.link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+  padding: 0 var(--s4);
+  border-radius: var(--radius-pill);
+  font-size: var(--t-body);
+  font-weight: 500;
+  color: var(--ink-secondary);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 0.18s ease-out, color 0.18s ease-out;
+}
 
-.links > * { scroll-snap-align: start; }
+.link:hover {
+  background: var(--accent-wash);
+  color: var(--accent);
+}
+
+/* Aktif: bidang biru bubuk terisi penuh plus bobot 700. Dua penanda non-warna
+   tetap ada, seperti pada versi bergaris bawah yang digantikannya. */
+.linkActive {
+  background: var(--accent-wash);
+  color: var(--accent);
+  font-weight: 700;
+}
 
 .actions {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-  margin-left: auto;
+  gap: var(--s2);
+  padding-left: var(--s4);
+  border-left: 1px solid var(--rule-hair);
 }
 
-.link {
-  padding: 8px 14px;
-  border-radius: var(--radius-sm);
-  font-size: 0.88rem;
+/* Penanda portal nakes. Sebelumnya label mono huruf besar bergaris kiri; kini
+   pil biru bubuk, sama seperti .panelTag di halaman depan. Ia tetap teks
+   penuh yang terbaca, bukan titik warna. */
+.roleTag {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--s1) var(--s3);
+  border-radius: var(--radius-pill);
+  background: var(--accent-wash);
+  font-size: var(--t-record);
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--accent);
   white-space: nowrap;
-  transition: color 0.15s, background 0.15s;
 }
 
-.link:hover {
-  color: var(--text-primary);
-  background: var(--bg-card-hover);
-}
-
-.linkActive {
-  color: var(--brand-text);
-  background: var(--brand-dim);
-}
-
-@media (max-width: 820px) {
-  .inner { gap: 12px; padding: 0 14px; }
-  .links {
-    -webkit-mask-image: linear-gradient(to right, #000 88%, transparent);
-    mask-image: linear-gradient(to right, #000 88%, transparent);
+@media (max-width: 560px) {
+  .roleTag {
+    display: none;
   }
-  .link { padding: 8px 10px; font-size: 0.84rem; }
 }
 
-/* Di lebar ponsel, menu dipindah ke barisnya sendiri di bawah merek.
-   Sebelumnya keempat menu berdesakan dengan tombol bahasa dan tema pada satu
-   baris selebar 375 piksel, menyisakan sekitar 135 piksel untuk menu sehingga
-   hanya satu setengah menu yang terlihat dan sisanya tertutup tombol bahasa.
-   Menu tetap dapat digeser mendatar, tetapi kini punya lebar penuh. */
-@media (max-width: 640px) {
+/* Keluar. Diredam warnanya karena ia bukan aksi yang ingin didorong, tetapi
+   tetap memenuhi lantai sentuh 44px dan tetap berupa kata, bukan ikon pintu:
+   pengguna utama produk ini lansia, dan ikon pintu keluar tidak universal. */
+.logout {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+  padding: 0 var(--s3);
+  border-radius: var(--radius-pill);
+  font-size: var(--t-record);
+  font-weight: 600;
+  color: var(--ink-muted);
+  white-space: nowrap;
+  transition: background-color 0.18s ease-out, color 0.18s ease-out;
+}
+
+.logout:hover {
+  background: var(--inset);
+  color: var(--ink);
+}
+
+/* ── Layar sempit ───────────────────────────────────────────────────────────
+   Navigasi turun ke barisnya sendiri dan menggulir mendatar. Tidak ada menu
+   hamburger, karena itu ikon, dan karena menyembunyikan lima tautan di balik
+   satu tombol justru menambah beban ingatan bagi pengguna yang kita layani. */
+
+@media (max-width: 860px) {
   .inner {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    grid-template-areas:
-      "brand actions"
-      "links links";
-    align-items: center;
-    gap: 8px 10px;
-    height: auto;
-    padding: 10px 14px;
+    flex-wrap: wrap;
+    padding: 0 var(--s4);
+    gap: var(--s3);
   }
 
-  .brand { grid-area: brand; }
-  .actions { grid-area: actions; margin-left: 0; }
+  .actions {
+    margin-left: auto;
+    padding-left: 0;
+    border-left: 0;
+  }
 
   .links {
-    grid-area: links;
+    order: 3;
     width: 100%;
-    padding-bottom: 2px;
+    margin-left: 0;
+    gap: var(--s1);
+    overflow-x: auto;
+    scrollbar-width: none;
+    border-top: 1px solid var(--rule-hair);
+    padding-top: var(--s2);
   }
 
-  .link { padding: 7px 12px; }
+  .links::-webkit-scrollbar {
+    display: none;
+  }
+
+  .link {
+    padding: 0 var(--s3);
+  }
 }

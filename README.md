@@ -1,5 +1,49 @@
 # NeuronMotion, Sistem Skrining Gangguan Saraf Berbasis Computer Vision
 
+## Menjalankan di mesin baru
+
+Butuh Node.js 20 atau lebih baru. Setelah `git clone`, cukup satu perintah:
+
+```bash
+npm run setup
+npm run dev:all
+```
+
+Lalu buka **http://localhost:3000**.
+
+`npm run setup` memasang dependensi root dan `webapp/`, membuat `.env` dari
+`.env.example` dengan `JWT_SECRET` acak, membuat basis data SQLite, dan
+mengisinya dengan data contoh. Aman dijalankan ulang: `.env` yang sudah ada
+tidak ditimpa, dan seed dilewati kalau basis datanya sudah berisi. Untuk
+mengisi ulang dari nol, jalankan `npm run seed` (perintah ini mengosongkan
+tabel lebih dulu).
+
+**Yang tidak ikut ter-clone:** `.env` dan `prisma/dev.db` ada di `.gitignore`,
+karena yang pertama memuat kunci penanda tangan token dan yang kedua memuat
+data pasien. Jadi hasil clone yang segar tidak punya basis data sama sekali;
+yang dibawa repositori hanya skrip seed-nya. Itulah yang dikerjakan
+`npm run setup`.
+
+### Akun demo
+
+Dibuat oleh seed. Ganti kata sandinya sebelum dipasang di mana pun yang bisa
+dijangkau publik.
+
+| Peran | Email | Kata sandi |
+|---|---|---|
+| Pasien | `pasien@neuronmotion.id` | `password123` |
+| Dokter | `dr.dewi@neuronmotion.id` | `doctor123` |
+| Admin | `admin@neuronmotion.id` | `admin123` |
+
+Empat dokter lain memakai kata sandi yang sama: `dr.andi@`, `dr.sari@`,
+`dr.budi@`, `dr.hendra@neuronmotion.id`. Akun admin baru punya endpoint API,
+belum punya halaman di aplikasi.
+
+Kunci Gemini dan DeepL bersifat opsional. Tanpa keduanya aplikasi tetap
+berjalan penuh; yang nonaktif hanya obrolan NeuroBot dan terjemahan otomatis.
+
+---
+
 Mockup UI (desain) sudah ada di project ini:
 - `NeuronMotion - Landing.dc.html` adalah halaman publik
 - `NeuronMotion - Skrining.dc.html` berisi alur skrining (pilih tes → rekam → hasil biomarker → skor risiko → riwayat)

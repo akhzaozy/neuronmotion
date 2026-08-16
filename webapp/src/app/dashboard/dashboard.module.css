@@ -1,181 +1,519 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   BERANDA PASIEN
+
+   Susunannya mengikuti rujukan yang dibawa tim: kolom kiri membawa kartu
+   pengukuran, pita tanggal, dan tabel riwayat, sementara kolom kanan dipegang
+   satu panel besar berisi angka utama beserta grafiknya.
+
+   Tiga hal dari rujukan itu sengaja tidak diikuti, dan ketiganya alasan yang
+   sama, yaitu produk ini tidak boleh menampilkan angka yang tidak diukurnya:
+
+   1. Tiga kartu "Muscle Recovery, Steps, Calories" diganti biomarker yang
+      benar-benar dibaca dari kamera, lengkap dengan satuannya.
+   2. Gambar jantung tiga dimensi diganti cincin skor. Gambar organ tidak
+      menyampaikan apa pun tentang orang yang sedang melihatnya; panjang busur
+      cincin ini adalah skornya sendiri.
+   3. "Checkup Schedule" beserta janji temu dokternya diganti pita tanggal
+      sesi yang sungguh ada. Produk ini tidak punya fitur penjadwalan.
+   ══════════════════════════════════════════════════════════════════════════ */
+
 .page {
   min-height: 100vh;
-  background: var(--bg-primary);
+  background: var(--sheet);
 }
 
-/* Padding dipindah ke container: sebelumnya ada di .page sehingga navbar sticky
-   di dalamnya ikut ter-indent dan tidak melebar penuh selebar layar. */
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 32px 5% 60px;
+.pad {
+  padding: var(--s7) 0 var(--s9);
 }
 
-.header {
+.loading {
+  padding: var(--s8) 0;
+  color: var(--ink-secondary);
+}
+
+/* ── Kop halaman ────────────────────────────────────────────────────────── */
+
+.pageHead {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 20px;
   flex-wrap: wrap;
-  margin-bottom: 32px;
-}
-
-.header h1 {
-  font-size: 2rem;
-  font-weight: 800;
-  letter-spacing: -0.025em;
-  margin-bottom: 4px;
-}
-
-.header p {
-  color: var(--text-secondary);
-  font-size: 1rem;
-}
-
-.userCard {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  background: var(--bg-card);
-  padding: 12px 20px;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-sm);
-}
-
-.avatar {
-  width: 48px;
-  height: 48px;
-  background: var(--brand-dim);
-  color: var(--brand-text);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  font-weight: 700;
-}
-
-.userName {
-  font-weight: 700;
-  font-size: 1.1rem;
-}
-
-.userRole {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 24px;
-  margin-bottom: 40px;
-}
-
-.card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 24px;
-  box-shadow: var(--shadow-sm);
-}
-
-.cardTitle {
-  font-size: 0.78rem;
-  font-weight: 700;
-  margin-bottom: 14px;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.scoreValue {
-  font-variant-numeric: tabular-nums;
-  font-size: 3.2rem;
-  font-weight: 800;
-  line-height: 1;
-  margin-bottom: 12px;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.03em;
-}
-
-.badge {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 99px;
-  font-size: 0.85rem;
-  font-weight: 700;
-  margin-bottom: 16px;
-}
-
-.trendBox {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  background: var(--bg-secondary);
-  padding: 8px 12px;
-  border-radius: var(--radius-md);
-}
-
-.historyList {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.historyItem {
-  display: flex;
+  align-items: flex-end;
   justify-content: space-between;
-  align-items: center;
-  padding: 16px 18px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+  gap: var(--s4);
+  margin-bottom: var(--s6);
 }
 
-.historyItem:hover {
-  border-color: var(--brand);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
+.pageHeadText {
+  min-width: 0;
 }
 
-.historyDate {
+.pageTitle {
+  font-size: clamp(1.875rem, 3.4vw, 2.5rem);
+  letter-spacing: -0.02em;
+}
+
+.pageLead {
+  margin-top: var(--s2);
+  font-size: var(--t-lead);
+  color: var(--ink-secondary);
+}
+
+/* ── Tata letak dua kolom ───────────────────────────────────────────────────
+   Kolom kanan dikunci 360px, bukan pecahan, supaya cincin skor punya ukuran
+   yang sama di layar 1280px dan 1600px. Angka utama yang ikut membesar
+   bersama lebar jendela membuat dua tangkapan layar produk ini terlihat
+   seperti dua produk. */
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: var(--s5);
+  align-items: start;
+}
+
+@media (max-width: 1080px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s7);
+  min-width: 0;
+}
+
+.aside {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s5);
+  min-width: 0;
+}
+
+/* Di bawah 1080px panel skor naik ke atas isi. Ia jawaban atas pertanyaan
+   yang membawa pasien membuka halaman ini, jadi ia tidak boleh berakhir di
+   dasar halaman pada ponsel. */
+@media (max-width: 1080px) {
+  .aside {
+    order: -1;
+  }
+}
+
+.sectionHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s3);
+  margin-bottom: var(--s4);
+}
+
+.sectionTitle {
+  font-size: var(--t-head);
+}
+
+.sectionMeta {
+  font-size: var(--t-record);
+  color: var(--ink-muted);
+}
+
+.sectionLink {
+  font-size: var(--t-body);
   font-weight: 600;
-  margin-bottom: 4px;
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
 }
 
-.historyDesc {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
+.sectionLink:hover {
+  color: var(--accent-deep);
 }
 
-.historyScore {
-  font-size: 1.5rem;
-  font-weight: 800;
+/* ── Kartu biomarker ────────────────────────────────────────────────────────
+   auto-fit dipakai, bukan tiga kolom tetap: jumlah kartu di sini bergantung
+   pada berapa tes yang benar-benar dikerjakan pasien, dan itu bisa satu
+   sampai enam. Grid tetap akan meninggalkan lubang ketika pasien hanya
+   mengerjakan dua tes. */
+
+.bioGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: var(--s4);
 }
 
-.ctaBox {
-  background: var(--gradient-brand);
+.bioCard {
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
   border-radius: var(--radius-lg);
-  padding: 32px;
+  box-shadow: var(--shadow-card);
+  padding: var(--s5);
+}
+
+.bioHead {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  margin-bottom: var(--s4);
+}
+
+.bioIcon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-pill);
+  background: var(--accent-wash);
+  color: var(--accent);
+}
+
+.bioLabel {
+  font-size: var(--t-record);
+  font-weight: 600;
+  color: var(--ink-secondary);
+  letter-spacing: 0;
+}
+
+.bioValue {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s2);
+  font-family: var(--font-display), var(--font-sans), system-ui, sans-serif;
+  font-size: clamp(1.875rem, 3vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Satuan selalu ikut angkanya dan tidak pernah dilepas, tetapi ia diredam
+   supaya angkanya yang terbaca lebih dulu. */
+.bioUnit {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: var(--t-record);
+  font-weight: 500;
+  color: var(--ink-muted);
+  letter-spacing: 0;
+}
+
+.bioDelta {
+  margin-top: var(--s3);
+  font-size: var(--t-record);
+  color: var(--ink-muted);
+}
+
+.bioDeltaValue {
+  font-weight: 700;
+  color: var(--ink-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Pita tanggal sesi ────────────────────────────────────────────────────── */
+
+.strip {
+  display: flex;
+  gap: var(--s3);
+  overflow-x: auto;
+  padding: var(--s2) var(--s1) var(--s3);
+  scrollbar-width: thin;
+}
+
+.stripItem {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s1);
+  min-width: 68px;
+  min-height: var(--touch-lg);
+  padding: var(--s3) var(--s2);
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  transition: background-color 0.18s ease-out, border-color 0.18s ease-out,
+    box-shadow 0.18s ease-out;
+}
+
+.stripItem:hover {
+  border-color: var(--accent-soft);
+  box-shadow: var(--shadow-raised);
+}
+
+/* Terpilih membawa tiga penanda: bidang biru penuh, bobot huruf, dan
+   aria-pressed pada markupnya. Tokennya --cta-field, bukan --accent, karena
+   --accent dibalik terangnya di tema gelap sehingga teks terang di atasnya
+   tidak lolos ambang kontras. */
+.stripItem[data-active] {
+  background: var(--cta-field);
+  border-color: var(--cta-field);
+  box-shadow: var(--shadow-raised);
+}
+
+.stripDay {
+  font-size: var(--t-record);
+  color: var(--ink-muted);
+}
+
+.stripDate {
+  font-family: var(--font-display), var(--font-sans), system-ui, sans-serif;
+  font-size: var(--t-lead);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.stripScore {
+  font-size: var(--t-record);
+  font-weight: 600;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.stripItem[data-active] .stripDay,
+.stripItem[data-active] .stripDate,
+.stripItem[data-active] .stripScore {
+  color: var(--cta-ink);
+}
+
+/* ── Tabel riwayat ──────────────────────────────────────────────────────── */
+
+.tableCard {
+  overflow-x: auto;
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--s3) var(--s5) var(--s4);
+}
+
+.doctorNote {
+  display: block;
+  margin-top: var(--s2);
+  padding-left: var(--s3);
+  border-left: 2px solid var(--accent-soft);
+  font-size: var(--t-record);
+  color: var(--ink-secondary);
+}
+
+/* ── Panel skor ─────────────────────────────────────────────────────────────
+   Kartu putih, bukan bidang biru penuh: cincin di dalamnya sudah membawa
+   warna tingkat, dan menaruhnya di atas bidang berwarna akan membuat dua
+   sistem warna bertabrakan di satu kartu. */
+
+.scorePanel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s4);
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-raised);
+  padding: var(--s6);
   text-align: center;
-  color: #fff;
+}
+
+.scorePanelTitle {
+  font-size: var(--t-lead);
+  align-self: flex-start;
+}
+
+/* Warna cincin diwariskan lewat currentColor dari kelas tingkat di panelnya,
+   jadi busur, chip, dan label selalu menyebut tingkat yang sama. */
+.panel_low {
+  color: var(--level-low);
+}
+
+.panel_mid {
+  color: var(--level-mid);
+}
+
+.panel_high {
+  color: var(--level-high);
+}
+
+.ringWrap {
+  position: relative;
+  width: min(240px, 100%);
+  aspect-ratio: 1;
+}
+
+.ring {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.ringArc {
+  transition: stroke-dasharray 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ringCenter {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: var(--s1);
+  pointer-events: none;
 }
 
-/* Ikon tren disejajarkan terhadap garis dasar teks di sebelahnya, karena ikon
-   segaris teks yang tidak disejajarkan akan tampak melayang. */
-.trendIcon {
-  display: inline-flex;
-  align-items: center;
-  vertical-align: -0.15em;
+.ringValue {
+  font-family: var(--font-display), var(--font-sans), system-ui, sans-serif;
+  font-size: clamp(3rem, 9vw, 4rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.ringUnit {
+  font-size: var(--t-record);
+  color: var(--ink-muted);
+}
+
+.levelChip {
+  margin: 0;
+}
+
+.trend {
+  color: var(--ink-secondary);
+}
+
+.delta {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-muted);
+}
+
+/* Arah skala dinyatakan terang-terangan. Tanpa kalimat ini, angka besar di
+   tengah cincin terbaca sebagai capaian, seperti langkah harian pada aplikasi
+   kebugaran, padahal di sini justru sebaliknya. */
+.lowerBetter {
+  font-size: var(--t-record);
+  color: var(--ink-muted);
+}
+
+.miniStats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s2);
+  width: 100%;
+  padding-top: var(--s4);
+  border-top: 1px solid var(--rule-hair);
+}
+
+.miniStat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+}
+
+.miniLabel {
+  font-size: var(--t-record);
+  color: var(--ink-muted);
+}
+
+.miniValue {
+  margin: 0;
+  font-family: var(--font-display), var(--font-sans), system-ui, sans-serif;
+  font-size: var(--t-head);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Grafik antar sesi ──────────────────────────────────────────────────── */
+
+.chartCard {
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--s5);
+}
+
+.bars {
+  margin: 0;
+}
+
+.barsHead {
+  margin-bottom: var(--s4);
+}
+
+.barsTitle {
+  font-size: var(--t-record);
+  font-weight: 600;
+  color: var(--ink-secondary);
+}
+
+.barsRow {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--s2);
+  height: 120px;
+}
+
+.barSlot {
+  flex: 1 1 0;
+  display: flex;
+  align-items: flex-end;
+  height: 100%;
+  min-width: 0;
+}
+
+.bar {
+  width: 100%;
+  border-radius: var(--radius-pill);
+  transition: height 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Warna batang mengikuti tingkat risiko sesi itu, bukan satu warna merek
+   untuk semuanya, supaya sesi yang memburuk terlihat tanpa harus membaca
+   angkanya satu per satu. */
+.bar_low {
+  background: var(--level-low);
+}
+
+.bar_mid {
+  background: var(--level-mid);
+}
+
+.bar_high {
+  background: var(--level-high);
+}
+
+/* ── Keadaan kosong ─────────────────────────────────────────────────────── */
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s4);
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  padding: var(--s8) var(--s7);
+}
+
+@media (max-width: 640px) {
+  .empty {
+    padding: var(--s6) var(--s5);
+  }
+}
+
+.emptyTitle {
+  font-size: var(--t-head);
+}
+
+.emptyBody {
+  color: var(--ink-secondary);
+  max-width: 56ch;
 }

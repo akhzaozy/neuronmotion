@@ -1,17 +1,14 @@
 'use client';
 import { useState } from 'react';
+import * as Dialog from '@radix-ui/react-dialog';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import DoctorNav from '@/components/DoctorNav';
 import { useI18n } from '@/lib/i18n';
-import { RulerIcon, MicroscopeIcon, WarningIcon, ChartIcon, HandIcon, TargetIcon, BulbIcon, CheckIcon } from '@/components/icons';
-import styles from '../../edukasi/edukasi.module.css';
-import local from './doctorEdukasi.module.css';
+import styles from './doctorEdukasi.module.css';
 
 interface Article {
   id: string;
-  // Komponen ikon, bukan emoji, agar seragam di semua perangkat
-  icon: React.ComponentType<{ size?: number }>;
   tag: string;
   title: string;
   excerpt: string;
@@ -24,7 +21,6 @@ interface Article {
 const CLINICAL_ARTICLES: Article[] = [
   {
     id: 'metodologi',
-    icon: RulerIcon,
     tag: 'Metodologi',
     title: 'Bagaimana Skor Risiko Dihitung',
     excerpt: 'Rincian bobot per biomarker, ambang kategori, dan peran K-NN dalam menyusun skor komposit.',
@@ -52,7 +48,6 @@ const CLINICAL_ARTICLES: Article[] = [
   },
   {
     id: 'interpretasi',
-    icon: MicroscopeIcon,
     tag: 'Interpretasi',
     title: 'Membaca Hasil Biomarker di Portal',
     excerpt: 'Arti tiap angka yang tampil pada detail pasien dan batas kewajaran interpretasinya.',
@@ -74,7 +69,6 @@ const CLINICAL_ARTICLES: Article[] = [
   },
   {
     id: 'keterbatasan',
-    icon: WarningIcon,
     tag: 'Keterbatasan',
     title: 'Batas Kemampuan Sistem yang Perlu Diketahui',
     excerpt: 'Apa yang belum dapat dijamin sistem ini, dan mengapa penilaian klinis tetap menentukan.',
@@ -94,7 +88,6 @@ const CLINICAL_ARTICLES: Article[] = [
   },
   {
     id: 'kualitas-data',
-    icon: ChartIcon,
     tag: 'Praktik',
     title: 'Menilai Mutu Sesi Skrining Pasien',
     excerpt: 'Cara mengenali sesi dengan data lemah dan meminta pasien mengulang dengan benar.',
@@ -122,7 +115,6 @@ const CLINICAL_ARTICLES: Article[] = [
 const PATIENT_ARTICLES: Article[] = [
   {
     id: 'p-tremor',
-    icon: HandIcon,
     tag: 'Untuk Pasien',
     title: 'Apa Itu Tremor dan Kapan Perlu Diperiksa',
     excerpt: 'Penjelasan bahasa awam tentang beda getaran biasa dan yang perlu dievaluasi.',
@@ -143,7 +135,6 @@ const PATIENT_ARTICLES: Article[] = [
   },
   {
     id: 'p-skor',
-    icon: TargetIcon,
     tag: 'Untuk Pasien',
     title: 'Memahami Arti Skor Skrining Anda',
     excerpt: 'Penjelasan kategori Rendah, Sedang, dan Tinggi tanpa istilah teknis.',
@@ -162,7 +153,6 @@ const PATIENT_ARTICLES: Article[] = [
   },
   {
     id: 'p-persiapan',
-    icon: BulbIcon,
     tag: 'Untuk Pasien',
     title: 'Persiapan Agar Hasil Tes Akurat',
     excerpt: 'Panduan praktis pencahayaan, jarak kamera, dan posisi tubuh saat tes.',
@@ -206,20 +196,21 @@ export default function DoctorEdukasiPage() {
     }
   }
 
-  const renderCard = (a: Article, shareable = false) => (
-    <div key={a.id} className={local.cardWrap}>
-      <button className={styles.articleCard} onClick={() => setReading(a)}>
-        <span className={styles.articleIcon}><a.icon size={22} /></span>
-        <span className={styles.articleTag}>{a.tag}</span>
-        <span className={styles.articleTitle}>{a.title}</span>
-        <span className={styles.articleExcerpt}>{a.excerpt}</span>
-        <span className={styles.readTime}>{a.readTime}</span>
+  /* Setiap artikel adalah satu baris arsip: label mono, judul, ringkasan, dan
+     lama baca. Tidak ada kartu dan tidak ada ikon; pemisahnya garis rambut. */
+  const renderRow = (a: Article, shareable = false) => (
+    <div key={a.id} className={styles.entry}>
+      <button type="button" className={styles.entryOpen} onClick={() => setReading(a)}>
+        <span className={styles.entryHead}>
+          <span className="label">{a.tag}</span>
+          <span className={styles.entryTime}>{a.readTime}</span>
+        </span>
+        <span className={styles.entryTitle}>{a.title}</span>
+        <span className={styles.entryExcerpt}>{a.excerpt}</span>
       </button>
       {shareable && (
-        <button className={local.shareBtn} onClick={() => shareArticle(a)}>
-          {copied === a.id
-                      ? <><CheckIcon size={14} /> {t('edu.copied')}</>
-                      : t('edu.copyForPatient')}
+        <button type="button" className="btn" onClick={() => shareArticle(a)}>
+          {copied === a.id ? t('edu.copied') : t('edu.copyForPatient')}
         </button>
       )}
     </div>
@@ -228,56 +219,70 @@ export default function DoctorEdukasiPage() {
   return (
     <div className={styles.page}>
       <DoctorNav />
-      <div className={styles.container}>
-        <div className={styles.header}>
-          <h1>Edukasi</h1>
-          <p>Referensi klinis, panduan interpretasi, dan evidensi untuk tenaga kesehatan.</p>
-        </div>
 
-        <section className={local.section}>
-          <div className={local.sectionHead}>
-            <h2 className={local.sectionTitle}>Materi Klinis</h2>
-            <p className={local.sectionDesc}>
-              Dasar perhitungan, cara membaca biomarker, dan batas kemampuan sistem.
-            </p>
-          </div>
-          <div className={styles.grid}>
-            {CLINICAL_ARTICLES.map(a => renderCard(a))}
-          </div>
-        </section>
-
-        <section className={local.section}>
-          <div className={local.sectionHead}>
-            <h2 className={local.sectionTitle}>Materi untuk Pasien</h2>
-            <p className={local.sectionDesc}>
-              Penjelasan berbahasa awam yang dapat Anda bagikan kepada pasien sebagai bahan edukasi.
-            </p>
-          </div>
-          <div className={styles.grid}>
-            {PATIENT_ARTICLES.map(a => renderCard(a, true))}
-          </div>
-        </section>
-      </div>
-
-      {reading && (
-        <div className={styles.overlay} onClick={() => setReading(null)}>
-          <div className={styles.readerCard} onClick={e => e.stopPropagation()}>
-            <h2 className={styles.readerTitle}>{reading.title}</h2>
-            <p className={styles.readerMeta}>{reading.tag} &bull; {reading.readTime}</p>
-            <div className={styles.readerBody}>{reading.body}</div>
-            <div className={styles.disclaimer}>
-              Materi ini bersifat edukatif dan tidak menggantikan penilaian klinis langsung.
+      <main className="sheet" id="main">
+        <div className={styles.pad}>
+          <header className="docHead">
+            <div className="docHead__meta">
+              <span>Edukasi</span>
+              <span>Portal Tenaga Kesehatan</span>
             </div>
-            <button
-              className="btn btn-primary"
-              style={{ width: '100%', marginTop: 20 }}
-              onClick={() => setReading(null)}
-            >
-              Tutup
-            </button>
-          </div>
+            <h1>Edukasi</h1>
+            <p className={styles.lead}>
+              Referensi klinis, panduan interpretasi, dan evidensi untuk tenaga kesehatan.
+            </p>
+          </header>
+
+          <section className={styles.section}>
+            <div className={styles.sectionHead}>
+              <h2 className={styles.sectionTitle}>Materi Klinis</h2>
+              <p className={styles.sectionDesc}>
+                Dasar perhitungan, cara membaca biomarker, dan batas kemampuan sistem.
+              </p>
+            </div>
+            <div className={styles.entries}>
+              {CLINICAL_ARTICLES.map(a => renderRow(a))}
+            </div>
+          </section>
+
+          <section className={styles.section}>
+            <div className={styles.sectionHead}>
+              <h2 className={styles.sectionTitle}>Materi untuk Pasien</h2>
+              <p className={styles.sectionDesc}>
+                Penjelasan berbahasa awam yang dapat Anda bagikan kepada pasien sebagai bahan edukasi.
+              </p>
+            </div>
+            <div className={styles.entries}>
+              {PATIENT_ARTICLES.map(a => renderRow(a, true))}
+            </div>
+          </section>
         </div>
-      )}
+      </main>
+
+      {/* Radix menangani jebakan fokus, tombol Escape, dan atribut aria;
+          tampilannya diambil dari primitif dialog di globals.css. */}
+      <Dialog.Root open={reading !== null} onOpenChange={open => { if (!open) setReading(null); }}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="dialogScrim" />
+          <Dialog.Content className="dialogSheet" aria-describedby={undefined}>
+            {reading && (
+              <>
+                <Dialog.Title className={styles.readerTitle}>{reading.title}</Dialog.Title>
+                <p className={styles.readerMeta}>{reading.tag} &bull; {reading.readTime}</p>
+                <div className={styles.readerBody}>{reading.body}</div>
+                <p className={`note ${styles.disclaimer}`}>
+                  Materi ini bersifat edukatif dan tidak menggantikan penilaian klinis langsung.
+                </p>
+                <Dialog.Close asChild>
+                  <button type="button" className="btn btn--primary btn--block">
+                    Tutup
+                  </button>
+                </Dialog.Close>
+              </>
+            )}
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </div>
   );
 }

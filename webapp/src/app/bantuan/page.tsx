@@ -1,32 +1,26 @@
 'use client';
-import { useState } from 'react';
+import * as Accordion from '@radix-ui/react-accordion';
 import AppNav from '@/components/AppNav';
-import { PenIcon, BulbIcon, VideoIcon, ActivityIcon, ChartIcon } from '@/components/icons';
 import styles from './bantuan.module.css';
 
 const STEPS = [
   {
-    icon: PenIcon,
     title: 'Daftar dan lengkapi profil',
     desc: 'Buat akun sebagai pasien, lalu isi tanggal lahir dan jenis kelamin. Data usia dipakai untuk membandingkan hasil Anda dengan rentang normal kelompok usia yang sesuai.',
   },
   {
-    icon: BulbIcon,
     title: 'Siapkan ruangan dan posisi',
     desc: 'Cari ruangan dengan pencahayaan cukup (tidak gelap, tidak silau). Untuk tes berjalan, sediakan ruang gerak sekitar 2 meter dan pastikan seluruh tubuh terlihat kamera.',
   },
   {
-    icon: VideoIcon,
     title: 'Izinkan akses kamera',
     desc: 'Browser akan meminta izin kamera. Video tidak dikirim ke server, semua analisis gerakan berjalan di perangkat Anda sendiri.',
   },
   {
-    icon: ActivityIcon,
     title: 'Ikuti 6 tes gerakan',
     desc: 'Setiap tes diawali panduan bergambar dan hitung mundur. Ikuti instruksi bagian tubuh yang diminta. Sistem akan memberi peringatan jika bagian tubuh tidak terdeteksi jelas.',
   },
   {
-    icon: ChartIcon,
     title: 'Lihat hasil dan pantau tren',
     desc: 'Hasil skrining muncul lengkap dengan skor risiko dan rekomendasi. Semua sesi tersimpan di halaman Riwayat agar Anda bisa membandingkan perkembangan dari waktu ke waktu.',
   },
@@ -63,77 +57,105 @@ const FAQS = [
   },
 ];
 
-export default function BantuanPage() {
-  const [openIndex, setOpenIndex] = useState<number | null>(0);
+const CONTACTS = [
+  { label: 'Email Dukungan', value: 'support@neuronmotion.id' },
+  { label: 'Tim Pengembang', value: 'Last Dance Team' },
+  { label: 'Status Produk', value: 'Beta' },
+];
 
+export default function BantuanPage() {
   return (
     <div className={styles.page}>
       <AppNav />
-      <div className={styles.container}>
-        <div className={styles.header}>
-          <h1>Bantuan</h1>
-          <p>Panduan penggunaan, pertanyaan yang sering diajukan, dan kontak tim NeuronMotion.</p>
-        </div>
 
-        <div className={styles.card}>
-          <h2 className={styles.cardTitle}>Panduan 5 Langkah</h2>
-          <div className={styles.steps}>
-            {STEPS.map((step, i) => (
-              <div key={i} className={styles.step}>
-                <div className={styles.stepNum}><step.icon size={20} /></div>
-                <div>
-                  <div className={styles.stepTitle}>{i + 1}. {step.title}</div>
-                  <div className={styles.stepDesc}>{step.desc}</div>
+      <main className="sheet" id="main">
+        <div className={styles.pad}>
+          <header className="docHead">
+            <div className="docHead__meta">
+              <span>Panduan Pengguna</span>
+              <span>{STEPS.length} langkah</span>
+              <span>{FAQS.length} pertanyaan</span>
+            </div>
+            <h1>Bantuan</h1>
+            <p className={styles.lead}>
+              Panduan penggunaan, pertanyaan yang sering diajukan, dan kontak tim NeuronMotion.
+            </p>
+          </header>
+
+          {/* Batas kemampuan alat ditempatkan di atas isi, bukan di kaki halaman,
+              supaya terbaca sebelum pengguna menarik kesimpulan dari hasilnya.
+              Blok ini tidak punya syarat dan tidak bisa ditutup. */}
+          <section className={`note note--lead ${styles.disclaimer}`} aria-label="Batas kemampuan alat">
+            <p className={`label ${styles.disclaimerLabel}`}>Disclaimer</p>
+            <p>
+              NeuronMotion adalah alat bantu skrining awal berbasis analisis gerakan, bukan alat
+              diagnosis medis dan bukan pengganti pemeriksaan tenaga kesehatan. Model klasifikasi saat
+              ini divalidasi menggunakan dataset sintetis berbasis literatur klinis, bukan uji klinis
+              pada pasien nyata. Untuk keputusan medis apa pun, selalu konsultasikan dengan dokter.
+            </p>
+            <p className={styles.emergency}>
+              Jika Anda mengalami gejala darurat seperti kelemahan mendadak pada satu sisi tubuh, wajah
+              perot, atau kesulitan bicara tiba-tiba, segera cari pertolongan medis darurat.
+            </p>
+          </section>
+
+          {/* ── Panduan langkah ───────────────────────────────────────────── */}
+          <section className={styles.section}>
+            <h2 className={styles.sectionHead}>Panduan 5 Langkah</h2>
+            <ol className={styles.steps}>
+              {STEPS.map((step, i) => (
+                <li key={step.title} className={styles.step}>
+                  <span className={styles.stepNum}>{String(i + 1).padStart(2, '0')}</span>
+                  <div className={styles.stepText}>
+                    <h3 className={styles.stepTitle}>{step.title}</h3>
+                    <p className={styles.stepDesc}>{step.desc}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </section>
+
+          {/* ── Pertanyaan yang sering diajukan ───────────────────────────── */}
+          <section className={styles.section}>
+            <h2 className={styles.sectionHead}>Pertanyaan yang Sering Diajukan</h2>
+            {/* Radix menangani keadaan buka tutup dan atribut aria; keadaannya
+                tetap dibawa kata, bukan tanda tambah yang berputar. */}
+            <Accordion.Root type="single" collapsible defaultValue="faq-0" className={styles.faq}>
+              {FAQS.map((faq, i) => (
+                <Accordion.Item key={faq.q} value={`faq-${i}`} className={styles.faqItem}>
+                  <Accordion.Header className={styles.faqHeader}>
+                    <Accordion.Trigger className={styles.faqTrigger}>
+                      <span className={styles.faqQuestion}>{faq.q}</span>
+                      {/* Keadaan dibawa dua kata yang saling menggantikan,
+                          bukan tanda tambah yang berputar. */}
+                      <span className={styles.faqState} aria-hidden="true">
+                        <span className={styles.faqStateClosed}>Buka</span>
+                        <span className={styles.faqStateOpen}>Tutup</span>
+                      </span>
+                    </Accordion.Trigger>
+                  </Accordion.Header>
+                  <Accordion.Content className={styles.faqContent}>
+                    <p className={styles.faqAnswer}>{faq.a}</p>
+                  </Accordion.Content>
+                </Accordion.Item>
+              ))}
+            </Accordion.Root>
+          </section>
+
+          {/* ── Kontak ────────────────────────────────────────────────────── */}
+          <section className={styles.section}>
+            <h2 className={styles.sectionHead}>Kontak Tim</h2>
+            <dl className={styles.contactList}>
+              {CONTACTS.map(item => (
+                <div key={item.label} className={styles.contactRow}>
+                  <dt className={`label ${styles.contactLabel}`}>{item.label}</dt>
+                  <dd className={styles.contactValue}>{item.value}</dd>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </dl>
+          </section>
         </div>
-
-        <div className={styles.card}>
-          <h2 className={styles.cardTitle}>Pertanyaan yang Sering Diajukan</h2>
-          {FAQS.map((faq, i) => (
-            <div key={i} className={styles.faqItem}>
-              <button
-                className={styles.faqQuestion}
-                onClick={() => setOpenIndex(openIndex === i ? null : i)}
-                aria-expanded={openIndex === i}
-              >
-                {faq.q}
-                <span className={`${styles.faqIcon} ${openIndex === i ? styles.faqIconOpen : ''}`}>+</span>
-              </button>
-              {openIndex === i && <div className={styles.faqAnswer}>{faq.a}</div>}
-            </div>
-          ))}
-        </div>
-
-        <div className={styles.card}>
-          <h2 className={styles.cardTitle}>Kontak Tim</h2>
-          <div className={styles.contactGrid}>
-            <div className={styles.contactItem}>
-              <div className={styles.contactLabel}>Email Dukungan</div>
-              <div className={styles.contactValue}>support@neuronmotion.id</div>
-            </div>
-            <div className={styles.contactItem}>
-              <div className={styles.contactLabel}>Tim Pengembang</div>
-              <div className={styles.contactValue}>Last Dance Team</div>
-            </div>
-            <div className={styles.contactItem}>
-              <div className={styles.contactLabel}>Status Produk</div>
-              <div className={styles.contactValue}>Beta</div>
-            </div>
-          </div>
-        </div>
-
-        <div className={styles.disclaimer}>
-          <strong>Disclaimer:</strong> NeuronMotion adalah alat bantu skrining awal berbasis analisis
-          gerakan, bukan alat diagnosis medis dan bukan pengganti pemeriksaan tenaga kesehatan. Model
-          klasifikasi saat ini divalidasi menggunakan dataset sintetis berbasis literatur klinis, bukan
-          uji klinis pada pasien nyata. Untuk keputusan medis apa pun, selalu konsultasikan dengan dokter.
-          Jika Anda mengalami gejala darurat seperti kelemahan mendadak pada satu sisi tubuh, wajah perot,
-          atau kesulitan bicara tiba-tiba, segera cari pertolongan medis darurat.
-        </div>
-      </div>
+      </main>
     </div>
   );
 }

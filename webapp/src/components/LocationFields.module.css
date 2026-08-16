@@ -1,37 +1,39 @@
+/* Kelompok isian wilayah.
+   Satu blok bidang bergaris rambut di dalam formulir, bukan kartu bersudut
+   membulat. Lantai ukuran huruf 14px berlaku juga di sini. */
+
 .wrap {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 16px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  gap: var(--s4);
+  padding: var(--s4);
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius);
 }
 
 .title {
-  font-size: 0.9rem;
   font-weight: 700;
-  color: var(--text-primary);
 }
 
 .hint {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  line-height: 1.6;
-  margin-top: -8px;
+  max-width: 68ch;
+  margin-top: calc(-1 * var(--s2));
+  font-size: var(--t-record);
+  color: var(--ink-secondary);
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--s2);
   flex: 1;
   min-width: 0;
 }
 
 .row {
   display: flex;
-  gap: 12px;
+  gap: var(--s3);
 }
 
 @media (max-width: 520px) {
@@ -39,16 +41,19 @@
 }
 
 .label {
-  font-size: 0.85rem;
+  font-size: var(--t-record);
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--ink-secondary);
 }
 
+/* Tanda wajib isi tidak berdiri sendiri sebagai warna: kata "wajib" ikut
+   dibawa teks bantuan di sebelahnya. */
 .req {
-  color: var(--red-text);
+  color: var(--level-high);
+  font-weight: 700;
 }
 
 .note {
-  font-size: 0.74rem;
-  color: var(--text-muted);
+  font-size: var(--t-record);
+  color: var(--ink-muted);
 }

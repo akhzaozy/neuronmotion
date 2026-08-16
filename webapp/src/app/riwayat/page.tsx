@@ -4,30 +4,24 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { api, Session } from '@/lib/api';
+import { normalizeBiomarkers } from '@/lib/biomarkers';
 import AppNav from '@/components/AppNav';
 import ReportTemplate from '@/components/ReportTemplate';
 import ReportPrintHost from '@/components/ReportPrintHost';
-import { ClipboardIcon, SparkleIcon } from '@/components/icons';
+import LoadFailure from '@/components/LoadFailure';
+import * as Dialog from '@radix-ui/react-dialog';
 import { useI18n, translateServerLabel, dateLocale, type Lang } from '@/lib/i18n';
 import styles from './riwayat.module.css';
 
 /**
- * Dua peta warna dipisah dengan sengaja. RISK_FILL dipakai untuk titik grafik
- * dan isian pil, yang boleh pekat karena berdampingan dengan warna lain.
- * RISK_TEXT dipakai ketika warnanya menjadi warna huruf, dan nilainya
- * menyesuaikan tema agar tetap memenuhi rasio kontras: hijau #059669 hanya
- * mencapai 3,9:1 di atas kartu gelap.
+ * Warna tingkat pengukuran, dipakai untuk titik grafik dan pita latarnya.
+ * Ia tidak pernah berdiri sendiri: setiap tempat yang memakainya juga membawa
+ * label teks penuh lewat kelas .level.
  */
 const RISK_FILL: Record<string, string> = {
-  HIGH: 'var(--red)',
-  MEDIUM: 'var(--yellow)',
-  LOW: 'var(--green)',
-};
-
-const RISK_TEXT: Record<string, string> = {
-  HIGH: 'var(--red-text)',
-  MEDIUM: 'var(--yellow-text)',
-  LOW: 'var(--green-text)',
+  HIGH: 'var(--level-high)',
+  MEDIUM: 'var(--level-mid)',
+  LOW: 'var(--level-low)',
 };
 
 const RISK_LABEL: Record<Lang, Record<string, string>> = {
@@ -39,19 +33,31 @@ function riskLabel(category: string, lang: Lang) {
   return RISK_LABEL[lang][category] || category;
 }
 
+/**
+ * Kelas tingkat dari kategori risiko.
+ *
+ * Warna tidak pernah jadi penanda tunggal: kelas .level membawa label teks,
+ * bobot garis kiri yang berbeda per tingkat, dan warna sekaligus.
+ */
+function levelClass(category: string) {
+  return category === 'HIGH' ? 'level level--high'
+    : category === 'MEDIUM' ? 'level level--mid'
+    : 'level level--low';
+}
+
 function formatDate(ts: string, lang: Lang = 'id') {
   return new Date(ts).toLocaleDateString(dateLocale(lang), {
     day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
   });
 }
 
-/** Grafik garis tren skor dengan pita warna hijau/kuning/merah sebagai latar. */
+/** Grafik garis tren skor dengan pita tingkat rendah, sedang, dan tinggi. */
 function TrendChart({ sessions }: { sessions: Session[] }) {
   const { t, lang } = useI18n();
-  const w = 720, h = 220, padL = 38, padR = 12, padT = 12, padB = 28;
+  const w = 720, h = 240, padL = 44, padR = 12, padT = 12, padB = 34;
   const points = [...sessions].reverse(); // urut lama → baru
   if (points.length < 2) {
-    return <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem' }}>{t('hist.needTwo')}</p>;
+    return <p className={styles.note}>{t('hist.needTwo')}</p>;
   }
 
   const plotW = w - padL - padR;
@@ -60,37 +66,37 @@ function TrendChart({ sessions }: { sessions: Session[] }) {
   const xFor = (i: number) => padL + (i / (points.length - 1)) * plotW;
   const path = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${xFor(i)} ${yFor(p.compositeScore)}`).join(' ');
 
-  // Pita: 0-35 rendah (hijau), 35-65 sedang (kuning), 65-100 tinggi (merah)
+  // Pita: 0-35 rendah, 35-65 sedang, 65-100 tinggi
   const bandLow = { y: yFor(35), height: yFor(0) - yFor(35) };
   const bandMed = { y: yFor(65), height: yFor(35) - yFor(65) };
   const bandHigh = { y: yFor(100), height: yFor(65) - yFor(100) };
 
   return (
     <div className={styles.chartWrap}>
-      <svg viewBox={`0 0 ${w} ${h}`} width="100%" height={240} style={{ display: 'block', minWidth: 560 }}>
-        <rect x={padL} y={bandLow.y} width={plotW} height={bandLow.height} fill="var(--green)" opacity="0.09" />
-        <rect x={padL} y={bandMed.y} width={plotW} height={bandMed.height} fill="var(--yellow)" opacity="0.09" />
-        <rect x={padL} y={bandHigh.y} width={plotW} height={bandHigh.height} fill="var(--red)" opacity="0.09" />
+      <svg viewBox={`0 0 ${w} ${h}`} width="100%" height={260} style={{ display: 'block', minWidth: 560 }}>
+        <rect x={padL} y={bandLow.y} width={plotW} height={bandLow.height} fill="var(--level-low)" opacity="0.09" />
+        <rect x={padL} y={bandMed.y} width={plotW} height={bandMed.height} fill="var(--level-mid)" opacity="0.09" />
+        <rect x={padL} y={bandHigh.y} width={plotW} height={bandHigh.height} fill="var(--level-high)" opacity="0.09" />
 
         {[0, 35, 65, 100].map(v => (
           <g key={v}>
-            <line x1={padL} y1={yFor(v)} x2={w - padR} y2={yFor(v)} stroke="var(--border)" strokeWidth="1" strokeDasharray="3 3" />
-            <text x={padL - 8} y={yFor(v) + 4} textAnchor="end" fontSize="10" fill="var(--text-muted)">{v}</text>
+            <line x1={padL} y1={yFor(v)} x2={w - padR} y2={yFor(v)} stroke="var(--rule-hair)" strokeWidth="1" />
+            <text x={padL - 10} y={yFor(v) + 5} textAnchor="end" fontSize="14" fill="var(--ink-muted)">{v}</text>
           </g>
         ))}
 
-        <path d={path} fill="none" stroke="var(--brand)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        <path d={path} fill="none" stroke="var(--ink)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
 
         {points.map((p, i) => (
           <g key={p.id}>
-            <circle cx={xFor(i)} cy={yFor(p.compositeScore)} r="4.5" fill={RISK_FILL[p.riskCategory] || 'var(--brand)'} stroke="var(--bg-card)" strokeWidth="2" />
+            <circle cx={xFor(i)} cy={yFor(p.compositeScore)} r="4.5" fill={RISK_FILL[p.riskCategory] || 'var(--ink)'} stroke="var(--sheet)" strokeWidth="2" />
             <title>{`${t('hist.session')} #${p.id} - ${t('risk.score')} ${Math.round(p.compositeScore)} (${riskLabel(p.riskCategory, lang)})`}</title>
           </g>
         ))}
 
         {points.map((p, i) => (
           (i === 0 || i === points.length - 1 || points.length <= 6) ? (
-            <text key={`x-${p.id}`} x={xFor(i)} y={h - 8} textAnchor="middle" fontSize="9" fill="var(--text-muted)">
+            <text key={`x-${p.id}`} x={xFor(i)} y={h - 10} textAnchor="middle" fontSize="14" fill="var(--ink-muted)">
               #{p.id}
             </text>
           ) : null
@@ -109,15 +115,29 @@ interface BiomarkerDelta {
 }
 
 function getBiomarkerDeltas(a: Session, b: Session, t: (k: string) => string): BiomarkerDelta[] {
-  const ra = a.rawBiomarkers, rb = b.rawBiomarkers;
+  /* Dibaca lewat penormal, bukan dari rawBiomarkers langsung. Sebelumnya baris
+     simetri, sway, ROM, dan asimetri lengan di sini membaca nama field yang
+     hanya ditulis analisator live, sehingga keempatnya kosong untuk seluruh
+     pasien yang datanya berasal dari seed. Lihat lib/biomarkers.ts. */
+  const ra = normalizeBiomarkers(a), rb = normalizeBiomarkers(b);
   return [
-    { label: t('bio.tremorShort'), unit: 'Hz', from: ra?.tremor?.dominantFrequencyHz, to: rb?.tremor?.dominantFrequencyHz, higherIsWorse: true },
-    { label: t('bio.fingerTapping'), unit: t('unit.tapsPerSec'), from: ra?.fingerTapping?.tapRatePerSecond, to: rb?.fingerTapping?.tapRatePerSecond, higherIsWorse: false },
-    { label: t('bio.gaitSymmetry'), unit: '%', from: ra?.gait?.symmetryPercent, to: rb?.gait?.symmetryPercent, higherIsWorse: false },
-    { label: t('bio.armAsymmetry'), unit: '%', from: ra?.armSwing?.asymmetryPercent, to: rb?.armSwing?.asymmetryPercent, higherIsWorse: true },
-    { label: t('bio.swayArea'), unit: 'cm²', from: ra?.posturalStability?.swayAreaCm2, to: rb?.posturalStability?.swayAreaCm2, higherIsWorse: true },
-    { label: t('bio.kneeRom'), unit: '°', from: ra?.rom?.romDeg, to: rb?.rom?.romDeg, higherIsWorse: false },
+    { label: t('bio.tremorShort'), unit: 'Hz', from: ra.tremorHz ?? undefined, to: rb.tremorHz ?? undefined, higherIsWorse: true },
+    { label: t('bio.fingerTapping'), unit: t('unit.tapsPerSec'), from: ra.tapRate ?? undefined, to: rb.tapRate ?? undefined, higherIsWorse: false },
+    { label: t('bio.gaitSymmetry'), unit: '%', from: ra.symmetryPercent ?? undefined, to: rb.symmetryPercent ?? undefined, higherIsWorse: false },
+    { label: t('bio.armAsymmetry'), unit: '%', from: ra.armAsymmetryPercent ?? undefined, to: rb.armAsymmetryPercent ?? undefined, higherIsWorse: true },
+    { label: t('bio.swayArea'), unit: 'cm²', from: ra.swayAreaCm2 ?? undefined, to: rb.swayAreaCm2 ?? undefined, higherIsWorse: true },
+    { label: t('bio.kneeRom'), unit: '°', from: ra.romDeg ?? undefined, to: rb.romDeg ?? undefined, higherIsWorse: false },
   ];
+}
+
+/** Satu baris biomarker pada detail sesi: label di kiri, angka rata kanan. */
+function BiomarkerRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className={styles.biomarkerItem}>
+      <dt className={`label ${styles.biomarkerLabel}`}>{label}</dt>
+      <dd className={styles.biomarkerValue}>{children}</dd>
+    </div>
+  );
 }
 
 export default function RiwayatPage() {
@@ -132,19 +152,26 @@ export default function RiwayatPage() {
   const [detail, setDetail] = useState<Session | null>(null);
   const [shareCode, setShareCode] = useState<string | null>(null);
   const [codeCopied, setCodeCopied] = useState(false);
+  // Lihat catatan yang sama di beranda pasien: riwayat yang gagal diambil
+  // tidak boleh tampil sebagai riwayat yang memang kosong.
+  const [failed, setFailed] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (isLoading) return;
     if (!user || user.role !== 'PATIENT') { router.push('/login'); return; }
 
+    let alive = true;
+
     // Kode berbagi dibuatkan saat pertama diminta, jadi pemanggilannya
     // sekaligus menjadi penyiapan untuk pasien yang belum pernah punya.
     api.getShareCode(user.id, token!)
-      .then(res => setShareCode(res.shareCode))
-      .catch(() => setShareCode(null));
+      .then(res => { if (alive) setShareCode(res.shareCode); })
+      .catch(() => { if (alive) setShareCode(null); });
 
     api.getHistory(user.id, token!)
       .then(res => {
+        if (!alive) return;
         const list = res.sessions || [];
         setSessions(list);
         if (list.length >= 2) {
@@ -152,9 +179,15 @@ export default function RiwayatPage() {
           setCompareB(list[0].id);
         }
       })
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, [user, token, isLoading, router]);
+      .catch(e => {
+        if (!alive) return;
+        console.error(e);
+        setFailed(e instanceof Error ? e.message : String(e));
+      })
+      .finally(() => { if (alive) setLoading(false); });
+
+    return () => { alive = false; };
+  }, [user, token, isLoading, router, attempt]);
 
   const sessionA = useMemo(() => sessions.find(s => s.id === compareA) || null, [sessions, compareA]);
   const sessionB = useMemo(() => sessions.find(s => s.id === compareB) || null, [sessions, compareB]);
@@ -208,6 +241,7 @@ export default function RiwayatPage() {
       header,
       ...sessions.map(s => {
         const b = s.rawBiomarkers || {};
+        const nb = normalizeBiomarkers(s);
         const t = (s.tremorResult || {}) as Record<string, unknown>;
         return [
           String(s.id),
@@ -221,11 +255,11 @@ export default function RiwayatPage() {
           num(t.amplitudeMillimeter),
           num(b.fingerTapping?.tapRatePerSecond),
           num((s.fingerTappingResult as Record<string, unknown> | undefined)?.decrementPercent),
-          num(b.gait?.symmetryPercent),
-          num(b.gait?.cadencePerMin),
-          num(b.armSwing?.asymmetryPercent),
-          num(b.posturalStability?.swayAreaCm2),
-          num(b.rom?.romDeg),
+          num(nb.symmetryPercent),
+          num(nb.cadence),
+          num(nb.armAsymmetryPercent),
+          num(nb.swayAreaCm2),
+          num(nb.romDeg),
           (s.aiAnalysis?.ringkasan || '').replace(/\n/g, ' '),
           s.aiAnalysis?.tingkatKeyakinan || '',
           (s.aiAnalysis?.saranTindakLanjut || []).join(' | ').replace(/\n/g, ' '),
@@ -248,7 +282,38 @@ export default function RiwayatPage() {
     return (
       <div className={styles.page}>
         <AppNav />
-        <div className={styles.container}><p>{t('hist.loading')}</p></div>
+        <main className="sheet">
+          <p className={styles.loading} role="status" aria-live="polite">{t('hist.loading')}</p>
+        </main>
+      </div>
+    );
+  }
+
+  // Halaman berhenti sebelum kop dokumen dan kode berbagi, sebab keduanya
+  // menyiratkan bahwa isi berkas di bawahnya sudah lengkap.
+  if (failed) {
+    return (
+      <div className={styles.page}>
+        <AppNav />
+        <main className="sheet" id="main">
+          <div className={styles.pad}>
+            <header className="docHead">
+              <div className="docHead__meta">
+                <span>{t('hist.title')}</span>
+                <span data-no-translate="">{user?.name}</span>
+              </div>
+              <h1>{t('hist.title')}</h1>
+            </header>
+            <LoadFailure
+              detail={failed}
+              onRetry={() => {
+                setLoading(true);
+                setFailed(null);
+                setAttempt(n => n + 1);
+              }}
+            />
+          </div>
+        </main>
       </div>
     );
   }
@@ -256,292 +321,310 @@ export default function RiwayatPage() {
   return (
     <div className={styles.page}>
       <AppNav />
-      <div className={styles.container}>
-        <div className={styles.header}>
-          <div>
-            <h1>{t('hist.title')}</h1>
-            <p>{t('hist.subtitle')}</p>
-          </div>
-          {sessions.length > 0 && (
-            <div className={styles.exportRow}>
-              <button className="btn btn-outline btn-sm" onClick={() => setPrinting(true)}>{t('hist.downloadPdf')}</button>
-              <button className="btn btn-outline btn-sm" onClick={exportCSV}>{t('hist.exportCsv')}</button>
+
+      <main className="sheet" id="main">
+        <div className={styles.pad}>
+          <header className="docHead">
+            <div className="docHead__meta">
+              <span>{t('hist.title')}</span>
+              <span data-no-translate="">{user?.name}</span>
+              <span>{sessions.length} {t('prof.sessions')}</span>
             </div>
+            <h1>{t('hist.title')}</h1>
+            <p className={styles.lead}>{t('hist.subtitle')}</p>
+            {sessions.length > 0 && (
+              <div className={styles.exportRow}>
+                <button className="btn" onClick={() => setPrinting(true)}>{t('hist.downloadPdf')}</button>
+                <button className="btn" onClick={exportCSV}>{t('hist.exportCsv')}</button>
+              </div>
+            )}
+          </header>
+
+          {/* Kode berbagi. Tanpa ini pasien tidak punya cara memberi akses kepada
+              tenaga kesehatan, dan panel dokter yang baru mendaftar selalu kosong. */}
+          <section className={styles.section}>
+            <div className={styles.sectionHead}>
+              <h2 className={styles.sectionTitle}>{t('share.title')}</h2>
+            </div>
+            <p className={styles.note}>{t('share.desc')}</p>
+            <div className={styles.shareRow}>
+              <code className={styles.shareCode} data-no-translate="">
+                {shareCode || '········'}
+              </code>
+              <button className="btn" onClick={copyShareCode} disabled={!shareCode}>
+                {t('share.copy')}
+              </button>
+              <button className="btn" onClick={resetShareCode} disabled={!shareCode}>
+                {t('share.reset')}
+              </button>
+              {codeCopied && <span className={styles.shareOk} role="status">{t('share.copied')}</span>}
+            </div>
+            <p className={styles.shareHint}>
+              {shareCode ? t('share.resetHint') : t('share.loading')}
+            </p>
+          </section>
+
+          {sessions.length === 0 ? (
+            <section className={styles.section}>
+              <div className={styles.emptyState}>
+                <p>{t('hist.noHistory')}</p>
+                <div className={styles.exportRow}>
+                  <Link href="/screening" className="btn btn--primary">{t('hist.startFirst')}</Link>
+                </div>
+              </div>
+            </section>
+          ) : (
+            <>
+              <section className={styles.section}>
+                <div className={styles.sectionHead}>
+                  <h2 className={styles.sectionTitle}>{t('hist.trendTitle')}</h2>
+                </div>
+                <TrendChart sessions={sessions} />
+              </section>
+
+              {sessions.length >= 2 && (
+                <section className={styles.section}>
+                  <div className={styles.sectionHead}>
+                    <h2 className={styles.sectionTitle}>{t('hist.compareTitle')}</h2>
+                  </div>
+                  <div className={styles.compareRow}>
+                    <select
+                      className={styles.compareSelect}
+                      aria-label={lang === 'en' ? 'First session to compare' : 'Sesi pertama yang dibandingkan'}
+                      value={compareA ?? ''}
+                      onChange={e => setCompareA(Number(e.target.value))}
+                    >
+                      {sessions.map(s => <option key={s.id} value={s.id} data-no-translate="">#{s.id} · {formatDate(s.timestamp, lang)}</option>)}
+                    </select>
+                    <span className={styles.compareVs}>vs</span>
+                    <select
+                      className={styles.compareSelect}
+                      aria-label={lang === 'en' ? 'Second session to compare' : 'Sesi kedua yang dibandingkan'}
+                      value={compareB ?? ''}
+                      onChange={e => setCompareB(Number(e.target.value))}
+                    >
+                      {sessions.map(s => <option key={s.id} value={s.id} data-no-translate="">#{s.id} · {formatDate(s.timestamp, lang)}</option>)}
+                    </select>
+                  </div>
+
+                  {sessionA && sessionB && (
+                    <div className={styles.deltaList}>
+                      <div className={styles.deltaItem}>
+                        <span className={styles.deltaLabel}>{t('hist.compositeScore')}</span>
+                        <span className={styles.deltaValue}>
+                          {Math.round(sessionA.compositeScore)} → {Math.round(sessionB.compositeScore)}{' '}
+                          {/* Arah perubahan dibawa kata penuh dan bobot huruf,
+                              bukan panah berwarna. */}
+                          <span className={
+                            sessionB.compositeScore > sessionA.compositeScore ? styles.deltaWorse
+                              : sessionB.compositeScore < sessionA.compositeScore ? styles.deltaBetter
+                                : styles.deltaSame
+                          }>
+                            {sessionB.compositeScore > sessionA.compositeScore ? t('hist.worsening')
+                              : sessionB.compositeScore < sessionA.compositeScore ? t('hist.improving') : t('hist.stable')}
+                          </span>
+                        </span>
+                      </div>
+                      {getBiomarkerDeltas(sessionA, sessionB, t).map(d => {
+                        if (d.from === undefined || d.to === undefined) return null;
+                        const worse = d.higherIsWorse ? d.to > d.from : d.to < d.from;
+                        const better = d.higherIsWorse ? d.to < d.from : d.to > d.from;
+                        return (
+                          <div key={d.label} className={styles.deltaItem}>
+                            <span className={styles.deltaLabel}>{d.label}</span>
+                            <span className={styles.deltaValue}>
+                              {d.from} → {d.to} {d.unit}{' '}
+                              <span className={worse ? styles.deltaWorse : better ? styles.deltaBetter : styles.deltaSame}>
+                                {worse ? t('hist.worsening') : better ? t('hist.improving') : t('hist.stable')}
+                              </span>
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </section>
+              )}
+
+              <section className={styles.section}>
+                <div className={styles.sectionHead}>
+                  <h2 className={styles.sectionTitle}>{t('hist.allSessions')} ({sessions.length})</h2>
+                </div>
+                <div className={styles.tableScroll}>
+                  <table className="dataTable">
+                    <thead>
+                      <tr>
+                        <th scope="col">{t('hist.date')}</th>
+                        <th scope="col" className="num">{t('risk.score')}</th>
+                        <th scope="col">{t('hist.category')}</th>
+                        <th scope="col">{t('hist.aiAnalysis')}</th>
+                        <th scope="col">{t('hist.doctorNote')}</th>
+                        <th scope="col"><span className="srOnly">{t('hist.detail')}</span></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sessions.map(s => (
+                        <tr key={s.id}>
+                          <td>
+                            <time dateTime={String(s.timestamp)}>{formatDate(s.timestamp, lang)}</time>
+                          </td>
+                          <td className="num"><strong>{Math.round(s.compositeScore)}</strong></td>
+                          <td>
+                            <span className={levelClass(s.riskCategory)}>
+                              {riskLabel(s.riskCategory, lang)}
+                            </span>
+                          </td>
+                          <td>
+                            {s.aiAnalysis?.available
+                              ? t('hist.available')
+                              : <span className={styles.muted}>{t('hist.none')}</span>}
+                          </td>
+                          <td className={styles.noteCell}>
+                            {s.doctorNote
+                              ? <span data-no-translate="">{s.doctorNote}</span>
+                              : <span className={styles.muted}>{t('hist.noDoctorNote')}</span>}
+                          </td>
+                          <td>
+                            <button className="btn" onClick={() => setDetail(s)}>{t('hist.detail')}</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </>
           )}
         </div>
+      </main>
 
-        {/* Kode berbagi. Tanpa ini pasien tidak punya cara memberi akses kepada
-            tenaga kesehatan, dan panel dokter yang baru mendaftar selalu kosong. */}
-        <div className={styles.card}>
-          <h2 className={styles.cardTitle}>{t('share.title')}</h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.6 }}>
-            {t('share.desc')}
-          </p>
-          <div className={styles.shareRow}>
-            <code className={styles.shareCode} data-no-translate="">
-              {shareCode || '········'}
-            </code>
-            <button className="btn btn-outline btn-sm" onClick={copyShareCode} disabled={!shareCode}>
-              {t('share.copy')}
-            </button>
-            <button className="btn btn-outline btn-sm" onClick={resetShareCode} disabled={!shareCode}>
-              {t('share.reset')}
-            </button>
-            {codeCopied && <span className={styles.shareOk}>{t('share.copied')}</span>}
-          </div>
-          <p className={styles.shareHint}>
-            {shareCode ? t('share.resetHint') : t('share.loading')}
-          </p>
-        </div>
+      {/* Panel detail memakai Radix Dialog, bukan div dengan klik di luar.
+          Bentuk lamanya tidak punya role dialog, tidak menjebak fokus, dan
+          tidak menanggapi Escape, sehingga menekan Tab dari dalamnya justru
+          berjalan ke halaman di belakangnya. */}
+      <Dialog.Root open={!!detail} onOpenChange={o => !o && setDetail(null)}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="dialogScrim" />
+          <Dialog.Content className="dialogSheet">
+            {detail && (
+              <>
+                <Dialog.Title className={styles.detailTitle}>
+                  {t('hist.sessionDetail')} #{detail.id}
+                </Dialog.Title>
+                <Dialog.Description className={styles.detailDate}>
+                  <time dateTime={String(detail.timestamp)}>{formatDate(detail.timestamp, lang)}</time>
+                </Dialog.Description>
 
-        {sessions.length === 0 ? (
-          <div className={styles.card}>
-            <div className={styles.emptyState}>
-              <div style={{ marginBottom: 14, color: 'var(--text-muted)', display: 'flex', justifyContent: 'center' }}>
-                <ClipboardIcon size={36} />
-              </div>
-              <p style={{ marginBottom: 16 }}>{t('hist.noHistory')}</p>
-              <Link href="/screening" className="btn btn-primary">{t('hist.startFirst')}</Link>
-            </div>
-          </div>
-        ) : (
-          <>
-            <div className={styles.card}>
-              <h2 className={styles.cardTitle}>{t('hist.trendTitle')}</h2>
-              <TrendChart sessions={sessions} />
-            </div>
-
-            {sessions.length >= 2 && (
-              <div className={styles.card}>
-                <h2 className={styles.cardTitle}>{t('hist.compareTitle')}</h2>
-                <div className={styles.compareRow}>
-                  <select
-                    className={styles.compareSelect}
-                    aria-label={lang === 'en' ? 'First session to compare' : 'Sesi pertama yang dibandingkan'}
-                    value={compareA ?? ''}
-                    onChange={e => setCompareA(Number(e.target.value))}
-                  >
-                    {sessions.map(s => <option key={s.id} value={s.id} data-no-translate="">#{s.id} · {formatDate(s.timestamp, lang)}</option>)}
-                  </select>
-                  <span style={{ color: 'var(--text-muted)' }}>vs</span>
-                  <select
-                    className={styles.compareSelect}
-                    aria-label={lang === 'en' ? 'Second session to compare' : 'Sesi kedua yang dibandingkan'}
-                    value={compareB ?? ''}
-                    onChange={e => setCompareB(Number(e.target.value))}
-                  >
-                    {sessions.map(s => <option key={s.id} value={s.id} data-no-translate="">#{s.id} · {formatDate(s.timestamp, lang)}</option>)}
-                  </select>
+                <div className={styles.detailScore}>
+                  <span className={styles.detailScoreValue}>{Math.round(detail.compositeScore)}</span>
+                  <span className={levelClass(detail.riskCategory)}>
+                    {t('dash.riskPrefix')} {riskLabel(detail.riskCategory, lang)}
+                  </span>
                 </div>
 
-                {sessionA && sessionB && (
-                  <div className={styles.deltaList}>
-                    <div className={styles.deltaItem}>
-                      <span className={styles.deltaLabel}>{t('hist.compositeScore')}</span>
-                      <span className={styles.deltaValue}>
-                        {Math.round(sessionA.compositeScore)} → {Math.round(sessionB.compositeScore)}{' '}
-                        <span style={{ color: sessionB.compositeScore > sessionA.compositeScore ? 'var(--red-text)' : sessionB.compositeScore < sessionA.compositeScore ? 'var(--green-text)' : 'var(--text-muted)' }}>
-                          {sessionB.compositeScore > sessionA.compositeScore ? `↑ ${t('hist.worsening')}`
-                            : sessionB.compositeScore < sessionA.compositeScore ? `↓ ${t('hist.improving')}` : `→ ${t('hist.stable')}`}
-                        </span>
-                      </span>
+                {detail.mlPrediction?.predictedLabel && (
+                  <p className={styles.detailPattern}>
+                    {t('hist.closestPattern')}: <strong>{translateServerLabel(detail.mlPrediction.predictedLabel, lang)}</strong>
+                    {detail.mlPrediction.confidence !== undefined && ` (${detail.mlPrediction.confidence}%)`}
+                  </p>
+                )}
+
+                {/* Dibaca lewat penormal. Empat dari enam baris di bawah ini
+                    sebelumnya tidak pernah muncul untuk pasien seed, karena
+                    keduanya menyebut nama field yang hanya ditulis analisator
+                    live. Lihat lib/biomarkers.ts. */}
+                <dl className={styles.biomarkerList}>
+                  {(() => {
+                    const nb = normalizeBiomarkers(detail);
+                    const rows: [string, string, number | null][] = [
+                      [t('bio.tremorShort'), 'Hz', nb.tremorHz],
+                      [t('bio.fingerTapping'), t('unit.perSec'), nb.tapRate],
+                      [t('bio.gaitSymmetry'), '%', nb.symmetryPercent],
+                      [t('bio.armAsymmetry'), '%', nb.armAsymmetryPercent],
+                      [t('bio.swayArea'), 'cm²', nb.swayAreaCm2],
+                      [t('bio.kneeRom'), '°', nb.romDeg],
+                    ];
+                    return rows.map(([label, unit, value]) =>
+                      value === null ? null : (
+                        <BiomarkerRow key={label} label={label}>
+                          {value.toFixed(2)} {unit}
+                        </BiomarkerRow>
+                      ),
+                    );
+                  })()}
+                </dl>
+
+                {/* Analisis AI yang tersimpan dari sesi ini, supaya rekomendasinya
+                    masih bisa dibaca ulang kapan saja, bukan hanya sekali saat selesai tes */}
+                {detail.aiAnalysis?.available && (
+                  <div className={`field ${styles.aiBox}`}>
+                    <div className={styles.aiHeader}>
+                      <span className={styles.aiTitle}>{t('hist.aiCombined')}</span>
+                      {detail.aiAnalysis.tingkatKeyakinan && (
+                        <span className={styles.aiConfidence}>{t('hist.confidence')}: {detail.aiAnalysis.tingkatKeyakinan}</span>
+                      )}
                     </div>
-                    {getBiomarkerDeltas(sessionA, sessionB, t).map(d => {
-                      if (d.from === undefined || d.to === undefined) return null;
-                      const worse = d.higherIsWorse ? d.to > d.from : d.to < d.from;
-                      const better = d.higherIsWorse ? d.to < d.from : d.to > d.from;
-                      return (
-                        <div key={d.label} className={styles.deltaItem}>
-                          <span className={styles.deltaLabel}>{d.label}</span>
-                          <span className={styles.deltaValue}>
-                            {d.from} → {d.to} {d.unit}{' '}
-                            <span style={{ color: worse ? 'var(--red-text)' : better ? 'var(--green-text)' : 'var(--text-muted)' }}>
-                              {worse ? `↑ ${t('hist.worsening')}` : better ? `↓ ${t('hist.improving')}` : `→ ${t('hist.stable')}`}
-                            </span>
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
 
-            <div className={styles.card}>
-              <h2 className={styles.cardTitle}>{t('hist.allSessions')} ({sessions.length})</h2>
-              <div className={styles.tableWrap}>
-                <table className={styles.table}>
-                  <thead>
-                    <tr>
-                      <th>{t('hist.date')}</th>
-                      <th>{t('risk.score')}</th>
-                      <th>{t('hist.category')}</th>
-                      <th>{t('hist.aiAnalysis')}</th>
-                      <th>{t('hist.doctorNote')}</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sessions.map(s => (
-                      <tr key={s.id}>
-                        <td>{formatDate(s.timestamp, lang)}</td>
-                        <td style={{ fontWeight: 700, color: RISK_TEXT[s.riskCategory] }}>{Math.round(s.compositeScore)}</td>
-                        <td>
-                          <span className={styles.riskPill} style={{ background: `color-mix(in srgb, ${RISK_FILL[s.riskCategory]} 15%, transparent)`, color: RISK_TEXT[s.riskCategory] }}>
-                            {riskLabel(s.riskCategory, lang)}
-                          </span>
-                        </td>
-                        <td>
-                          {s.aiAnalysis?.available
-                            ? <span className={styles.aiPill}><SparkleIcon size={13} /> {t('hist.available')}</span>
-                            : <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>{t('hist.none')}</span>}
-                        </td>
-                        <td className={styles.noteCell}>
-                          {s.doctorNote
-                            ? <span data-no-translate="">{s.doctorNote}</span>
-                            : <span style={{ color: 'var(--text-muted)' }}>{t('hist.noDoctorNote')}</span>}
-                        </td>
-                        <td>
-                          <button className="btn btn-outline btn-sm" onClick={() => setDetail(s)}>{t('hist.detail')}</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </>
-        )}
-      </div>
+                    {detail.aiAnalysis.ringkasan && (
+                      <p className={styles.aiSummary}>{detail.aiAnalysis.ringkasan}</p>
+                    )}
 
-      {detail && (
-        <div className={styles.detailPanel} onClick={() => setDetail(null)}>
-          <div className={styles.detailCard} onClick={e => e.stopPropagation()}>
-            <h2 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: 4 }}>{t('hist.sessionDetail')} #{detail.id}</h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', marginBottom: 16 }}>{formatDate(detail.timestamp, lang)}</p>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-              <span style={{ fontSize: '2.2rem', fontWeight: 800, color: RISK_TEXT[detail.riskCategory] }}>
-                {Math.round(detail.compositeScore)}
-              </span>
-              <span className={styles.riskPill} style={{ background: `color-mix(in srgb, ${RISK_FILL[detail.riskCategory]} 15%, transparent)`, color: RISK_TEXT[detail.riskCategory] }}>
-                {t('dash.riskPrefix')} {riskLabel(detail.riskCategory, lang)}
-              </span>
-            </div>
-
-            {detail.mlPrediction?.predictedLabel && (
-              <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: 8 }}>
-                {t('hist.closestPattern')}: <strong style={{ color: 'var(--purple-text)' }}>{translateServerLabel(detail.mlPrediction.predictedLabel, lang)}</strong>
-                {detail.mlPrediction.confidence !== undefined && ` (${detail.mlPrediction.confidence}%)`}
-              </p>
-            )}
-
-            <div className={styles.biomarkerGrid}>
-              {detail.rawBiomarkers?.tremor?.dominantFrequencyHz !== undefined && (
-                <div className={styles.biomarkerItem}>
-                  <div className={styles.biomarkerLabel}>{t('bio.tremorShort')}</div>
-                  <div className={styles.biomarkerValue}>{detail.rawBiomarkers.tremor.dominantFrequencyHz} Hz</div>
-                </div>
-              )}
-              {detail.rawBiomarkers?.fingerTapping?.tapRatePerSecond !== undefined && (
-                <div className={styles.biomarkerItem}>
-                  <div className={styles.biomarkerLabel}>{t('bio.fingerTapping')}</div>
-                  <div className={styles.biomarkerValue}>{detail.rawBiomarkers.fingerTapping.tapRatePerSecond} {t('unit.perSec')}</div>
-                </div>
-              )}
-              {detail.rawBiomarkers?.gait?.symmetryPercent !== undefined && (
-                <div className={styles.biomarkerItem}>
-                  <div className={styles.biomarkerLabel}>{t('bio.gaitSymmetry')}</div>
-                  <div className={styles.biomarkerValue}>{detail.rawBiomarkers.gait.symmetryPercent}%</div>
-                </div>
-              )}
-              {detail.rawBiomarkers?.armSwing?.asymmetryPercent !== undefined && (
-                <div className={styles.biomarkerItem}>
-                  <div className={styles.biomarkerLabel}>{t('bio.armAsymmetry')}</div>
-                  <div className={styles.biomarkerValue}>{detail.rawBiomarkers.armSwing.asymmetryPercent}%</div>
-                </div>
-              )}
-              {detail.rawBiomarkers?.posturalStability?.swayAreaCm2 !== undefined && (
-                <div className={styles.biomarkerItem}>
-                  <div className={styles.biomarkerLabel}>{t('bio.swayArea')}</div>
-                  <div className={styles.biomarkerValue}>{detail.rawBiomarkers.posturalStability.swayAreaCm2} cm²</div>
-                </div>
-              )}
-              {detail.rawBiomarkers?.rom?.romDeg !== undefined && (
-                <div className={styles.biomarkerItem}>
-                  <div className={styles.biomarkerLabel}>{t('bio.kneeRom')}</div>
-                  <div className={styles.biomarkerValue}>{detail.rawBiomarkers.rom.romDeg}°</div>
-                </div>
-              )}
-            </div>
-
-            {/* Analisis AI yang tersimpan dari sesi ini, supaya rekomendasinya
-                masih bisa dibaca ulang kapan saja, bukan hanya sekali saat selesai tes */}
-            {detail.aiAnalysis?.available && (
-              <div className={styles.aiBox}>
-                <div className={styles.aiHeader}>
-                  <span className={styles.aiTitle}><SparkleIcon size={16} /> {t('hist.aiCombined')}</span>
-                  {detail.aiAnalysis.tingkatKeyakinan && (
-                    <span className={styles.aiConfidence}>{t('hist.confidence')}: {detail.aiAnalysis.tingkatKeyakinan}</span>
-                  )}
-                </div>
-
-                {detail.aiAnalysis.ringkasan && (
-                  <p className={styles.aiSummary}>{detail.aiAnalysis.ringkasan}</p>
-                )}
-
-                {detail.aiAnalysis.korelasiGejala && detail.aiAnalysis.korelasiGejala.length > 0 && (
-                  <div style={{ marginBottom: 14 }}>
-                    <h4 className={styles.aiSubTitle}>{t('hist.symptomLink')}</h4>
-                    {detail.aiAnalysis.korelasiGejala.map((k, i) => (
-                      <div key={i} className={styles.correlationItem}>
-                        <span className={k.konsisten ? styles.dotOk : styles.dotWarn} />
-                        <div>
-                          <div className={styles.correlationSymptom}>{k.gejala}</div>
-                          <div className={styles.correlationFinding}>{k.temuanPengukuran}</div>
-                        </div>
+                    {detail.aiAnalysis.korelasiGejala && detail.aiAnalysis.korelasiGejala.length > 0 && (
+                      <div className={styles.aiGroup}>
+                        <h4 className={styles.aiSubTitle}>{t('hist.symptomLink')}</h4>
+                        {detail.aiAnalysis.korelasiGejala.map((k, i) => (
+                          <div
+                            key={i}
+                            className={`${styles.correlationItem} ${k.konsisten ? styles.corrOk : styles.corrWarn}`}
+                          >
+                            <div className={styles.correlationSymptom}>{k.gejala}</div>
+                            <div className={styles.correlationFinding}>{k.temuanPengukuran}</div>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    )}
+
+                    {detail.aiAnalysis.saranTindakLanjut && detail.aiAnalysis.saranTindakLanjut.length > 0 && (
+                      <div>
+                        <h4 className={styles.aiSubTitle}>{t('hist.followUp')}</h4>
+                        <ul className={styles.aiList}>
+                          {detail.aiAnalysis.saranTindakLanjut.map((s, i) => <li key={i}>{s}</li>)}
+                        </ul>
+                      </div>
+                    )}
+
+                    {detail.aiAnalysis.perluPerhatianSegera && (
+                      <p className={styles.urgentNote}>{t('hist.urgentNote')}</p>
+                    )}
                   </div>
                 )}
 
-                {detail.aiAnalysis.saranTindakLanjut && detail.aiAnalysis.saranTindakLanjut.length > 0 && (
-                  <div>
-                    <h4 className={styles.aiSubTitle}>{t('hist.followUp')}</h4>
+                {detail.recommendations && detail.recommendations.length > 0 && (
+                  <div className={styles.aiGroup}>
+                    <h3 className={styles.aiSubTitle}>{t('hist.systemRec')}</h3>
                     <ul className={styles.aiList}>
-                      {detail.aiAnalysis.saranTindakLanjut.map((s, i) => <li key={i}>{s}</li>)}
+                      {detail.recommendations.map((r, i) => <li key={i}>{r}</li>)}
                     </ul>
                   </div>
                 )}
 
-                {detail.aiAnalysis.perluPerhatianSegera && (
-                  <div className={styles.urgentNote}>
-                    {t('hist.urgentNote')}
+                {detail.doctorNote && (
+                  <div className={`field ${styles.doctorNoteBox}`}>
+                    <strong className={`label ${styles.doctorNoteLabel}`}>{t('hist.doctorNote')}</strong>
+                    <p className={styles.doctorNoteText} data-no-translate="">{detail.doctorNote}</p>
                   </div>
                 )}
-              </div>
-            )}
 
-            {detail.recommendations && detail.recommendations.length > 0 && (
-              <div style={{ marginBottom: 16 }}>
-                <h3 className={styles.aiSubTitle}>{t('hist.systemRec')}</h3>
-                <ul className={styles.aiList}>
-                  {detail.recommendations.map((r, i) => <li key={i}>{r}</li>)}
-                </ul>
-              </div>
+                <Dialog.Close asChild>
+                  <button className={`btn btn--primary btn--lg btn--block ${styles.dialogClose}`}>
+                    {t('common.close')}
+                  </button>
+                </Dialog.Close>
+              </>
             )}
-
-            {detail.doctorNote && (
-              <div className={styles.doctorNoteBox}>
-                <strong className={styles.doctorNoteLabel}>{t('hist.doctorNote')}</strong>
-                <p className={styles.doctorNoteText} data-no-translate="">{detail.doctorNote}</p>
-              </div>
-            )}
-
-            <button className="btn btn-primary" style={{ width: '100%' }} onClick={() => setDetail(null)}>{t('common.close')}</button>
-          </div>
-        </div>
-      )}
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
 
       {/* Laporan cetak memakai template khusus, bukan menyalin tampilan halaman */}
       <div data-report-host="">

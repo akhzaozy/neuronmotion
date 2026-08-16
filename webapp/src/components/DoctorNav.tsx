@@ -21,31 +21,34 @@ export default function DoctorNav() {
     <nav className={styles.nav}>
       <div className={styles.inner}>
         <Link href="/doctor" className={styles.brand}>
-          <Logo size={30} />
-          <span className={styles.brandText} data-no-translate="">
-            NeuronMotion <span className={styles.brandSuffix}>AI</span>
-          </span>
+          <Logo size={17} />
         </Link>
-        <div className={styles.links}>
-          {NAV_ITEMS.map(item => (
-            <Link
-              key={item.href}
-              href={item.href}
-              // Dashboard hanya aktif pada path persis, agar tidak ikut menyala
-              // ketika pengguna berada di submenu seperti /doctor/edukasi
-              className={`${styles.link} ${
-                (item.href === '/doctor' ? pathname === '/doctor' : pathname.startsWith(item.href))
-                  ? styles.linkActive : ''
-              }`}
-            >
-              {t(item.key)}
-            </Link>
-          ))}
-        </div>
+
         <div className={styles.actions}>
-          <span className={styles.roleBadge}>{t('nav.portalNakes')}</span>
+          {/* Penanda portal dibedakan lewat label teks, bukan lencana berwarna,
+              supaya nakes selalu tahu ia sedang berada di sisi mana. */}
+          <span className={styles.roleTag}>{t('nav.portalNakes')}</span>
           <LanguageToggle />
           <ThemeToggle size="sm" />
+        </div>
+
+        <div className={styles.links}>
+          {NAV_ITEMS.map(item => {
+            // Beranda hanya aktif pada path persis, agar tidak ikut menyala
+            // ketika pengguna berada di submenu seperti /doctor/edukasi
+            const active =
+              item.href === '/doctor' ? pathname === '/doctor' : pathname.startsWith(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`${styles.link} ${active ? styles.linkActive : ''}`}
+                aria-current={active ? 'page' : undefined}
+              >
+                {t(item.key)}
+              </Link>
+            );
+          })}
         </div>
       </div>
     </nav>

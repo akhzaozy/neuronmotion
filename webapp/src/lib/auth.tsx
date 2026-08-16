@@ -1,6 +1,7 @@
 'use client';
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { UserProfile } from '@/lib/api';
+import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
+import { UserProfile, SESSION_EXPIRED_EVENT } from '@/lib/api';
 
 interface AuthContextType {
   user: UserProfile | null;
@@ -16,6 +17,7 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const router = useRouter();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -37,12 +39,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(token);
   };
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('gs_token');
     localStorage.removeItem('gs_user');
     setUser(null);
     setToken(null);
-  };
+  }, []);
+
+  /* ── Sesi berakhir ────────────────────────────────────────────────────────
+     Token berlaku 24 jam. Ketika server menolaknya, lapisan api menembakkan
+     peristiwa ini dan di sinilah pengguna benar-benar dikeluarkan, lalu
+     dibawa ke halaman masuk dengan penanda ?expired=1 supaya ia membaca
+     penjelasan alih-alih menyimpulkan sendiri bahwa aplikasinya rusak.
+
+     Ditangani terpusat, bukan di setiap halaman: kalau tidak, setiap
+     pemanggilan API baru di kemudian hari harus mengingat penanganan yang
+     sama, dan yang terlupa akan mengulang persoalan ini. */
+  useEffect(() => {
+    const onExpired = () => {
+      logout();
+      router.replace('/login?expired=1');
+    };
+    window.addEventListener(SESSION_EXPIRED_EVENT, onExpired);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, onExpired);
+  }, [logout, router]);
 
   return (
     <AuthContext.Provider value={{ user, token, login, logout, isLoading }}>

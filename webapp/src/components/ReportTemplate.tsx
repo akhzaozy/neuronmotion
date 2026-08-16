@@ -1,5 +1,7 @@
 'use client';
 import { Session } from '@/lib/api';
+import { normalizeBiomarkers } from '@/lib/biomarkers';
+import Logo from './Logo';
 import styles from './ReportTemplate.module.css';
 
 export interface ReportPatient {
@@ -57,23 +59,23 @@ function TrendChart({ sessions }: { sessions: Session[] }) {
   return (
     <svg viewBox={`0 0 ${w} ${h}`} className={styles.chart}>
       {/* Pita kategori risiko sebagai latar */}
-      <rect x={padL} y={yFor(100)} width={w - padL - padR} height={yFor(65) - yFor(100)} fill="#fdecea" />
-      <rect x={padL} y={yFor(65)} width={w - padL - padR} height={yFor(35) - yFor(65)} fill="#fdf6e3" />
-      <rect x={padL} y={yFor(35)} width={w - padL - padR} height={yFor(0) - yFor(35)} fill="#eaf7ee" />
+      <rect x={padL} y={yFor(100)} width={w - padL - padR} height={yFor(65) - yFor(100)} className={styles.bandHigh} />
+      <rect x={padL} y={yFor(65)} width={w - padL - padR} height={yFor(35) - yFor(65)} className={styles.bandMid} />
+      <rect x={padL} y={yFor(35)} width={w - padL - padR} height={yFor(0) - yFor(35)} className={styles.bandLow} />
 
       {[0, 35, 65, 100].map(v => (
         <g key={v}>
-          <line x1={padL} y1={yFor(v)} x2={w - padR} y2={yFor(v)} stroke="#cbd5e1" strokeWidth="0.5" strokeDasharray="3 3" />
-          <text x={padL - 6} y={yFor(v) + 3} textAnchor="end" fontSize="8" fill="#64748b">{v}</text>
+          <line x1={padL} y1={yFor(v)} x2={w - padR} y2={yFor(v)} className={styles.gridLine} />
+          <text x={padL - 6} y={yFor(v) + 3} textAnchor="end" fontSize="8" className={styles.axisText}>{v}</text>
         </g>
       ))}
 
-      <path d={path} fill="none" stroke="#2563eb" strokeWidth="2" strokeLinejoin="round" />
+      <path d={path} className={styles.trendLine} />
       {points.map((p, i) => (
         <g key={p.id}>
           <circle cx={padL + i * xStep} cy={yFor(p.compositeScore)} r="3"
-            fill={p.riskCategory === 'HIGH' ? '#dc2626' : p.riskCategory === 'MEDIUM' ? '#d97706' : '#059669'} />
-          <text x={padL + i * xStep} y={h - 8} textAnchor="middle" fontSize="7" fill="#64748b">
+            className={styles[`dot${p.riskCategory}` as keyof typeof styles] ?? styles.dotLOW} />
+          <text x={padL + i * xStep} y={h - 8} textAnchor="middle" fontSize="7" className={styles.axisText}>
             #{p.id}
           </text>
         </g>
@@ -89,6 +91,7 @@ function TrendChart({ sessions }: { sessions: Session[] }) {
  */
 export default function ReportTemplate({ patient, sessions, meta }: Props) {
   const latest = sessions[0];
+  const nb = normalizeBiomarkers(latest);
   const age = patient.age ?? calcAge(patient.dateOfBirth);
   const location = [patient.city, patient.state, patient.countryName].filter(Boolean).join(', ');
   const printedAt = new Date().toLocaleString('id-ID', {
@@ -99,18 +102,14 @@ export default function ReportTemplate({ patient, sessions, meta }: Props) {
     <div className={styles.sheet} id="neuronmotion-report">
       {/* ── Kop laporan ── */}
       <header className={styles.head}>
+        {/* Tanda nama yang sama dengan seluruh produk. Sebelumnya di sini ada
+            ikon kotak biru bersudut membulat, padahal Logo.tsx menyatakan
+            bahwa dunia visual ini tidak memakai ikon dan tandanya adalah
+            namanya sendiri. Laporan adalah berkas yang paling sering dilihat
+            di luar aplikasi, jadi justru di sinilah tandanya harus benar. */}
         <div className={styles.brandBlock}>
-          <div className={styles.logoMark}>
-            <svg viewBox="0 0 56 56" width="34" height="34">
-              <rect width="56" height="56" rx="14" fill="#2563eb" />
-              <path d="M11 30h7l4-11 6 20 4-14 4 5h9" stroke="#fff" strokeWidth="3"
-                strokeLinecap="round" strokeLinejoin="round" fill="none" />
-            </svg>
-          </div>
-          <div>
-            <div className={styles.brandName}>NeuronMotion</div>
-            <div className={styles.brandSub}>Laporan Skrining Biomarker Motorik</div>
-          </div>
+          <Logo size={17} />
+          <div className={styles.brandSub}>Laporan Skrining Biomarker Motorik</div>
         </div>
         <div className={styles.printedAt}>
           <div>Dicetak</div>
@@ -183,27 +182,26 @@ export default function ReportTemplate({ patient, sessions, meta }: Props) {
             <thead>
               <tr><th>Parameter</th><th>Nilai</th><th>Satuan</th></tr>
             </thead>
+            {/* Dibaca lewat penormal, bukan dari rawBiomarkers langsung.
+                Sebelumnya simetri langkah, asimetri ayunan lengan, sway area,
+                dan ROM tidak pernah tercetak untuk pasien yang datanya berasal
+                dari seed, karena keempatnya menyebut nama field yang hanya
+                ditulis analisator live. Ini laporan yang masuk rekam medis,
+                jadi baris yang diam-diam hilang adalah persoalan yang lebih
+                besar daripada tampilan. Lihat lib/biomarkers.ts. */}
             <tbody>
-              {latest.rawBiomarkers.tremor?.dominantFrequencyHz !== undefined && (
-                <tr><td>Frekuensi tremor</td><td>{latest.rawBiomarkers.tremor.dominantFrequencyHz}</td><td>Hz</td></tr>
-              )}
-              {latest.rawBiomarkers.fingerTapping?.tapRatePerSecond !== undefined && (
-                <tr><td>Kecepatan finger tapping</td><td>{latest.rawBiomarkers.fingerTapping.tapRatePerSecond}</td><td>ketuk/detik</td></tr>
-              )}
-              {latest.rawBiomarkers.gait?.symmetryPercent !== undefined && (
-                <tr><td>Simetri langkah</td><td>{latest.rawBiomarkers.gait.symmetryPercent}</td><td>%</td></tr>
-              )}
-              {latest.rawBiomarkers.gait?.cadencePerMin !== undefined && (
-                <tr><td>Kadense</td><td>{latest.rawBiomarkers.gait.cadencePerMin}</td><td>langkah/menit</td></tr>
-              )}
-              {latest.rawBiomarkers.armSwing?.asymmetryPercent !== undefined && (
-                <tr><td>Asimetri ayunan lengan</td><td>{latest.rawBiomarkers.armSwing.asymmetryPercent}</td><td>%</td></tr>
-              )}
-              {latest.rawBiomarkers.posturalStability?.swayAreaCm2 !== undefined && (
-                <tr><td>Sway area postural</td><td>{latest.rawBiomarkers.posturalStability.swayAreaCm2}</td><td>cm²</td></tr>
-              )}
-              {latest.rawBiomarkers.rom?.romDeg !== undefined && (
-                <tr><td>Range of motion lutut</td><td>{latest.rawBiomarkers.rom.romDeg}</td><td>derajat</td></tr>
+              {([
+                ['Frekuensi tremor', 'Hz', nb.tremorHz],
+                ['Kecepatan finger tapping', 'ketuk/detik', nb.tapRate],
+                ['Simetri langkah', '%', nb.symmetryPercent],
+                ['Kadense', 'langkah/menit', nb.cadence],
+                ['Asimetri ayunan lengan', '%', nb.armAsymmetryPercent],
+                ['Sway area postural', 'cm²', nb.swayAreaCm2],
+                ['Range of motion lutut', 'derajat', nb.romDeg],
+              ] as [string, string, number | null][]).map(([label, unit, value]) =>
+                value === null ? null : (
+                  <tr key={label}><td>{label}</td><td>{value.toFixed(2)}</td><td>{unit}</td></tr>
+                ),
               )}
             </tbody>
           </table>

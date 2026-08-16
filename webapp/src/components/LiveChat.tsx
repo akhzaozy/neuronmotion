@@ -55,6 +55,23 @@ export default function LiveChat() {
     else if (messages.length > 1) setHasUnread(true);
   }, [messages, isOpen, scrollToBottom]);
 
+  /* Tinggi isian mengikuti isinya.
+     ─────────────────────────────────────────────────────────────────────────
+     Tanpa ini, isian terkunci pada rows dan pertanyaan panjang menggulir di
+     dalam kotak setinggi dua baris, sehingga pengguna hanya pernah melihat
+     dua baris terakhir dari kalimat yang sedang ia susun sendiri. Itu terasa
+     terutama bagi pengguna yang mengetik pelan.
+
+     Tinggi direset ke 'auto' lebih dulu supaya kotak juga menyusut kembali
+     ketika teksnya dihapus, bukan hanya membesar. Batas atasnya disamakan
+     dengan max-height di berkas modulnya; melewati itu barulah ia menggulir. */
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 132)}px`;
+  }, [input, isOpen]);
+
   async function sendMessage() {
     const text = input.trim();
     if (!text || loading) return;
@@ -110,7 +127,8 @@ export default function LiveChat() {
 
   return (
     <>
-      {/* Floating button */}
+      {/* Tombol pembuka. Isinya kata, bukan ikon gelembung percakapan, dan
+          keadaan belum terbaca juga dinyatakan kata. */}
       <button
         id="livechat-toggle-btn"
         className={`${styles.fab} ${isOpen ? styles.fabOpen : ''}`}
@@ -118,21 +136,10 @@ export default function LiveChat() {
         aria-label={isOpen ? t('bot.closeChat') : t('bot.openChat')}
         title={isOpen ? t('bot.closeChat') : t('bot.chatWith')}
       >
-        {hasUnread && !isOpen && <span className={styles.unreadDot} />}
-        <span className={styles.fabIcon}>
-          {isOpen ? (
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          ) : (
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-              <path d="M8 10h8M8 14h5" strokeWidth="1.8" />
-            </svg>
-          )}
-        </span>
-        {!isOpen && <span className={styles.fabLabel}>NeuroBot</span>}
+        <span className={styles.fabLabel} data-no-translate="">NeuroBot</span>
+        {hasUnread && !isOpen && (
+          <span className={styles.unreadFlag}>{t('bot.newMessage')}</span>
+        )}
       </button>
 
       {/* Chat window */}
@@ -143,64 +150,46 @@ export default function LiveChat() {
         aria-label={t('bot.chatWith')}
         aria-hidden={!isOpen}
       >
-        {/* Header */}
+        {/* Kop lembar percakapan. Kendalinya kata bergaris bawah, bukan tombol
+            kotak berikon, dan tetap memenuhi lantai sasaran sentuh. */}
         <div className={styles.chatHeader}>
-          <div className={styles.botAvatar}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73A2 2 0 0 1 10 4a2 2 0 0 1 2-2zm-3 9a1.5 1.5 0 0 0 0 3 1.5 1.5 0 0 0 0-3zm6 0a1.5 1.5 0 0 0 0 3 1.5 1.5 0 0 0 0-3z" />
-            </svg>
-          </div>
           <div className={styles.headerInfo}>
-            <div className={styles.botName}>NeuroBot</div>
-            <div className={styles.botStatus}>
-              <span className={styles.statusDot} />
-              {t('bot.status')}
-            </div>
+            <div className={styles.botName} data-no-translate="">NeuroBot</div>
+            <div className={styles.botStatus}>{t('bot.status')}</div>
           </div>
           <div className={styles.headerActions}>
             <button
               id="livechat-clear-btn"
-              className={styles.iconBtn}
+              className={styles.headerBtn}
               onClick={clearChat}
               title={t('bot.clearHistory')}
               aria-label={t('bot.clearHistory')}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <polyline points="3 6 5 6 21 6" />
-                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                <path d="M10 11v6M14 11v6" />
-                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-              </svg>
+              {t('common.delete')}
             </button>
             <button
               id="livechat-close-btn"
-              className={styles.iconBtn}
+              className={styles.headerBtn}
               onClick={() => setIsOpen(false)}
               title={t('bot.closeChat')}
               aria-label={t('bot.closeChat')}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
+              {t('common.close')}
             </button>
           </div>
         </div>
 
-        {/* Messages */}
+        {/* Giliran percakapan. Siapa yang berbicara dibawa label mono di atas
+            isinya, bukan sisi kiri kanan dan warna gelembung. */}
         <div className={styles.chatBody} ref={chatBodyRef}>
           {messages.map((msg) => (
             <div
               key={msg.id}
-              className={`${styles.bubble} ${msg.role === 'user' ? styles.bubbleUser : styles.bubbleBot}`}
+              className={`${styles.bubble} ${msg.role === 'user' ? styles.bubbleUser : ''}`}
             >
-              {msg.role === 'model' && (
-                <div className={styles.bubbleAvatar}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73A2 2 0 0 1 10 4a2 2 0 0 1 2-2zm-3 9a1.5 1.5 0 0 0 0 3 1.5 1.5 0 0 0 0-3zm6 0a1.5 1.5 0 0 0 0 3 1.5 1.5 0 0 0 0-3z" />
-                  </svg>
-                </div>
-              )}
+              <span className={styles.bubbleWho}>
+                {msg.role === 'user' ? t('bot.you') : <span data-no-translate="">NeuroBot</span>}
+              </span>
               {/* Pesan pengguna adalah kalimat yang ia ketik sendiri, jadi
                   dibiarkan apa adanya. Balasan bot sudah dihasilkan dalam
                   bahasa yang dipilih, sehingga juga tidak perlu diterjemahkan. */}
@@ -213,17 +202,11 @@ export default function LiveChat() {
           ))}
 
           {loading && (
-            <div className={`${styles.bubble} ${styles.bubbleBot}`}>
-              <div className={styles.bubbleAvatar}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73A2 2 0 0 1 10 4a2 2 0 0 1 2-2zm-3 9a1.5 1.5 0 0 0 0 3 1.5 1.5 0 0 0 0-3zm6 0a1.5 1.5 0 0 0 0 3 1.5 1.5 0 0 0 0-3z" />
-                </svg>
-              </div>
-              <div className={styles.typingDots}>
-                <span />
-                <span />
-                <span />
-              </div>
+            <div className={styles.bubble}>
+              <span className={styles.bubbleWho} data-no-translate="">NeuroBot</span>
+              <p className={styles.typing} role="status" aria-live="polite">
+                {t('common.loading')}
+              </p>
             </div>
           )}
 
@@ -248,7 +231,13 @@ export default function LiveChat() {
           </div>
         )}
 
-        {/* Input */}
+        {/* Penyusun pesan.
+            ─────────────────────────────────────────────────────────────────
+            Isian mengambil satu baris penuh, dan petunjuk beserta tombol
+            kirim turun ke baris di bawahnya. Sebelumnya ketiganya berdesakan
+            dalam satu baris: di panel selebar 380px, tombol "Kirim pesan"
+            memakan sekitar sepertiga lebarnya, menyisakan kotak yang terlalu
+            sempit bahkan untuk teks contohnya sendiri. */}
         <div className={styles.chatInputArea}>
           <textarea
             id="livechat-input"
@@ -258,26 +247,22 @@ export default function LiveChat() {
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={t('bot.placeholder')}
-            rows={1}
+            rows={2}
             disabled={loading}
             aria-label={t('bot.messageLabel')}
           />
-          <button
-            id="livechat-send-btn"
-            className={`${styles.sendBtn} ${(!input.trim() || loading) ? styles.sendBtnDisabled : ''}`}
-            onClick={sendMessage}
-            disabled={!input.trim() || loading}
-            aria-label={t('bot.send')}
-          >
-            {loading ? (
-              <div className={styles.sendSpinner} />
-            ) : (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="22" y1="2" x2="11" y2="13" />
-                <polygon points="22 2 15 22 11 13 2 9 22 2" />
-              </svg>
-            )}
-          </button>
+          <div className={styles.chatInputRow}>
+            <span className={styles.enterHint}>{t('bot.enterHint')}</span>
+            <button
+              id="livechat-send-btn"
+              className={`${styles.sendBtn} ${(!input.trim() || loading) ? styles.sendBtnDisabled : ''}`}
+              onClick={sendMessage}
+              disabled={!input.trim() || loading}
+              aria-label={t('bot.send')}
+            >
+              {loading ? t('common.loading') : t('bot.sendShort')}
+            </button>
+          </div>
         </div>
         <div className={styles.disclaimer}>
           {t('bot.disclaimer')}

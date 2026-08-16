@@ -1,219 +1,145 @@
+/* Portal nakes, Ruang Periksa Terang.
+   ─────────────────────────────────────────────────────────────────────────────
+   Ini permukaan data terpadat di produk ini, dan sebelumnya seluruh isinya
+   dibawa tabel dan garis rule tanpa satu pun kartu. Alasannya masuk akal di
+   dunia Basel: kepadatan data memang lebih baik dilayani garis daripada kotak.
+
+   Yang berubah bukan kepadatannya melainkan cara mengelompokkannya. Angka
+   ringkasan menjadi empat kartu, daftar pasien menjadi satu kartu berisi baris
+   berbentuk pil, dan tabel pemeriksaan masuk ke kartunya sendiri. Tabelnya
+   sendiri tidak disentuh: rapat, tabular, rata kanan. Dokter membaca ini di
+   sela praktik, dan menambah ruang di dalam tabel akan menukar informasi per
+   layar dengan kelegaan yang tidak ia minta. */
+
 .page {
   min-height: 100vh;
-  padding: 40px 5%;
-  background: var(--bg-primary);
+  background: var(--sheet);
 }
 
-.container {
-  max-width: 1400px;
-  margin: 0 auto;
+.pad {
+  padding: var(--s7) 0 var(--s9);
 }
 
-/* Kepala halaman.
-   Sebelumnya satu baris kaku tanpa izin membungkus, sehingga di lebar ponsel
-   tombol Perbarui dan Keluar terdorong keluar layar. Overflow mendatar pada
-   body menyembunyikannya alih-alih memunculkan bilah geser, jadi tombolnya
-   hilang begitu saja dan tidak bisa ditekan sama sekali. */
-.header {
+.headRow {
   display: flex;
   flex-wrap: wrap;
+  align-items: flex-end;
   justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 40px;
+  gap: var(--s4);
 }
 
-.header > div:first-child {
-  min-width: 0;
-  flex: 1 1 260px;
+.lead {
+  margin-top: var(--s3);
+  font-size: var(--t-lead);
+  color: var(--ink-secondary);
 }
 
-.header h1 {
-  font-size: 2.2rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+.stamp {
+  margin-top: var(--s2);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: var(--t-record);
+  letter-spacing: 0.04em;
+  color: var(--ink-muted);
 }
 
-.header p {
-  color: var(--text-secondary);
-  font-size: 1.1rem;
+.headActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
 }
 
-.statsGrid {
+/* Ringkasan angka. Empat kartu melayang, bukan empat kolom yang dipisah garis.
+   Angka tetap memimpin dan labelnya tetap di bawahnya. */
+.stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-  margin-bottom: 40px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s4);
+  margin-top: var(--s7);
 }
 
-.statCard {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 24px;
-}
-
-.statTitle {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin-bottom: 12px;
-}
-
-.statValue {
-  font-variant-numeric: tabular-nums;
-  font-size: 2.5rem;
-  font-weight: 800;
-}
-
-.contentGrid {
-  display: grid;
-  grid-template-columns: 350px 1fr;
-  gap: 32px;
-}
-
-@media (max-width: 1024px) {
-  .contentGrid {
-    grid-template-columns: 1fr;
+@media (max-width: 900px) {
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-.patientList {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+@media (max-width: 520px) {
+  .stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
-.listHeader {
-  padding: 20px;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg-secondary);
+.stat {
+  padding: var(--s5);
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.statValue {
+  display: block;
+  font-family: var(--font-display), var(--font-sans), system-ui, sans-serif;
+  font-size: var(--t-title);
   font-weight: 700;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
 }
 
-.listBody {
-  display: flex;
-  flex-direction: column;
-  max-height: 600px;
-  overflow-y: auto;
+.statLabel {
+  display: block;
+  margin-top: var(--s2);
 }
 
-.patientItem {
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+/* Daftar pasien duduk sebagai indeks di kolom kiri, isi pemeriksaan memimpin
+   lebarnya. Di bawah 980px indeks turun ke atas isi. */
+.layout {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: var(--s7);
+  align-items: start;
+  margin-top: var(--s8);
 }
 
-.patientItem:hover, .patientItem.active {
-  background: var(--brand-dim);
+@media (max-width: 980px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s6);
+  }
 }
 
-.patientName {
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-
-.patientInfo {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-}
-
-.riskIndicator {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-}
-
-.riskIndicator.HIGH { background: var(--red); box-shadow: 0 0 10px rgba(239,68,68,0.5); }
-.riskIndicator.MEDIUM { background: var(--yellow); }
-.riskIndicator.LOW { background: var(--green); }
-
-.searchBox {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border);
-}
-
-.searchInput {
-  width: 100%;
-  background: var(--bg-primary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 8px 12px;
-  font-size: 0.85rem;
-  color: var(--text-primary);
-}
-
-.searchInput:focus { border-color: var(--brand); }
-
-.searchInput::placeholder { color: var(--text-muted); }
-
-.detailView {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+/* Daftar pasien adalah satu kartu. Bagian di dalamnya, yaitu penautan,
+   pencarian, dan daftarnya sendiri, tetap dipisah garis rambut, karena garis
+   rambut memang tugasnya memisahkan di dalam satu kartu. */
+.index {
+  min-width: 0;
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
   border-radius: var(--radius-lg);
-  padding: 32px;
+  box-shadow: var(--shadow-card);
+  padding: var(--s5);
 }
 
-.detailHeader {
-  /* Diizinkan membungkus supaya isinya turun ke baris berikutnya di layar
-     sempit, bukan terdorong keluar layar lalu terpotong tanpa jejak oleh
-     overflow-x: hidden pada body. */
-  flex-wrap: wrap;
+.indexHead {
   display: flex;
+  align-items: baseline;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 32px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid var(--border);
+  gap: var(--s3);
+  padding-bottom: var(--s3);
+  border-bottom: 1px solid var(--rule-hair);
 }
 
-.detailTitle {
-  font-size: 1.8rem;
-  font-weight: 800;
-  margin-bottom: 8px;
+.indexTitle {
+  font-size: var(--t-head);
 }
 
-.badgeGrid {
-  display: flex;
-  gap: 12px;
-  margin-top: 16px;
-}
-
-.noteSection {
-  margin-top: 40px;
-  padding-top: 32px;
-  border-top: 1px solid var(--border);
-}
-
-textarea.input {
-  min-height: 120px;
-  margin-bottom: 16px;
-}
-
-.emptyState {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 400px;
-  color: var(--text-secondary);
-  text-align: center;
-}
-
-.emptyStateIcon {
-  font-size: 4rem;
-  margin-bottom: 16px;
-  opacity: 0.5;
+.count {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: var(--t-record);
+  color: var(--ink-muted);
+  white-space: nowrap;
 }
 
 /* Kotak penautan pasien.
@@ -221,42 +147,28 @@ textarea.input {
    selalu kosong, sehingga tindakan pertama yang masuk akal adalah menautkan
    pasien, bukan mencari di daftar yang belum berisi apa pun. */
 .linkBox {
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--border);
-  background: var(--brand-dim);
-}
-
-.linkTitle {
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 4px;
+  padding: var(--s4) 0;
+  border-bottom: 1px solid var(--rule-hair);
 }
 
 .linkDesc {
-  font-size: 0.76rem;
-  color: var(--text-secondary);
-  line-height: 1.5;
-  margin-bottom: 10px;
+  margin: var(--s2) 0 var(--s3);
+  font-size: var(--t-record);
+  color: var(--ink-secondary);
 }
 
 .linkRow {
   display: flex;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: var(--s2);
 }
 
 .linkInput {
-  flex: 1;
+  flex: 1 1 140px;
   min-width: 0;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 8px 12px;
-  font-family: var(--font-mono), ui-monospace, Menlo, monospace;
-  font-size: 0.88rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-primary);
 }
 
 /* Huruf besar hanya berlaku untuk kode yang diketik, bukan untuk teks contoh,
@@ -266,16 +178,244 @@ textarea.input {
   letter-spacing: normal;
 }
 
-.linkMsgOk {
-  margin-top: 8px;
-  font-size: 0.76rem;
+/* Hasil penautan dibawa label teks berbobot dengan garis kiri, bukan warna
+   sendirian. */
+.linkMsgOk,
+.linkMsgErr {
+  margin-top: var(--s3);
+  padding: var(--s2) var(--s3);
+  border-radius: var(--radius);
+  font-size: var(--t-record);
   font-weight: 600;
-  color: var(--green-text);
+  border-left-style: solid;
+}
+
+.linkMsgOk {
+  color: var(--level-low);
+  background: var(--level-low-wash);
+  border-left-width: 2px;
+  border-left-color: var(--level-low);
 }
 
 .linkMsgErr {
-  margin-top: 8px;
-  font-size: 0.76rem;
+  color: var(--level-high);
+  background: var(--level-high-wash);
+  border-left-width: 6px;
+  border-left-color: var(--level-high);
+}
+
+.searchBox {
+  padding: var(--s4) 0;
+  border-bottom: 1px solid var(--rule-hair);
+}
+
+.listBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  max-height: 620px;
+  overflow-y: auto;
+  /* Ruang untuk bilah gulir supaya baris tidak tertimpa olehnya. */
+  padding-right: var(--s2);
+}
+
+/* Setiap pasien adalah satu baris arsip: nama, data ringkas mono, dan tingkat
+   risiko sebagai label teks penuh. */
+.patientItem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  width: 100%;
+  min-height: var(--touch-lg);
+  padding: var(--s3);
+  text-align: left;
+  border: 0;
+  border-left: 3px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  transition: background-color 0.18s ease-out, border-color 0.18s ease-out;
+  /* Wajib. .listBody adalah flex kolom bertinggi terbatas, dan anak flex boleh
+     menyusut secara bawaan. Dengan puluhan pasien, setiap baris diperas sampai
+     min-height 56px sementara isinya menuntut lebih, sehingga isi baris ini
+     meluber keluar kotaknya dan menimpa nama pasien di bawahnya. Tinggi baris
+     harus ditentukan isinya, dan yang menggulir adalah wadahnya. */
+  flex: none;
+}
+
+/* Kolom teks harus boleh menyempit. Tanpa min-width:0, nama pasien yang
+   panjang memaksa lebar minimum flex item dan mendorong pil risiko keluar
+   dari kartunya. */
+.patientItem > span:first-child {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.patientItem:hover {
+  background: var(--inset);
+}
+
+/* Terpilih ditandai garis kiri aksen dan nama berbobot 700, jadi keadaannya
+   tetap terbaca ketika warna dimatikan. */
+.active {
+  background: var(--accent-wash);
+  border-left-color: var(--accent);
+}
+
+/* Nama dan baris keterangan wajib display:block.
+   ─────────────────────────────────────────────────────────────────────────
+   Keduanya elemen <span>, jadi tanpa ini keduanya inline: margin-top pada
+   .patientInfo diabaikan sama sekali, dan nama beserta keterangannya mengalir
+   sebagai satu paragraf yang membungkus di tempat yang tidak diduga. Itu yang
+   membuat "Agus Sari" dan "Usia: 76 th" duduk di baris yang sama sementara
+   "Skor: 69" turun sendirian. */
+.patientName {
+  display: block;
   font-weight: 600;
-  color: var(--red-text);
+}
+
+.active .patientName {
+  font-weight: 700;
+}
+
+.patientInfo {
+  display: block;
+  margin-top: var(--s1);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: var(--t-record);
+  letter-spacing: 0.04em;
+  color: var(--ink-muted);
+}
+
+.listEmpty {
+  padding: var(--s6) 0;
+  color: var(--ink-secondary);
+}
+
+/* ── Isi pemeriksaan ─────────────────────────────────────────────────────── */
+
+.detail {
+  min-width: 0;
+}
+
+.detailHead {
+  /* Diizinkan membungkus supaya isinya turun ke baris berikutnya di layar
+     sempit, bukan terdorong keluar layar lalu terpotong tanpa jejak oleh
+     overflow-x: hidden pada body. */
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s4);
+  padding-bottom: var(--s4);
+  border-bottom: 1px solid var(--rule-hair);
+}
+
+.detailTitle {
+  font-size: var(--t-title);
+  letter-spacing: -0.02em;
+}
+
+.detailMeta {
+  margin-top: var(--s2);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: var(--t-record);
+  letter-spacing: 0.04em;
+  color: var(--ink-muted);
+}
+
+.detailActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.section {
+  margin-top: var(--s7);
+}
+
+.sectionHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  margin-bottom: var(--s4);
+}
+
+.sectionTitle {
+  font-size: var(--t-head);
+}
+
+.sessionSelect {
+  width: auto;
+  max-width: 100%;
+}
+
+/* Klasifikasi pola. Bidang isi bergaris penuh dengan label kolom di atasnya,
+   memakai primitif .field dari globals.css. Isinya bermakna, jadi ia memang
+   layak jadi bidang tersendiri; yang tidak layak adalah garis tepi kiri,
+   sebab ketebalan garis kiri di produk ini menyandikan tingkat pengukuran. */
+.classification {
+  margin-top: var(--s5);
+}
+
+.classificationValue {
+  margin-top: var(--s2);
+  font-size: var(--t-lead);
+  font-weight: 700;
+}
+
+.classificationSub {
+  margin-top: var(--s1);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: var(--t-record);
+  letter-spacing: 0.04em;
+  color: var(--ink-secondary);
+}
+
+.tableScroll {
+  overflow-x: auto;
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--s3) var(--s5) var(--s4);
+}
+
+.noteSection {
+  margin-top: var(--s8);
+  padding: var(--s6);
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.noteField {
+  margin: var(--s4) 0;
+}
+
+.emptyState {
+  padding: var(--s8) var(--s6);
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.emptyState h2 {
+  font-size: var(--t-head);
+}
+
+.emptyState p {
+  margin-top: var(--s3);
+  color: var(--ink-secondary);
+}
+
+.loading {
+  padding: var(--s8) 0;
+  color: var(--ink-secondary);
 }

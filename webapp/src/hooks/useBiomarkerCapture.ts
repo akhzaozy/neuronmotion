@@ -23,7 +23,16 @@ interface Landmark {
   x: number; y: number; z: number; visibility?: number;
 }
 
-const TEST_DURATION: Record<string, number> = {
+/**
+ * Durasi perekaman per tes, dalam detik.
+ *
+ * Ini satu-satunya sumber kebenaran durasi. Teks instruksi TIDAK boleh menulis
+ * angkanya sendiri, melainkan menyisipkan nilai dari sini, karena sebelumnya
+ * setiap instruksi menyebut "10 detik" sementara tiga tes sebenarnya merekam
+ * 15 detik. Pengguna berhenti bergerak di detik ke-10 dan sepertiga terakhir
+ * rekaman berisi orang yang berdiri diam, yang merusak biomarkernya.
+ */
+export const TEST_DURATION: Record<string, number> = {
   tremor: 10,
   fingerTapping: 10,
   gait: 15,
@@ -31,6 +40,23 @@ const TEST_DURATION: Record<string, number> = {
   posture: 15,
   rom: 10,
 };
+
+/** Sebab kegagalan kamera, dibedakan agar tiap sebab punya pemulihannya sendiri. */
+export type CameraFault =
+  | 'denied'      // izin ditolak, termasuk blokir permanen
+  | 'notFound'    // tidak ada kamera pada perangkat
+  | 'inUse'       // kamera dipakai aplikasi lain
+  | 'insecure'    // halaman tidak dilayani lewat HTTPS
+  | 'modelTimeout'
+  | 'modelFailed'
+  | 'unknown';
+
+/** Sebab rekaman ditolak oleh quality gate. */
+export interface CaptureRejection {
+  reason: 'tooFewSamples' | 'bodyPartMissing';
+  testType: string;
+  sampleCount?: number;
+}
 
 // Pesan peringatan spesifik per tes ketika bagian tubuh yang diminta tidak terdeteksi
 const BODY_PART_WARNING: Record<string, string> = {
@@ -100,24 +126,79 @@ export function useBiomarkerCapture() {
   const [countdown, setCountdown] = useState(0);
   const [modelsReady, setModelsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fault, setFault] = useState<CameraFault | null>(null);
+  const [rejection, setRejection] = useState<CaptureRejection | null>(null);
 
   // ── Init Camera ─────────────────────────────────────────────────────────────
+  /**
+   * Tiga tes membutuhkan seluruh tubuh berdiri masuk frame. Pada layar sempit
+   * yang dipegang portrait, meminta 1280x720 lanskap menghasilkan strip
+   * mendatar yang secara fisik tidak bisa memuat orang dewasa berdiri pada
+   * jarak dua meter, dan pergelangan kaki yang jadi dasar biomarker gait jatuh
+   * di luar frame. Jadi orientasi permintaan mengikuti orientasi layar.
+   */
   const startCamera = useCallback(async () => {
+    setFault(null);
+    setError(null);
+
+    // getUserMedia hanya tersedia pada konteks aman. Tanpa pemeriksaan ini,
+    // kegagalannya muncul sebagai penolakan biasa dan pengguna diminta memberi
+    // izin yang tidak akan pernah ditawarkan browser.
+    if (typeof window !== 'undefined' && !window.isSecureContext) {
+      setFault('insecure');
+      return;
+    }
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+      setFault('unknown');
+      return;
+    }
+
+    const portrait =
+      typeof window !== 'undefined' && window.matchMedia('(orientation: portrait)').matches;
+
     try {
-      setError(null);
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 1280, height: 720, facingMode: 'user' },
+        video: portrait
+          ? { width: { ideal: 720 }, height: { ideal: 1280 }, facingMode: 'user' }
+          : { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
         audio: false,
       });
       streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-        setCameraReady(true);
+
+      // Elemen video harus sudah ada. Bila belum, aliran kamera tidak punya
+      // tempat dipasang: izin sudah diberikan, lampu kamera menyala, tetapi
+      // layar berhenti pada ajakan mengaktifkan kamera tanpa sebab yang
+      // terlihat. Dulu keadaan ini lewat begitu saja karena hanya dibungkus
+      // pemeriksaan if tanpa cabang gagal.
+      if (!videoRef.current) {
+        stream.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+        setFault('unknown');
+        console.error('startCamera: elemen video belum terpasang saat aliran kamera siap');
+        return;
       }
+
+      videoRef.current.srcObject = stream;
+
+      // Kegagalan play() bukan penolakan izin. Bila ia ikut masuk ke penangan
+      // di bawah, pengguna diberi tahu bahwa ia menolak izin yang justru baru
+      // saja ia berikan, lalu diminta membetulkan setelan yang tidak salah.
+      try {
+        await videoRef.current.play();
+      } catch (playError) {
+        console.error(playError);
+        setFault('unknown');
+        return;
+      }
+
+      setCameraReady(true);
       await initMediaPipe();
     } catch (e) {
-      setError('Kamera tidak bisa diakses. Pastikan izin kamera sudah diberikan.');
+      const name = (e as { name?: string })?.name;
+      if (name === 'NotAllowedError' || name === 'SecurityError') setFault('denied');
+      else if (name === 'NotFoundError' || name === 'OverconstrainedError') setFault('notFound');
+      else if (name === 'NotReadableError' || name === 'AbortError') setFault('inUse');
+      else setFault('unknown');
       console.error(e);
     }
   }, []);
@@ -127,7 +208,7 @@ export function useBiomarkerCapture() {
     // Timeout 30 detik, jika model tidak selesai load, tampilkan error
     const timeoutId = setTimeout(() => {
       if (!modelsRef.current) {
-        setError('Sistem analisis tidak bisa dimuat (timeout). Periksa koneksi internet lalu refresh halaman.');
+        setFault('modelTimeout');
         setModelsReady(false);
       }
     }, 30_000);
@@ -176,7 +257,7 @@ export function useBiomarkerCapture() {
   const initMediaPipeCPU = useCallback(async () => {
     const timeoutId = setTimeout(() => {
       if (!modelsRef.current) {
-        setError('Sistem analisis tidak bisa dimuat (timeout). Periksa koneksi internet lalu refresh halaman.');
+        setFault('modelTimeout');
       }
     }, 30_000);
     try {
@@ -200,7 +281,7 @@ export function useBiomarkerCapture() {
       startRenderLoop();
     } catch (e) {
       clearTimeout(timeoutId);
-      setError('Gagal memuat sistem analisis. Coba refresh halaman atau periksa koneksi internet Anda.');
+      setFault('modelFailed');
     }
   }, []);
 
@@ -216,8 +297,13 @@ export function useBiomarkerCapture() {
     let samples = samplesRef.current;
 
     // QUALITY GATE 1: Validasi kelengkapan data (Minimal 20 frame terekam)
+    //
+    // Kegagalan dilaporkan sebagai keadaan, bukan window.alert. Kotak OS tidak
+    // bisa diterjemahkan, tidak bisa ditata, berukuran kecil, dan harus ditutup
+    // dengan menyentuh perangkat yang justru sengaja ditinggalkan pengguna dua
+    // meter di belakangnya.
     if (samples.length < 20) {
-      alert(`Data pergerakan tidak cukup (Hanya ${samples.length} sampel terdeteksi). Pastikan posisi Anda sesuai panduan di kamera. Silakan ulangi tes ini.`);
+      setRejection({ reason: 'tooFewSamples', testType: test || '', sampleCount: samples.length });
       return; // Memaksa user untuk mengulang (tanpa men-trigger setCapturedData)
     }
 
@@ -226,7 +312,7 @@ export function useBiomarkerCapture() {
     // tidak terdeteksi sama sekali (mis. diminta gerakkan kaki tapi yang terekam tangan).
     const validRatio = totalFramesRef.current > 0 ? validFramesRef.current / totalFramesRef.current : 1;
     if (validRatio < MIN_VALID_FRAME_RATIO) {
-      alert(`${BODY_PART_WARNING[test || ''] || 'Bagian tubuh yang diminta tidak terdeteksi dengan baik.'} Silakan ulangi tes ini.`);
+      setRejection({ reason: 'bodyPartMissing', testType: test || '' });
       return;
     }
 
@@ -253,18 +339,50 @@ export function useBiomarkerCapture() {
 
   // ── Render Loop ──────────────────────────────────────────────────────────────
   const startRenderLoop = useCallback(() => {
-    const render = async () => {
+    // Gelung lama dihentikan lebih dulu. Fungsi ini dipanggil dari jalur GPU
+    // maupun jalur cadangan CPU, dan dua gelung yang berjalan bersamaan akan
+    // menyuapi pendeteksi dengan stempel waktu yang saling menyalip, yang
+    // dijawabnya dengan melempar galat.
+    if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+
+    let lastPlayAttempt = 0;
+
+    const renderFrame = async () => {
       const video = videoRef.current;
       const canvas = canvasRef.current;
       const models = modelsRef.current;
 
-      if (!video || !canvas || !models || video.readyState < 2) {
-        animFrameRef.current = requestAnimationFrame(render);
-        return;
+      if (!video || !canvas || !models) return;
+
+      /* Aliran kamera dipasang ulang bila elemennya berganti.
+         Halaman skrining dan demo menukar layar instruksi dengan jendela
+         perekaman lewat ternary, sehingga CameraView dibongkar saat pengguna
+         menekan mulai dan dipasang kembali sesudahnya. Elemen video yang baru
+         tidak membawa srcObject milik elemen lama, jadi readyState-nya tetap
+         nol, gelung ini berputar selamanya di penjaga di bawah, dan yang
+         terlihat pengguna adalah bingkai kosong dengan hitungan mundur
+         membeku. Memulihkannya di sini membuat pratinjau tahan terhadap
+         pembongkaran dari sebab apa pun, bukan hanya dari kedua halaman itu. */
+      const stream = streamRef.current;
+      if (stream) {
+        if (video.srcObject !== stream) video.srcObject = stream;
+        // Pemutaran bisa ditolak sesaat, jadi percobaannya diulang, tetapi
+        // dijarangkan supaya tidak memanggil play enam puluh kali sedetik.
+        if (video.paused && Date.now() - lastPlayAttempt > 300) {
+          lastPlayAttempt = Date.now();
+          void video.play().catch(() => {});
+        }
       }
 
+      if (video.readyState < 2) return;
+
+      // Bingkai pertama kadang lolos readyState tetapi dimensinya masih nol.
+      // Melewatinya lebih baik daripada menyerahkan gambar 0x0 ke pendeteksi,
+      // yang menjawabnya dengan melempar galat.
+      if (!video.videoWidth || !video.videoHeight) return;
+
       const ctx = canvas.getContext('2d');
-      if (!ctx) { animFrameRef.current = requestAnimationFrame(render); return; }
+      if (!ctx) return;
 
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
@@ -354,19 +472,47 @@ export function useBiomarkerCapture() {
         const remaining = Math.max(0, dur - elapsed);
         setCountdown(Math.ceil(remaining));
 
-        ctx.fillStyle = 'rgba(239,68,68,0.8)';
-        ctx.beginPath();
-        ctx.arc(canvas.width - 30, 30, 10, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 20px Inter';
-        ctx.textAlign = 'right';
-        ctx.fillText(`REC ${remaining.toFixed(1)}s`, canvas.width - 50, 38);
-        ctx.textAlign = 'left';
+        // Hitung mundur digambar sebagai DOM di atas video, bukan di canvas ini.
+        // Teks canvas hidup dalam ruang koordinat selebar 1280, sehingga pada
+        // HP selebar 390 piksel ia tampil sekitar 6 piksel, tidak terbaca oleh
+        // siapa pun, apalagi oleh pengguna yang berdiri dua meter di depannya.
 
         if (remaining <= 0) {
           handleStopFromLoop();
+        }
+      }
+    };
+
+    /**
+     * Penjadwalan bingkai berikutnya dipisahkan dari isi bingkai.
+     *
+     * Sebelumnya keduanya menyatu: requestAnimationFrame berada di baris
+     * terakhir renderFrame, dan fungsinya async. Setiap galat di dalamnya
+     * karena itu menjadi promise yang ditolak, bukan pengecualian, sehingga
+     * baris penjadwalan tidak pernah tercapai dan gelung mati diam-diam.
+     * Yang terlihat pengguna adalah kanvas kosong dengan hitungan mundur
+     * membeku, tanpa satu pun pesan galat di mana pun. Satu bingkai yang
+     * gagal tidak boleh mematikan pratinjau selamanya.
+     */
+    let consecutiveErrors = 0;
+
+    const render = async () => {
+      try {
+        await renderFrame();
+        consecutiveErrors = 0;
+      } catch (e) {
+        consecutiveErrors += 1;
+        // Dilaporkan sekali per rentetan, sebab pada 60 bingkai per detik
+        // kegagalan yang berulang akan membanjiri konsol dan menutupi
+        // sebabnya sendiri.
+        if (consecutiveErrors === 1) console.error('render frame gagal', e);
+
+        // Bila kegagalannya menetap, keadaannya bukan lagi gangguan sesaat.
+        // Lebih baik pengguna diberi tahu daripada dibiarkan menatap bingkai
+        // kosong sambil menunggu sesuatu yang tidak akan datang.
+        if (consecutiveErrors === 60) {
+          setFault('modelFailed');
+          return;
         }
       }
 
@@ -566,9 +712,12 @@ export function useBiomarkerCapture() {
 
   useEffect(() => () => stopCamera(), [stopCamera]);
 
+  const clearRejection = useCallback(() => setRejection(null), []);
+
   return {
     videoRef, canvasRef,
     cameraReady, poseReady: modelsReady, error,
+    fault, rejection, clearRejection,
     activeTest, isCapturing: isCapturingState,
     liveMetrics, countdown, capturedData, detectionWarning, lightingWarning,
     startCamera, stopCamera,

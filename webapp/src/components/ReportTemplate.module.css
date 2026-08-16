@@ -1,17 +1,69 @@
 /**
- * Laporan cetak. Warna sengaja dikunci terang (bukan token tema) karena laporan
- * dicetak di atas kertas putih, sehingga tema gelap justru membuatnya tak terbaca.
+ * Laporan cetak.
+ *
+ * Warna tetap dikunci terang dan tidak pernah ikut berubah bersama tema,
+ * sebab laporan ini dicetak di atas kertas putih dan mode gelap akan
+ * membuatnya tidak terbaca. Alasan itu sudah benar sejak awal dan
+ * dipertahankan.
+ *
+ * Yang berubah adalah paletnya. Sebelumnya berkas ini memakai warna bawaan
+ * kerangka kerja (biru 2563eb, batu tulis 1e293b, dan seterusnya) tanpa satu
+ * pun nilai dari sistem visual produk, sehingga satu-satunya artefak yang
+ * benar-benar dibawa pulang pasien dan dibaca tenaga kesehatan justru menjadi
+ * satu-satunya yang tidak berbahasa Lembar Klinis Basel.
+ *
+ * Caranya adalah menyetel ulang token Basel dengan nilai terangnya tepat di
+ * akar laporan. Nama tokennya sengaja nama yang asli, bukan nama tiruan,
+ * sebab dengan begitu setiap komponen bersarang di dalam laporan ikut
+ * terkunci terang tanpa perlu tahu bahwa dirinya sedang dicetak. Tanda nama
+ * Logo adalah alasan nyata aturan ini ada: ia memakai token yang sama, dan
+ * pada tema gelap akan menghilang di atas kertas putih.
+ *
+ * Nilainya harfiah dan tidak ikut berubah bersama tema. DESIGN.md tetap
+ * sumber kebenarannya, dan blok ini disalin ulang bila palet produk berubah.
+ *
+ * Latar halaman dibiarkan putih, bukan krem seperti layar. Di sini kertasnya
+ * memang kertas sungguhan, dan mencetak bidang krem satu halaman penuh hanya
+ * menghabiskan tinta pada mesin yang bersedia mencetaknya.
  */
 .sheet {
+  --ink: #17181c;
+  --ink-secondary: #454a52;
+  --ink-muted: #5f656e;
+  --sheet: #ffffff;
+  --field: #fbfaf7;
+  --inset: #e2e0d7;
+  --accent: #c8402a;
+  --accent-deep: #9c2f1e;
+  --rule-hair: rgba(23, 24, 28, 0.14);
+  --rule: rgba(23, 24, 28, 0.28);
+  --rule-heavy: rgba(23, 24, 28, 0.72);
+  --level-low: #2f6b4f;
+  --level-low-wash: rgba(47, 107, 79, 0.1);
+  --level-mid: #8a5a12;
+  --level-mid-wash: rgba(138, 90, 18, 0.1);
+  --level-high: #a32d1c;
+  --level-high-wash: rgba(163, 45, 28, 0.1);
+
   background: #ffffff;
-  color: #1e293b;
-  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
   width: 100%;
   max-width: 210mm;
   margin: 0 auto;
   padding: 18mm 16mm;
   font-size: 10.5pt;
   line-height: 1.5;
+}
+
+/* Label mikro. Huruf mesin dengan spasi renggang, sama seperti cara berkas
+   lain di produk ini menandai nilai terukur. */
+.idLabel,
+.scoreLabel,
+.table th {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 /* ── Kop ── */
@@ -21,47 +73,39 @@
   justify-content: space-between;
   gap: 16px;
   padding-bottom: 12px;
-  border-bottom: 2px solid #2563eb;
+  border-bottom: 2px solid var(--rule-heavy);
   margin-bottom: 16px;
 }
 
 .brandBlock {
   display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.logoMark { display: flex; }
-
-.brandName {
-  font-size: 15pt;
-  font-weight: 800;
-  color: #1e293b;
-  letter-spacing: -0.01em;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
 }
 
 .brandSub {
   font-size: 9pt;
-  color: #64748b;
+  color: var(--ink-muted);
 }
 
 .printedAt {
   text-align: right;
   font-size: 8.5pt;
-  color: #64748b;
+  color: var(--ink-muted);
   white-space: nowrap;
 }
 
 .printedAt strong {
   display: block;
-  color: #334155;
+  color: var(--ink-secondary);
 }
 
 /* ── Identitas ── */
 .identity {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: 2px;
   padding: 12px 14px;
   margin-bottom: 18px;
 }
@@ -75,17 +119,15 @@
 .idLabel {
   display: block;
   font-size: 7.5pt;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #94a3b8;
-  font-weight: 600;
+  color: var(--ink-muted);
+  font-weight: 500;
 }
 
 .idValue {
   display: block;
   font-size: 10pt;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--ink);
 }
 
 /* ── Seksi ── */
@@ -96,11 +138,12 @@
 
 .h2 {
   font-size: 11.5pt;
-  font-weight: 800;
-  color: #1e293b;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.02em;
   margin-bottom: 10px;
   padding-bottom: 5px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--rule);
 }
 
 /* ── Ringkasan ── */
@@ -113,30 +156,49 @@
 .scoreBox {
   flex-shrink: 0;
   width: 92px;
-  border-radius: 8px;
+  border-radius: 2px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 12px 8px;
-  border: 2px solid;
+  border: 1px solid;
+  /* Ketebalan tepi kiri mengikuti tingkat, sama seperti di layar, sehingga
+     tingkat keparahan tetap terbaca pada cetakan hitam putih. */
+  border-left-style: solid;
 }
 
-.riskHIGH { border-color: #dc2626; background: #fef2f2; color: #dc2626; }
-.riskMEDIUM { border-color: #d97706; background: #fffbeb; color: #d97706; }
-.riskLOW { border-color: #059669; background: #ecfdf5; color: #059669; }
+.riskLOW {
+  border-color: var(--level-low);
+  border-left-width: 2px;
+  background: var(--level-low-wash);
+  color: var(--level-low);
+}
+
+.riskMEDIUM {
+  border-color: var(--level-mid);
+  border-left-width: 4px;
+  background: var(--level-mid-wash);
+  color: var(--level-mid);
+}
+
+.riskHIGH {
+  border-color: var(--level-high);
+  border-left-width: 6px;
+  background: var(--level-high-wash);
+  color: var(--level-high);
+}
 
 .scoreNum {
   font-size: 26pt;
   font-weight: 800;
   line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
 .scoreLabel {
   font-size: 7.5pt;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-weight: 500;
   margin-top: 4px;
 }
 
@@ -147,17 +209,22 @@
   justify-content: space-between;
   gap: 12px;
   padding: 4px 0;
-  border-bottom: 1px dotted #e2e8f0;
+  border-bottom: 1px solid var(--rule-hair);
   font-size: 9.5pt;
 }
 
-.kv span { color: #64748b; }
-.kv strong { color: #1e293b; text-align: right; }
+.kv span { color: var(--ink-muted); }
+
+.kv strong {
+  color: var(--ink);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
 
 .recommend {
   margin-top: 8px;
   font-size: 9.5pt;
-  color: #475569;
+  color: var(--ink-secondary);
   line-height: 1.6;
 }
 
@@ -165,55 +232,85 @@
 .chart {
   width: 100%;
   height: auto;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  background: #fff;
+  border: 1px solid var(--rule-hair);
+  border-radius: 2px;
+  background: #ffffff;
 }
 
 .caption {
   font-size: 8pt;
-  color: #94a3b8;
+  color: var(--ink-muted);
   margin-top: 6px;
   line-height: 1.5;
 }
+
+/* Warna grafik tinggal di sini, bukan di dalam JSX. Atribut penyajian SVG
+   tidak menerima var(), jadi setiap unsur diberi kelas dan diwarnai lewat
+   berkas ini, supaya paletnya tetap satu tempat. */
+.bandHigh { fill: var(--level-high-wash); }
+.bandMid { fill: var(--level-mid-wash); }
+.bandLow { fill: var(--level-low-wash); }
+
+.gridLine {
+  stroke: var(--rule-hair);
+  stroke-width: 0.5;
+}
+
+.axisText {
+  fill: var(--ink-muted);
+  font-family: var(--font-mono), ui-monospace, monospace;
+}
+
+.trendLine {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.dotHIGH { fill: var(--level-high); }
+.dotMEDIUM { fill: var(--level-mid); }
+.dotLOW { fill: var(--level-low); }
 
 /* ── Tabel ── */
 .table {
   width: 100%;
   border-collapse: collapse;
   font-size: 9pt;
+  font-variant-numeric: tabular-nums;
 }
 
 .table th {
-  background: #f1f5f9;
-  color: #475569;
-  font-weight: 700;
+  background: transparent;
+  color: var(--ink-muted);
+  font-weight: 500;
   text-align: left;
   padding: 6px 8px;
-  border: 1px solid #e2e8f0;
+  border: 0;
+  border-bottom: 2px solid var(--rule-heavy);
   font-size: 8.5pt;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
 }
 
 .table td {
   padding: 6px 8px;
-  border: 1px solid #e2e8f0;
-  color: #334155;
+  border: 0;
+  border-bottom: 1px solid var(--rule-hair);
+  color: var(--ink-secondary);
 }
 
-.table tbody tr:nth-child(even) { background: #fafbfc; }
+/* Baris selang-seling dihapus. Dalam sistem dokumen, pemisah barisnya adalah
+   garis, dan dua penanda untuk satu pekerjaan justru membuat tabel berisik. */
 
 .noteCell {
   max-width: 200px;
   font-size: 8.5pt;
-  color: #475569;
+  color: var(--ink-secondary);
 }
 
 /* ── Analisis AI ── */
 .aiText {
   font-size: 9.5pt;
-  color: #334155;
+  color: var(--ink-secondary);
   line-height: 1.7;
   margin-bottom: 8px;
 }
@@ -225,7 +322,7 @@
 
 .aiList li {
   font-size: 9.5pt;
-  color: #475569;
+  color: var(--ink-secondary);
   line-height: 1.6;
   margin-bottom: 3px;
 }
@@ -234,7 +331,7 @@
 .foot {
   margin-top: 24px;
   padding-top: 12px;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--rule);
   break-inside: avoid;
 }
 
@@ -245,28 +342,31 @@
 
 .signLine {
   height: 44px;
-  border-bottom: 1px solid #94a3b8;
+  border-bottom: 1px solid var(--rule);
   margin-bottom: 5px;
 }
 
 .signName {
   font-size: 9.5pt;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--ink);
 }
 
 .signRole {
   font-size: 8.5pt;
-  color: #64748b;
+  color: var(--ink-muted);
 }
 
+/* Catatan kaki, bukan kartu bergaris samping. Keterangan batasan pada lembar
+   klinis muncul sebagai catatan di kaki halaman: garis rambut di atasnya,
+   huruf lebih kecil, tanpa bidang berwarna yang menariknya jadi elemen
+   utama. */
 .disclaimer {
   font-size: 8pt;
-  color: #64748b;
+  color: var(--ink-muted);
   line-height: 1.6;
-  background: #f8fafc;
-  border-left: 3px solid #cbd5e1;
-  padding: 8px 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--rule-hair);
 }
 
 /* ── Aturan cetak ── */
@@ -279,4 +379,12 @@
   .table { page-break-inside: auto; }
   .table tr { page-break-inside: avoid; }
   .foot { page-break-inside: avoid; }
+
+  /* Bidang berwarna pada kotak skor hanya tercetak bila pengguna mengaktifkan
+     pencetakan latar. Ketebalan tepi kiri tetap tercetak, jadi tingkat
+     keparahan tidak pernah bergantung pada warna saja. */
+  .scoreBox {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }

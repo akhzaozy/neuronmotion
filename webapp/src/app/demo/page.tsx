@@ -1,12 +1,14 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { HandIcon } from '@/components/icons';
 import { api } from '@/lib/api';
 import { useBiomarkerCapture } from '@/hooks/useBiomarkerCapture';
+import { getTest } from '@/lib/tests';
+import { useI18n } from '@/lib/i18n';
 import CameraView from '@/components/CameraView';
+import ScreeningInstruction from '@/components/ScreeningInstruction';
 import Logo from '@/components/Logo';
-import styles from '../screening/screening.module.css';
+import styles from './demo.module.css';
 
 interface TremorResult {
   dominantFrequencyHz: number;
@@ -16,10 +18,22 @@ interface TremorResult {
   score: number;
 }
 
+/**
+ * Peragaan satu tes tanpa akun.
+ *
+ * Ini satu-satunya permukaan yang menampilkan angka mentah pengukuran, karena
+ * di sinilah angka itu memang jadi isinya: pengunjung datang untuk melihat
+ * bahwa alatnya benar-benar mengukur sesuatu. Pada alur skrining pasien,
+ * bilah metrik yang sama disembunyikan.
+ */
 export default function DemoPage() {
+  const { t } = useI18n();
+  const test = getTest('tremor');
+
   const {
-    videoRef, canvasRef, cameraReady, poseReady, error,
-    activeTest, isCapturing, liveMetrics, countdown, capturedData, detectionWarning, lightingWarning,
+    videoRef, canvasRef, cameraReady, poseReady,
+    activeTest, isCapturing, liveMetrics, countdown, capturedData,
+    detectionWarning, lightingWarning, fault,
     startCamera, startCapture, stopCapture,
   } = useBiomarkerCapture();
 
@@ -28,117 +42,206 @@ export default function DemoPage() {
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzeError, setAnalyzeError] = useState('');
 
+  /* Ekspor rekaman untuk plat di halaman depan.
+     Digerbangi ?export=1 supaya tidak pernah tampil kepada pengguna biasa
+     maupun saat produk ini diperagakan. Membaca dari window.location alih-alih
+     useSearchParams agar halaman ini tetap bisa dirender statis. */
+  const [canExport, setCanExport] = useState(false);
+  const [exportState, setExportState] = useState<'idle' | 'copied' | 'downloaded'>('idle');
+
   useEffect(() => {
-    if (capturedData && capturedData.testType === 'tremor') {
+    // Ditunda satu bingkai agar tidak menetapkan keadaan secara sinkron di
+    // dalam efek. Nilainya tidak bisa dihitung saat inisialisasi useState
+    // karena window belum ada saat prarender, dan menebaknya di sana akan
+    // membuat hasil server dan klien berbeda.
+    const frame = requestAnimationFrame(() =>
+      setCanExport(new URLSearchParams(window.location.search).get('export') === '1'),
+    );
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
+  useEffect(() => {
+    if (capturedData?.testType === 'tremor') {
       setAnalyzing(true);
       setAnalyzeError('');
       api.analyzeTremor(capturedData.payload as object)
-        .then((res: any) => setResult(res))
-        .catch((e: any) => setAnalyzeError(e.message || 'Gagal menganalisis data.'))
+        .then((res: unknown) => setResult(res as TremorResult))
+        .catch((e: Error) => setAnalyzeError(e.message || 'Gagal menganalisis data.'))
         .finally(() => setAnalyzing(false));
     }
   }, [capturedData]);
 
-  const handleInstructionDone = () => {
-    setShowInstruction(false);
-    startCapture('tremor');
+  const level = result ? (result.score >= 65 ? 'high' : result.score >= 35 ? 'mid' : 'low') : 'low';
+
+  /** Menyusun rekaman dalam bentuk yang dipakai src/data/tremorTrace.ts. */
+  const buildTraceJson = () => {
+    const raw = (capturedData?.payload as { samples?: Array<{ timestamp: number; x: number; y: number }> })?.samples;
+    if (!raw?.length || !result) return null;
+
+    const t0 = raw[0].timestamp;
+    const round = (n: number, d: number) => Number(n.toFixed(d));
+
+    return JSON.stringify(
+      {
+        capturedAt: new Date().toISOString().slice(0, 10),
+        durationSec: round((raw[raw.length - 1].timestamp - t0) / 1000, 1),
+        dominantFrequencyHz: result.dominantFrequencyHz,
+        amplitudeMillimeter: result.amplitudeMillimeter,
+        // Empat desimal sudah jauh melampaui ketelitian pelacak, dan menahan
+        // berkasnya tetap kecil karena ia ikut terkirim ke setiap pengunjung.
+        samples: raw.map(s => ({ t: Math.round(s.timestamp - t0), x: round(s.x, 4), y: round(s.y, 4) })),
+      },
+      null,
+      2,
+    );
+  };
+
+  const exportTrace = async () => {
+    const json = buildTraceJson();
+    if (!json) return;
+    try {
+      await navigator.clipboard.writeText(json);
+      setExportState('copied');
+    } catch {
+      // Papan klip bisa ditolak peramban. Berkasnya tetap harus bisa diambil.
+      const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'tremorTrace.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      setExportState('downloaded');
+    }
   };
 
   return (
     <div className={styles.page}>
-      <div className={styles.container} style={{ gridTemplateColumns: '1fr', maxWidth: 640, margin: '0 auto' }}>
-        <div className={styles.header}>
-          <Link href="/" style={{ display: 'inline-flex', marginBottom: 16 }} aria-label="Kembali ke beranda">
-            <Logo size={40} />
-          </Link>
-          <h1>Coba Deteksi Tremor, Gratis</h1>
-          <p>Tanpa perlu bikin akun dulu, coba 1 dari 6 tes biomarker NeuronMotion di sini.</p>
-        </div>
-
-        <div className={styles.mainColumn}>
-          {!result && !analyzing && (
-            <div className={styles.instructions}>
-              <h4 style={{ display: 'flex', alignItems: 'center', gap: 9 }}><HandIcon size={19} /> Instruksi Tremor</h4>
-              <p>Angkat tangan kanan Anda sejajar dada dan tahan dalam keadaan rileks selama 10 detik. Kamera akan mengukur frekuensi dan amplitudo getaran.</p>
+      <main className="sheet" id="main">
+        <div className={styles.pad}>
+          <header className="docHead">
+            <div className="docHead__meta">
+              <Link href="/" className={styles.homeLink}>
+                <Logo size={15} />
+              </Link>
+              <span>{t('demo.kicker')}</span>
             </div>
-          )}
+            <h1>{t('demo.title')}</h1>
+            <p className={styles.lead}>{t('demo.lead')}</p>
+          </header>
 
           {!result && (
-            <CameraView
-              videoRef={videoRef}
-              canvasRef={canvasRef}
-              cameraReady={cameraReady}
-              poseReady={poseReady}
-              isCapturing={isCapturing}
-              activeTest={activeTest}
-              liveMetrics={liveMetrics}
-              countdown={countdown}
-              error={error}
-              detectionWarning={detectionWarning}
-              lightingWarning={lightingWarning}
-              onStart={startCamera}
-              onStartCapture={handleInstructionDone}
-              showInstruction={showInstruction}
-              instructionTestType="tremor"
-              onInstructionDone={handleInstructionDone}
-              onInstructionSkip={handleInstructionDone}
-            />
-          )}
+            <div className={styles.stack}>
+              {showInstruction ? (
+                <ScreeningInstruction
+                  test={test}
+                  onStart={() => {
+                    setShowInstruction(false);
+                    startCapture('tremor');
+                  }}
+                  onSkipTest={() => setShowInstruction(false)}
+                  onCancel={() => setShowInstruction(false)}
+                />
+              ) : (
+                <CameraView
+                  videoRef={videoRef}
+                  canvasRef={canvasRef}
+                  cameraReady={cameraReady}
+                  poseReady={poseReady}
+                  isCapturing={isCapturing}
+                  activeTest={activeTest}
+                  test={test}
+                  liveMetrics={liveMetrics}
+                  countdown={countdown}
+                  fault={fault}
+                  detectionWarning={detectionWarning}
+                  lightingWarning={lightingWarning}
+                  showMetrics
+                  onStart={startCamera}
+                  onStop={stopCapture}
+                />
+              )}
 
-          {!result && cameraReady && poseReady && !isCapturing && !analyzing && (
-            <div className={styles.controls}>
-              <button className="btn btn-primary btn-lg" onClick={() => setShowInstruction(true)} disabled={showInstruction}>
-                Mulai Rekam &bull; Tremor
-              </button>
+              {cameraReady && poseReady && !isCapturing && !showInstruction && !analyzing && (
+                <button
+                  type="button"
+                  className="btn btn--primary btn--lg btn--block"
+                  onClick={() => setShowInstruction(true)}
+                >
+                  {t('scr.beginTest')}
+                </button>
+              )}
+
+              {analyzing && (
+                <p className={styles.status} role="status" aria-live="polite">
+                  {t('scr.analysing')}
+                </p>
+              )}
+
+              {analyzeError && (
+                <p className={styles.error} role="alert">
+                  {analyzeError}
+                </p>
+              )}
             </div>
-          )}
-
-          {!result && isCapturing && (
-            <div className={styles.controls}>
-              <button className="btn btn-danger btn-lg" onClick={stopCapture}>Hentikan Rekaman</button>
-            </div>
-          )}
-
-          {analyzing && (
-            <div style={{ textAlign: 'center', padding: 24, color: 'var(--text-secondary)' }}>Menganalisis data getaran...</div>
-          )}
-
-          {analyzeError && (
-            <div style={{ textAlign: 'center', padding: 16, color: 'var(--red-text)' }}>{analyzeError}</div>
           )}
 
           {result && (
-            <div className={styles.stepCard} style={{ textAlign: 'center' }}>
-              <div
-                className={styles.scoreCircle}
-                style={{
-                  borderColor: result.score >= 65 ? 'var(--red)' : result.score >= 35 ? 'var(--yellow)' : 'var(--green)',
-                  color: result.score >= 65 ? 'var(--red-text)' : result.score >= 35 ? 'var(--yellow-text)' : 'var(--green-text)',
-                }}
-              >
-                {Math.round(result.score)}
-              </div>
-              <h3 style={{ margin: '8px 0' }}>{result.category.replace(/_/g, ' ')}</h3>
-              <p style={{ color: 'var(--text-secondary)', marginBottom: 8 }}>{result.interpretation}</p>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 24 }}>
-                Frekuensi dominan: {result.dominantFrequencyHz} Hz &bull; Amplitudo: {result.amplitudeMillimeter} mm
+            <article className={styles.stack}>
+              <p className={styles.scoreLine}>
+                <span className={styles.scoreValue}>{Math.round(result.score)}</span>
+                <span className={styles.scoreOf}>{t('res.scoreOf')}</span>
               </p>
-              <div style={{ background: 'var(--brand-dim)', border: '1px solid rgba(59,130,246,0.3)', borderRadius: 12, padding: 20, marginBottom: 16 }}>
-                <p style={{ marginBottom: 12, fontWeight: 600 }}>Ini baru 1 dari 6 parameter biomarker.</p>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: 16 }}>
-                  Daftar akun gratis untuk skrining lengkap (tremor, finger tapping, gait, arm swing, postur, ROM) dan simpan riwayat pemeriksaan Anda.
-                </p>
-                <Link href="/register" className="btn btn-primary btn-lg" style={{ width: '100%' }}>
-                  Daftar &amp; Mulai Skrining Lengkap
+
+              <p className={`level level--${level} ${styles.levelChip}`}>
+                {result.category.replace(/_/g, ' ')}
+              </p>
+
+              <p>{result.interpretation}</p>
+
+              <table className="dataTable">
+                <caption>{t('demo.measured')}</caption>
+                <tbody>
+                  <tr>
+                    <td>{t('demo.frequency')}</td>
+                    <td className="num">{result.dominantFrequencyHz} Hz</td>
+                  </tr>
+                  <tr>
+                    <td>{t('demo.amplitude')}</td>
+                    <td className="num">{result.amplitudeMillimeter} mm</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              {canExport && (
+                <div className={styles.exportRow}>
+                  <button type="button" className="btn" onClick={exportTrace}>
+                    Salin rekaman (JSON)
+                  </button>
+                  {exportState !== 'idle' && (
+                    <span role="status" className={styles.exportOk}>
+                      {exportState === 'copied'
+                        ? 'Tersalin. Tempel ke src/data/tremorTrace.ts'
+                        : 'Terunduh sebagai tremorTrace.json'}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              <p className="note note--lead">{t('res.notDiagnosis')}</p>
+
+              <section className={styles.invite}>
+                <h2>{t('demo.oneOfSix')}</h2>
+                <p>{t('demo.inviteBody')}</p>
+                <Link href="/register" className="btn btn--primary btn--lg">
+                  {t('demo.register')}
                 </Link>
-              </div>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                Hasil demo ini tidak disimpan. Ini bukan diagnosis medis.
-              </p>
-            </div>
+              </section>
+
+              <p className={styles.footnote}>{t('demo.notStored')}</p>
+            </article>
           )}
         </div>
-      </div>
+      </main>
     </div>
   );
 }

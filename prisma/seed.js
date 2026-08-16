@@ -144,6 +144,8 @@ async function main() {
   console.log(`✅ ${sessionCount} sesi pemeriksaan dibuat`);
 
   // Buat akun pasien demo yang bisa login
+  const demoDob = new Date();
+  demoDob.setFullYear(demoDob.getFullYear() - 64);
   const demoPatient = await prisma.user.create({
     data: {
       email: 'pasien@neuronmotion.id',
@@ -151,9 +153,111 @@ async function main() {
       name: 'Pasien Demo',
       role: 'PATIENT',
       gender: 'M',
+      dateOfBirth: demoDob,
     },
   });
   await prisma.doctorPatient.create({ data: { doctorId: doctors[0].id, patientId: demoPatient.id } });
+
+  /* Riwayat akun demo.
+     ─────────────────────────────────────────────────────────────────────────
+     Sebelumnya akun ini dibuat tanpa satu pun sesi, sehingga orang yang masuk
+     dengan akun demo justru melihat halaman kosong dan tidak menemukan apa pun
+     dari produk ini.
+
+     Datanya ditulis tangan, tidak diambil dari generator sintetis, karena dua
+     alasan. Pertama, generator memberi satu set biomarker per pasien lalu
+     memakainya ulang untuk seluruh sesinya, sehingga grafik trennya datar dan
+     setiap perbandingan antar sesi bernilai nol. Kedua, generator tidak pernah
+     mengisi ayunan lengan dan rentang gerak, sehingga dua dari enam kartu
+     biomarker tidak pernah muncul.
+
+     Deretan di bawah ini bergerak: memburuk perlahan selama lima bulan lalu
+     sedikit membaik pada sesi terakhir. Itu bentuk yang membuat garis tren,
+     selisih antar sesi, dan pembanding riwayat punya sesuatu untuk ditunjukkan.
+
+     Nama fieldnya sengaja mengikuti keluaran analisator live di
+     server/services/biomarkers.js, bukan bentuk ringkas yang dipakai pasien
+     sintetis di atas, supaya akun demo ikut menguji jalur yang sama dengan
+     rekaman kamera sungguhan.
+
+     Angka-angka ini data peraga, bukan rekaman pasien nyata. */
+  const demoSessions = [
+    { daysAgo: 152, score: 28.4, tremorHz: 3.81, amp: 0.0061, tap: 4.62, dec: 6.2,  cad: 108.4, sym: 95.8, arm: 8.3,  rom: 128.5, sway: 2.14 },
+    { daysAgo: 121, score: 33.9, tremorHz: 4.08, amp: 0.0079, tap: 4.31, dec: 9.4,  cad: 105.1, sym: 93.6, arm: 12.1, rom: 124.2, sway: 2.83 },
+    { daysAgo: 88,  score: 41.2, tremorHz: 4.37, amp: 0.0104, tap: 3.94, dec: 13.1, cad: 101.3, sym: 90.7, arm: 16.8, rom: 119.4, sway: 3.91 },
+    { daysAgo: 54,  score: 47.6, tremorHz: 4.71, amp: 0.0138, tap: 3.52, dec: 17.3, cad: 96.8,  sym: 87.9, arm: 21.6, rom: 114.1, sway: 5.22 },
+    { daysAgo: 19,  score: 43.8, tremorHz: 4.59, amp: 0.0126, tap: 3.71, dec: 15.2, cad: 98.9,  sym: 89.2, arm: 19.4, rom: 116.3, sway: 4.68 },
+  ];
+
+  for (const d of demoSessions) {
+    const when = new Date();
+    when.setDate(when.getDate() - d.daysAgo);
+
+    await prisma.session.create({
+      data: {
+        patientId: demoPatient.id,
+        doctorId: doctors[0].id,
+        timestamp: when,
+        createdAt: when,
+        tremorResult: JSON.stringify({
+          dominantFrequencyHz: d.tremorHz,
+          amplitude: d.amp,
+          category: 'PARKINSON_TREMOR',
+          score: Math.round(d.tremorHz * 14),
+        }),
+        fingerTappingResult: JSON.stringify({
+          tapRatePerSecond: d.tap,
+          decrementPercent: d.dec,
+          category: d.dec > 15 ? 'MODERATE_BRADYKINESIA' : d.dec > 8 ? 'MILD_BRADYKINESIA' : 'NORMAL',
+          score: Math.round(d.dec * 3.4),
+        }),
+        gaitResult: JSON.stringify({
+          cadencePerMin: d.cad,
+          strideSymmetryIndex: parseFloat((d.sym / 100).toFixed(3)),
+          symmetryPercent: d.sym,
+          stepCount: Math.round(d.cad / 4),
+          category: d.sym < 90 ? 'MODERATE_ASYMMETRY' : 'NORMAL',
+          score: Math.round(100 - d.sym),
+        }),
+        armSwingResult: JSON.stringify({
+          leftAmplitudeDeg: parseFloat((32 - d.arm / 3).toFixed(1)),
+          rightAmplitudeDeg: parseFloat((32 - d.arm / 1.2).toFixed(1)),
+          asymmetryPercent: d.arm,
+          weakerSide: 'kanan',
+          category: d.arm > 20 ? 'SIGNIFICANT_ASYMMETRY' : d.arm > 10 ? 'MILD_ASYMMETRY' : 'NORMAL',
+          score: Math.round(d.arm * 2.6),
+        }),
+        romResult: JSON.stringify({
+          joint: 'knee',
+          maxAngleDeg: d.rom,
+          minAngleDeg: 4.2,
+          romDeg: d.rom,
+          category: d.rom < 120 ? 'MILD_LIMITATION' : 'NORMAL',
+          score: Math.round(Math.max(0, 135 - d.rom) * 2),
+        }),
+        posturalResult: JSON.stringify({
+          swayLengthNorm: parseFloat((d.sway * 0.14).toFixed(4)),
+          swayAreaNorm: parseFloat((d.sway / 10000).toFixed(6)),
+          swayAreaCm2: d.sway,
+          frameCount: 300,
+          category: d.sway > 4 ? 'UNSTABLE' : 'MILDLY_UNSTABLE',
+          score: Math.round(d.sway * 12),
+        }),
+        compositeScore: d.score,
+        riskCategory: d.score >= 65 ? 'HIGH' : d.score >= 35 ? 'MEDIUM' : 'LOW',
+        mlPrediction: JSON.stringify({
+          predictedCondition: 'PARKINSON_EARLY',
+          predictedLabel: 'Parkinson Awal (Hoehn-Yahr 1-2)',
+          confidence: 71,
+        }),
+        recommendations: JSON.stringify([
+          'Konsultasikan hasil ini dengan dokter saraf untuk pemeriksaan lanjutan.',
+          'Ulangi skrining setiap satu bulan untuk memantau perubahan.',
+        ]),
+      },
+    });
+  }
+  console.log(`✅ ${demoSessions.length} sesi untuk akun demo dibuat`);
   console.log(`\n✅ Akun demo dibuat:`);
   console.log(`   Pasien: pasien@neuronmotion.id / password123`);
   console.log(`   Dokter: dr.andi@neuronmotion.id / doctor123`);

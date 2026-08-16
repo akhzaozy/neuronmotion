@@ -1,0 +1,55 @@
+/* Pengalih bahasa. Dua kode bahasa berdampingan di dalam satu pil bergaris,
+   bentuknya sepadan dengan pengalih tema di sebelahnya.
+
+   Keadaan terpilih ditandai bobot huruf DAN bidang berwarna, bukan warna saja,
+   sehingga tetap terbaca tanpa membedakan warna. */
+
+.group {
+  display: inline-flex;
+  flex-shrink: 0;
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+/* Lantai 44px berlaku pada kedua sumbu, bukan tinggi saja. Diukur sebelumnya,
+   kedua tombol ini 42 dan 43px lebarnya karena padding --s3 pada label dua
+   huruf tidak sampai ke lantai itu. */
+.option {
+  min-height: var(--touch);
+  min-width: var(--touch);
+  padding: 0 var(--s3);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: var(--t-record);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+  background: transparent;
+  transition: color 0.14s ease-out, background-color 0.14s ease-out;
+}
+
+.option:hover {
+  color: var(--accent);
+  background: var(--accent-wash);
+}
+
+.option[aria-pressed='true'] {
+  font-weight: 700;
+  color: #ffffff;
+  background: var(--accent);
+}
+
+:global([data-theme='dark']) .option[aria-pressed='true'] {
+  color: #06222c;
+}
+
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme='light'])) .option[aria-pressed='true'] {
+    color: #06222c;
+  }
+}
+
+/* Garis pemisah antar dua pilihan, hanya ketika keduanya tidak aktif. */
+.option + .option {
+  border-left: 1px solid var(--rule-hair);
+}

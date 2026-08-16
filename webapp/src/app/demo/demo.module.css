@@ -1,0 +1,103 @@
+.page {
+  min-height: 100vh;
+  background: var(--sheet);
+}
+
+.pad {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--s7) 0 var(--s9);
+}
+
+.homeLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+}
+
+.lead {
+  font-size: var(--t-lead);
+  color: var(--ink-secondary);
+  margin-top: var(--s3);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+}
+
+.status,
+.error {
+  padding: var(--s3) var(--s4);
+  border-radius: var(--radius);
+  font-weight: 600;
+}
+
+.error {
+  border-left: 4px solid var(--level-high);
+  background: var(--level-high-wash);
+  color: var(--level-high);
+}
+
+.scoreLine {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s3);
+  margin: 0;
+}
+
+.scoreValue {
+  font-family: var(--font-display), var(--font-sans), system-ui, sans-serif;
+  font-size: var(--t-display);
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.scoreOf {
+  font-size: var(--t-lead);
+  color: var(--ink-muted);
+}
+
+.levelChip {
+  align-self: flex-start;
+  margin: 0;
+}
+
+/* Tampilannya datang dari .note--lead di globals.css. */
+
+.invite {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s3);
+  padding-top: var(--s5);
+  border-top: 1px solid var(--rule-hair);
+}
+
+.invite h2 {
+  font-size: var(--t-head);
+}
+
+.footnote {
+  font-size: var(--t-record);
+  color: var(--ink-muted);
+}
+
+/* Baris ekspor rekaman. Hanya tampil pada /demo?export=1, dipakai untuk
+   mengambil data plat di halaman depan. Bukan bagian dari alur pengguna. */
+.exportRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.exportOk {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: var(--t-record);
+  color: var(--ink-muted);
+}

@@ -35,17 +35,19 @@ export default function GeoBreakdown({ data }: { data?: GeoData | null }) {
   const maxTotal = Math.max(...rows.map(r => r.total), 1);
 
   return (
-    <div className={styles.card}>
-      <div className={styles.header}>
+    <section className={styles.block}>
+      <div className={styles.head}>
         <div>
           <h2 className={styles.title}>{t('doc.geoTitle')}</h2>
           <p className={styles.subtitle}>{t('doc.geoSubtitle')}</p>
         </div>
-        <div className={styles.tabs}>
+        <div className={styles.tabs} role="group" aria-label={t('doc.geoTitle')}>
           {LEVELS.map(l => (
             <button
               key={l.key}
+              type="button"
               className={`${styles.tab} ${level === l.key ? styles.tabActive : ''}`}
+              aria-pressed={level === l.key}
               onClick={() => setLevel(l.key)}
             >
               {t(l.labelKey)}
@@ -57,37 +59,57 @@ export default function GeoBreakdown({ data }: { data?: GeoData | null }) {
       {rows.length === 0 ? (
         <p className={styles.empty}>{t('geo.empty')}</p>
       ) : (
-        <div className={styles.list}>
-          {rows.map(r => (
-            <div key={r.name} className={styles.row}>
-              <div className={styles.rowHead}>
-                <span className={styles.rowName} data-no-translate="">{r.name}</span>
-                <span className={styles.rowTotal}>{r.total} {t('geo.patients')}</span>
-              </div>
-              {/* Satu batang dibagi menurut proporsi risiko, panjangnya relatif
-                  terhadap wilayah dengan pasien terbanyak */}
-              <div className={styles.barTrack} style={{ width: `${(r.total / maxTotal) * 100}%` }}>
-                {r.HIGH > 0 && (
-                  <span className={styles.segHigh} style={{ flex: r.HIGH }} title={`${t('geo.highRiskTip')}: ${r.HIGH}`} />
-                )}
-                {r.MEDIUM > 0 && (
-                  <span className={styles.segMed} style={{ flex: r.MEDIUM }} title={`${t('geo.mediumRiskTip')}: ${r.MEDIUM}`} />
-                )}
-                {r.LOW > 0 && (
-                  <span className={styles.segLow} style={{ flex: r.LOW }} title={`${t('geo.lowRiskTip')}: ${r.LOW}`} />
-                )}
-                {r.HIGH + r.MEDIUM + r.LOW === 0 && (
-                  <span className={styles.segNone} style={{ flex: 1 }} title={t('doc.noSessionsYet')} />
-                )}
-              </div>
-              <div className={styles.rowMeta}>
-                {r.HIGH > 0 && <span className={styles.tagHigh}>{r.HIGH} {t('geo.high')}</span>}
-                {r.MEDIUM > 0 && <span className={styles.tagMed}>{r.MEDIUM} {t('geo.medium')}</span>}
-                {r.LOW > 0 && <span className={styles.tagLow}>{r.LOW} {t('geo.low')}</span>}
-                {r.HIGH + r.MEDIUM + r.LOW === 0 && <span className={styles.tagNone}>{t('geo.notScreened')}</span>}
-              </div>
-            </div>
-          ))}
+        <div className={styles.tableScroll}>
+          <table className="dataTable">
+            <thead>
+              <tr>
+                <th scope="col">{t(LEVELS.find(l => l.key === level)!.labelKey)}</th>
+                <th scope="col" className="num">{t('geo.patients')}</th>
+                <th scope="col" className="num">{t('geo.high')}</th>
+                <th scope="col" className="num">{t('geo.medium')}</th>
+                <th scope="col" className="num">{t('geo.low')}</th>
+                <th scope="col">
+                  <span className="srOnly">{t('doc.geoTitle')}</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map(r => (
+                <tr key={r.name}>
+                  <th scope="row" className={styles.name} data-no-translate="">
+                    {r.name}
+                  </th>
+                  <td className="num">{r.total}</td>
+                  <td className="num">{r.HIGH}</td>
+                  <td className="num">{r.MEDIUM}</td>
+                  <td className="num">{r.LOW}</td>
+                  <td>
+                    {r.HIGH + r.MEDIUM + r.LOW === 0 ? (
+                      <span className={styles.none}>{t('geo.notScreened')}</span>
+                    ) : (
+                      /* Satu batang dibagi menurut proporsi risiko, panjangnya
+                         relatif terhadap wilayah dengan pasien terbanyak */
+                      <span
+                        className={styles.bar}
+                        style={{ width: `${(r.total / maxTotal) * 100}%` }}
+                        aria-hidden="true"
+                      >
+                        {r.HIGH > 0 && (
+                          <span className={styles.segHigh} style={{ flex: r.HIGH }} title={`${t('geo.highRiskTip')}: ${r.HIGH}`} />
+                        )}
+                        {r.MEDIUM > 0 && (
+                          <span className={styles.segMid} style={{ flex: r.MEDIUM }} title={`${t('geo.mediumRiskTip')}: ${r.MEDIUM}`} />
+                        )}
+                        {r.LOW > 0 && (
+                          <span className={styles.segLow} style={{ flex: r.LOW }} title={`${t('geo.lowRiskTip')}: ${r.LOW}`} />
+                        )}
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
@@ -98,6 +120,6 @@ export default function GeoBreakdown({ data }: { data?: GeoData | null }) {
             : `${data.unknownCount} dari ${data.totalPatients} pasien belum mengisi data wilayah, sehingga tidak masuk dalam hitungan di atas.`}
         </p>
       )}
-    </div>
+    </section>
   );
 }

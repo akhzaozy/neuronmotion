@@ -9,6 +9,16 @@ import styles from '../../profil/profil.module.css';
 
 const SPECIALIZATIONS = ['Neurolog', 'Dokter Umum', 'Fisioterapis', 'Perawat'];
 
+/** Satu baris keterangan: label di kiri, nilai di kanan, dipisah garis rambut. */
+function InfoRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className={styles.infoRow}>
+      <dt className={`label ${styles.infoLabel}`}>{label}</dt>
+      <dd className={styles.infoValue}>{children}</dd>
+    </div>
+  );
+}
+
 export default function DoctorProfilPage() {
   const router = useRouter();
   const { user, token, logout, isLoading, login } = useAuth();
@@ -29,6 +39,7 @@ export default function DoctorProfilPage() {
   const [showPwForm, setShowPwForm] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [showPw, setShowPw] = useState(false);
   const [pwSaving, setPwSaving] = useState(false);
 
   useEffect(() => {
@@ -92,7 +103,9 @@ export default function DoctorProfilPage() {
     return (
       <div className={styles.page}>
         <DoctorNav />
-        <div className={styles.container}><p>Memuat profil...</p></div>
+        <main className="sheet">
+          <p className={styles.loading} role="status" aria-live="polite">Memuat profil...</p>
+        </main>
       </div>
     );
   }
@@ -103,136 +116,150 @@ export default function DoctorProfilPage() {
   return (
     <div className={styles.page}>
       <DoctorNav />
-      <div className={styles.container}>
-        <div className={styles.profileHeader}>
-          <div className={styles.avatar}>{profile?.name?.charAt(0) || 'D'}</div>
-          <div>
-            <div className={styles.profileName}>{profile?.name}</div>
-            <div className={styles.profileRole}>
-              {profile?.specialization || 'Tenaga Kesehatan'}
-              {profile?.institution ? ` · ${profile.institution}` : ''}
+
+      <main className="sheet" id="main">
+        <div className={styles.pad}>
+          <header className="docHead">
+            <div className="docHead__meta">
+              <span data-no-translate="">
+                {profile?.specialization || 'Tenaga Kesehatan'}
+                {profile?.institution ? ` · ${profile.institution}` : ''}
+              </span>
+              <span data-no-translate="">{profile?.email}</span>
             </div>
-            <div className={styles.profileEmail}>{profile?.email}</div>
-          </div>
-        </div>
+            <h1 data-no-translate="">{profile?.name}</h1>
+          </header>
 
-        {message && <div className={styles.successMsg}>{message}</div>}
-        {error && <div className={styles.errorMsg}>{error}</div>}
+          {message && <p className={styles.successMsg} role="status">{message}</p>}
+          {error && <p className={styles.errorMsg} role="alert">{error}</p>}
 
-        <div className={styles.card}>
-          <div className={styles.cardHeader}>
-            <h2 className={styles.cardTitle}>Data Profesional</h2>
-            {!editing && (
-              <button className="btn btn-outline btn-sm" onClick={() => setEditing(true)}>Ubah</button>
+          {/* ── Data profesional ──────────────────────────────────────────── */}
+          <section className={styles.section}>
+            <div className={styles.sectionHead}>
+              <h2 className={styles.sectionTitle}>Data Profesional</h2>
+              {!editing && (
+                <button className="btn" onClick={() => setEditing(true)}>Ubah</button>
+              )}
+            </div>
+
+            {!editing ? (
+              <dl className={styles.infoList}>
+                <InfoRow label="Nama">
+                  <span data-no-translate="">{profile?.name}</span>
+                </InfoRow>
+                <InfoRow label="Profesi">{profile?.specialization || 'Belum diisi'}</InfoRow>
+                <InfoRow label="Institusi">
+                  <span data-no-translate="">{profile?.institution || 'Belum diisi'}</span>
+                </InfoRow>
+                <InfoRow label="Wilayah Praktik">
+                  <span data-no-translate="">{locationText}</span>
+                </InfoRow>
+                <InfoRow label="Email">
+                  <span data-no-translate="">{profile?.email}</span>
+                </InfoRow>
+              </dl>
+            ) : (
+              <div className={styles.form}>
+                <div className={styles.formGroup}>
+                  <label className="label" htmlFor="docprof-name">Nama Lengkap</label>
+                  <input id="docprof-name" className="input" value={name} onChange={e => setName(e.target.value)} />
+                </div>
+                <div className={styles.formGroup}>
+                  <label className="label" htmlFor="docprof-specialization">Profesi</label>
+                  <select id="docprof-specialization" className="input" value={specialization} onChange={e => setSpecialization(e.target.value)}>
+                    <option value="">Pilih profesi</option>
+                    {SPECIALIZATIONS.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div className={styles.formGroup}>
+                  <label className="label" htmlFor="docprof-institution">Institusi / Tempat Praktik</label>
+                  <input id="docprof-institution" className="input" value={institution} onChange={e => setInstitution(e.target.value)}
+                    placeholder="Contoh: RS Siloam Jakarta" />
+                </div>
+
+                <LocationFields value={location} onChange={setLocation} />
+
+                <div className={styles.actionRow}>
+                  <button className="btn btn--primary" onClick={saveProfile} disabled={saving}>
+                    {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
+                  </button>
+                  <button className="btn" onClick={() => setEditing(false)} disabled={saving}>Batal</button>
+                </div>
+              </div>
             )}
-          </div>
+          </section>
 
-          {editing ? (
-            <>
-              <div className={styles.formGroup}>
-                <label className={styles.label} htmlFor="docprof-name">Nama Lengkap</label>
-                <input id="docprof-name" className="input" value={name} onChange={e => setName(e.target.value)} />
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.label} htmlFor="docprof-specialization">Profesi</label>
-                <select id="docprof-specialization" className="input" value={specialization} onChange={e => setSpecialization(e.target.value)}>
-                  <option value="">Pilih profesi</option>
-                  {SPECIALIZATIONS.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.label} htmlFor="docprof-institution">Institusi / Tempat Praktik</label>
-                <input id="docprof-institution" className="input" value={institution} onChange={e => setInstitution(e.target.value)}
-                  placeholder="Contoh: RS Siloam Jakarta" />
-              </div>
+          {/* ── Keamanan ──────────────────────────────────────────────────── */}
+          <section className={styles.section}>
+            <div className={styles.sectionHead}>
+              <h2 className={styles.sectionTitle}>Keamanan</h2>
+              {!showPwForm && (
+                <button className="btn" onClick={() => setShowPwForm(true)}>Ganti Password</button>
+              )}
+            </div>
 
-              <LocationFields value={location} onChange={setLocation} />
-
-              <div className={styles.actionRow}>
-                <button className="btn btn-outline" onClick={() => setEditing(false)} disabled={saving}>Batal</button>
-                <button className="btn btn-primary" onClick={saveProfile} disabled={saving}>
-                  {saving && <span className="btnSpinner" />}
-                  {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
-                </button>
+            {!showPwForm ? (
+              <p className={styles.note}>
+                Gunakan password yang kuat dan tidak dipakai di layanan lain, karena akun ini dapat
+                mengakses data kesehatan pasien.
+              </p>
+            ) : (
+              <div className={styles.form}>
+                <div className={styles.formGroup}>
+                  <label className="label" htmlFor="docprof-current-pw">Password Saat Ini</label>
+                  <input id="docprof-current-pw" type={showPw ? 'text' : 'password'} className="input" value={currentPassword}
+                    onChange={e => setCurrentPassword(e.target.value)} />
+                </div>
+                <div className={styles.formGroup}>
+                  <div className={styles.labelRow}>
+                    <label className="label" htmlFor="docprof-new-pw">Password Baru</label>
+                    {/* Pengalih kata sandi memakai kata, bukan ikon mata. */}
+                    <button
+                      type="button"
+                      className={styles.reveal}
+                      onClick={() => setShowPw(v => !v)}
+                      aria-pressed={showPw}
+                    >
+                      {showPw ? 'Sembunyikan' : 'Tampilkan'}
+                    </button>
+                  </div>
+                  <input id="docprof-new-pw" type={showPw ? 'text' : 'password'} className="input" value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)} placeholder="Minimal 6 karakter" minLength={6} />
+                </div>
+                <div className={styles.actionRow}>
+                  <button className="btn btn--primary" onClick={changePassword}
+                    disabled={pwSaving || newPassword.length < 6 || !currentPassword}>
+                    {pwSaving ? 'Menyimpan...' : 'Simpan Password'}
+                  </button>
+                  <button className="btn" onClick={() => { setShowPwForm(false); setCurrentPassword(''); setNewPassword(''); }}>
+                    Batal
+                  </button>
+                </div>
               </div>
-            </>
-          ) : (
-            <>
-              <div className={styles.infoRow}>
-                <span className={styles.infoLabel}>Nama</span>
-                <span className={styles.infoValue}>{profile?.name}</span>
-              </div>
-              <div className={styles.infoRow}>
-                <span className={styles.infoLabel}>Profesi</span>
-                <span className={styles.infoValue}>{profile?.specialization || 'Belum diisi'}</span>
-              </div>
-              <div className={styles.infoRow}>
-                <span className={styles.infoLabel}>Institusi</span>
-                <span className={styles.infoValue}>{profile?.institution || 'Belum diisi'}</span>
-              </div>
-              <div className={styles.infoRow}>
-                <span className={styles.infoLabel}>Wilayah Praktik</span>
-                <span className={styles.infoValue}>{locationText}</span>
-              </div>
-              <div className={styles.infoRow}>
-                <span className={styles.infoLabel}>Email</span>
-                <span className={styles.infoValue}>{profile?.email}</span>
-              </div>
-            </>
-          )}
-        </div>
-
-        <div className={styles.card}>
-          <div className={styles.cardHeader}>
-            <h2 className={styles.cardTitle}>Keamanan</h2>
-            {!showPwForm && (
-              <button className="btn btn-outline btn-sm" onClick={() => setShowPwForm(true)}>Ganti Password</button>
             )}
-          </div>
-          {showPwForm ? (
-            <>
-              <div className={styles.formGroup}>
-                <label className={styles.label} htmlFor="docprof-current-pw">Password Saat Ini</label>
-                <input id="docprof-current-pw" type="password" className="input" value={currentPassword}
-                  onChange={e => setCurrentPassword(e.target.value)} />
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.label} htmlFor="docprof-new-pw">Password Baru</label>
-                <input id="docprof-new-pw" type="password" className="input" value={newPassword}
-                  onChange={e => setNewPassword(e.target.value)} placeholder="Minimal 6 karakter" />
-              </div>
-              <div className={styles.actionRow}>
-                <button className="btn btn-outline" onClick={() => { setShowPwForm(false); setCurrentPassword(''); setNewPassword(''); }}>
-                  Batal
-                </button>
-                <button className="btn btn-primary" onClick={changePassword}
-                  disabled={pwSaving || newPassword.length < 6 || !currentPassword}>
-                  {pwSaving && <span className="btnSpinner" />}
-                  {pwSaving ? 'Menyimpan...' : 'Simpan Password'}
-                </button>
-              </div>
-            </>
-          ) : (
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem' }}>
-              Gunakan password yang kuat dan tidak dipakai di layanan lain, karena akun ini dapat
-              mengakses data kesehatan pasien.
+          </section>
+
+          {/* ── Tanggung jawab akses data ─────────────────────────────────── */}
+          <section className={styles.section}>
+            <div className={styles.sectionHead}>
+              <h2 className={styles.sectionTitle}>Tanggung Jawab Akses Data</h2>
+            </div>
+            <p className={styles.note}>
+              Akun ini dapat melihat data kesehatan pasien yang menautkan diri kepada Anda. Gunakan akses
+              tersebut sebatas keperluan perawatan, dan lepaskan tautan bila hubungan perawatan telah
+              berakhir. Pasien berhak menghapus riwayat maupun akunnya kapan saja.
             </p>
-          )}
-        </div>
+          </section>
 
-        <div className={styles.card}>
-          <h2 className={styles.cardTitle} style={{ marginBottom: 12 }}>Tanggung Jawab Akses Data</h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', lineHeight: 1.7 }}>
-            Akun ini dapat melihat data kesehatan pasien yang menautkan diri kepada Anda. Gunakan akses
-            tersebut sebatas keperluan perawatan, dan lepaskan tautan bila hubungan perawatan telah
-            berakhir. Pasien berhak menghapus riwayat maupun akunnya kapan saja.
-          </p>
-          <button className={styles.logoutBtn} style={{ marginTop: 18 }}
-            onClick={() => { logout(); router.push('/login'); }}>
-            Keluar
-          </button>
+          {/* Keluar adalah tindakan biasa yang bisa dibatalkan dengan masuk
+              kembali, jadi ia tombol netral, bukan bidang merah. */}
+          <div className={styles.logoutRow}>
+            <button className="btn btn--block" onClick={() => { logout(); router.push('/login'); }}>
+              Keluar
+            </button>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
