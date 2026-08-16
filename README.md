@@ -35,9 +35,9 @@ Cukup dengan membuka website lewat laptop atau *smartphone* yang memiliki kamera
 
 | No | Foto / Nama | Peran & Tanggung Jawab Utama |
 |:---:|:---|:---|
-| 1 | **Siti Aminatuzzuhriyah** | **Clinical Researcher & Dataset Validator**<br>• Riset kriteria klinis skala MDS-UPDRS.<br>• Validasi rentang patologis 6 biomarker neurologi.<br>• Pemodelan distribusi dataset klinis. |
+| 1 | **Siti Aminatuzzuhriyah** | **Project Lead & Clinical Researcher**<br>• Riset kriteria klinis skala MDS-UPDRS.<br>• Validasi rentang patologis 6 biomarker neurologi.<br>• Pemodelan distribusi dataset klinis. |
 | 2 | **Adhitya Hermawan** | **Machine Learning & Backend Engineer**<br>• Pengembangan algoritma pemrosesan sinyal (DFT & PCA).<br>• Arsitektur classifier K-NN ($k=11$) dan standardisasi Z-Score.<br>• Pengembangan RESTful API & manajemen basis data PostgreSQL/Prisma. |
-| 3 | **Muhammad Akhza Fachrozy** | **Project Lead & Frontend/Vision Architect**<br>• Perancangan arsitektur sistem *end-to-end*.<br>• Integrasi Google MediaPipe Vision (WASM/WebGL) di browser.<br>• Desain antarmuka responsif (*Design System*) & integrasi AI. |
+| 3 | **Muhammad Akhza Fachrozy** | **Frontend/Vision Architect & Deployment**<br>• Perancangan arsitektur sistem *end-to-end*.<br>• Integrasi Google MediaPipe Vision (WASM/WebGL) di browser.<br>• Desain antarmuka responsif (*Design System*) & integrasi AI. |
 
 ---
 
