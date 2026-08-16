@@ -2,6 +2,19 @@
 import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import {
+  ArrowLeft,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  User,
+  Stethoscope,
+  AlertCircle,
+  Info,
+  Loader2,
+  ShieldCheck,
+} from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import Logo from '@/components/Logo';
@@ -32,34 +45,13 @@ function LoginForm() {
   // riwayat pemeriksaannya.
   const sessionExpired = params.get('expired') === '1';
 
-  /* Panel akun demo.
-     ───────────────────────────────────────────────────────────────────────
-     Menampilkan kredensial di halaman masuk adalah hal yang tidak boleh ikut
-     terbawa ke pemasangan yang bisa dijangkau publik, jadi ia dikendalikan
-     saklar dan bukan dipasang mati. Bawaannya menyala supaya orang yang baru
-     meng-clone proyek ini tidak perlu menyetel apa pun; untuk mematikannya,
-     isi NEXT_PUBLIC_SHOW_DEMO_ACCOUNTS dengan 'false'. */
-  const showDemoAccounts = process.env.NEXT_PUBLIC_SHOW_DEMO_ACCOUNTS !== 'false';
-  const [filledDemo, setFilledDemo] = useState<'PATIENT' | 'DOCTOR' | null>(null);
-
-  /* Mengisi formulir, bukan langsung masuk. Pengguna tetap melihat email dan
-     kata sandi yang dipakainya, sehingga ia bisa mencatatnya, dan tetap
-     menekan tombol masuk sendiri. */
-  const fillDemo = (which: 'PATIENT' | 'DOCTOR') => {
-    setRole(which);
-    setEmail(which === 'DOCTOR' ? 'dr.dewi@neuronmotion.id' : 'pasien@neuronmotion.id');
-    setPassword(which === 'DOCTOR' ? 'doctor123' : 'password123');
-    setError('');
-    setFilledDemo(which);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     try {
-      const data = await api.login(email, password);
+      const data = await api.login(email.trim(), password);
       const userRole = data.user.role;
 
       if (userRole !== 'PATIENT' && userRole !== 'DOCTOR') {
@@ -101,7 +93,7 @@ function LoginForm() {
   return (
     <div className={styles.page}>
       <header className={styles.bar}>
-        <Link href="/" className={styles.brand}>
+        <Link href="/" className={styles.brand} aria-label="NeuronMotion Home">
           <Logo size={16} />
         </Link>
         <div className={styles.barActions}>
@@ -112,96 +104,85 @@ function LoginForm() {
 
       <main className={styles.main} id="main">
         <div className={styles.form}>
-          <div className="docHead">
-            <div className="docHead__meta">
-              <Link href="/" className={styles.backLink}>
-                {t('common.backHome')}
-              </Link>
-            </div>
-            <h1>{t('auth.welcome')}</h1>
+          <div className={styles.cardHead}>
+            <Link href="/" className={styles.backLink}>
+              <ArrowLeft size={16} aria-hidden="true" />
+              <span>{t('common.backHome')}</span>
+            </Link>
+            <h1 className={styles.cardTitle}>{t('auth.welcome')}</h1>
+            <p className={styles.cardSubtitle}>{t('auth.welcomeSubtitle')}</p>
           </div>
 
-          {/* Pemberitahuan, bukan galat: pengguna tidak melakukan kesalahan
-              apa pun, jadi ia tidak diberi bidang merah. */}
+          {/* Pemberitahuan sesi berakhir */}
           {sessionExpired && (
             <div className={styles.notice} role="status">
-              <p className={styles.noticeTitle}>{t('session.expiredTitle')}</p>
-              <p className={styles.noticeBody}>{t('session.expiredBody')}</p>
+              <Info size={18} className={styles.noticeIcon} aria-hidden="true" />
+              <div className={styles.noticeText}>
+                <p className={styles.noticeTitle}>{t('session.expiredTitle')}</p>
+                <p className={styles.noticeBody}>{t('session.expiredBody')}</p>
+              </div>
             </div>
           )}
 
-          {/* Akun demo. Ditaruh di atas pemilih peran karena menekannya juga
-              menyetel perannya, jadi urutan bacanya harus dari sini ke bawah. */}
-          {showDemoAccounts && (
-            <section className={styles.demo} aria-labelledby="demoHead">
-              <p id="demoHead" className={styles.demoTitle}>
-                {t('demoAcc.title')}
-                {filledDemo && (
-                  <span className={styles.demoFilled} role="status">
-                    {' '}
-                    {t('demoAcc.filled')}
-                  </span>
-                )}
-              </p>
-
-              <div className={styles.demoRow}>
-                {([
-                  ['PATIENT', 'demoAcc.patient'],
-                  ['DOCTOR', 'demoAcc.doctor'],
-                ] as const).map(([which, labelKey]) => (
-                  <button
-                    key={which}
-                    type="button"
-                    className={styles.demoBtn}
-                    data-filled={filledDemo === which ? '' : undefined}
-                    aria-pressed={filledDemo === which}
-                    onClick={() => fillDemo(which)}
-                  >
-                    {t(labelKey)}
-                  </button>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Peran dipilih lewat dua tombol berlabel teks penuh. */}
-          <div className={styles.roleGroup} role="group" aria-label={t('auth.roleLabel')}>
-            {(['PATIENT', 'DOCTOR'] as const).map(r => (
+          {/* Pilihan peran dengan ikon dan helper */}
+          <div className={styles.roleSection}>
+            <div className={styles.roleGroup} role="group" aria-label={t('auth.roleLabel')}>
               <button
-                key={r}
                 type="button"
                 className={styles.roleOption}
-                aria-pressed={role === r}
+                aria-pressed={role === 'PATIENT'}
                 onClick={() => {
-                  setRole(r);
+                  setRole('PATIENT');
                   setError('');
                 }}
               >
-                {r === 'PATIENT' ? t('auth.patient') : t('auth.doctor')}
+                <User size={16} aria-hidden="true" />
+                <span>{t('auth.patient')}</span>
               </button>
-            ))}
+              <button
+                type="button"
+                className={styles.roleOption}
+                aria-pressed={role === 'DOCTOR'}
+                onClick={() => {
+                  setRole('DOCTOR');
+                  setError('');
+                }}
+              >
+                <Stethoscope size={16} aria-hidden="true" />
+                <span>{t('auth.doctor')}</span>
+              </button>
+            </div>
+            <p className={styles.roleHint}>
+              {role === 'PATIENT' ? t('auth.patientDesc') : t('auth.doctorDesc')}
+            </p>
           </div>
 
+          {/* Pesan galat */}
           {error && (
-            <p className={styles.error} role="alert">
-              {error}
-            </p>
+            <div className={styles.error} role="alert">
+              <AlertCircle size={18} className={styles.errorIcon} aria-hidden="true" />
+              <span>{error}</span>
+            </div>
           )}
 
-          <form onSubmit={handleSubmit} className={styles.fields}>
+          <form onSubmit={handleSubmit} className={styles.fields} noValidate>
             <div className={styles.field}>
               <label className="label" htmlFor="login-email">
                 {t('auth.email')}
               </label>
-              <input
-                id="login-email"
-                type="email"
-                autoComplete="email"
-                className="input"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-              />
+              <div className={styles.inputWrapper}>
+                <Mail size={18} className={styles.inputIcon} aria-hidden="true" />
+                <input
+                  id="login-email"
+                  type="email"
+                  autoComplete="email"
+                  className={`input ${styles.inputWithIcon}`}
+                  placeholder={lang === 'en' ? 'name@email.com' : 'nama@email.com'}
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  required
+                />
+              </div>
             </div>
 
             <div className={styles.field}>
@@ -209,43 +190,65 @@ function LoginForm() {
                 <label className="label" htmlFor="login-password">
                   {t('auth.password')}
                 </label>
-                {/* Pengalih kata sandi memakai kata, bukan ikon mata, dan tetap
-                    bisa dijangkau keyboard. */}
+              </div>
+              <div className={styles.inputWrapper}>
+                <Lock size={18} className={styles.inputIcon} aria-hidden="true" />
+                <input
+                  id="login-password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  className={`input ${styles.inputWithIconAndAction}`}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                />
                 <button
                   type="button"
-                  className={styles.reveal}
+                  className={styles.passwordToggle}
                   onClick={() => setShowPassword(v => !v)}
-                  aria-pressed={showPassword}
+                  aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
+                  title={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
                 >
-                  {showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
+                  {showPassword ? (
+                    <EyeOff size={18} aria-hidden="true" />
+                  ) : (
+                    <Eye size={18} aria-hidden="true" />
+                  )}
                 </button>
               </div>
-              <input
-                id="login-password"
-                type={showPassword ? 'text' : 'password'}
-                autoComplete="current-password"
-                className="input"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-              />
             </div>
 
-            <button type="submit" className="btn btn--primary btn--lg btn--block" disabled={loading}>
-              {loading
-                ? t('common.loading')
-                : role === 'DOCTOR'
-                  ? t('auth.loginAsDoctor')
-                  : t('auth.loginAsPatient')}
+            <button
+              type="submit"
+              className={`btn btn--primary btn--lg ${styles.submitButton}`}
+              disabled={loading || !email.trim() || !password}
+            >
+              {loading ? (
+                <>
+                  <Loader2 size={18} className={styles.spinner} aria-hidden="true" />
+                  <span>{t('common.loading')}</span>
+                </>
+              ) : role === 'DOCTOR' ? (
+                t('auth.loginAsDoctor')
+              ) : (
+                t('auth.loginAsPatient')
+              )}
             </button>
           </form>
 
-          <p className={styles.footer}>
-            {t('auth.noAccount')}{' '}
-            <Link href="/register" className={styles.link}>
-              {t('auth.registerHere')}
-            </Link>
-          </p>
+          <div className={styles.footer}>
+            <p style={{ margin: 0 }}>
+              {t('auth.noAccount')}{' '}
+              <Link href="/register" className={styles.link}>
+                {t('auth.registerHere')}
+              </Link>
+            </p>
+            <div className={styles.securityNote}>
+              <ShieldCheck size={14} aria-hidden="true" />
+              <span>{lang === 'en' ? 'Encrypted & HIPAA/GDPR aware privacy' : 'Terenkripsi & Perlindungan Privasi Data Klinis'}</span>
+            </div>
+          </div>
         </div>
       </main>
     </div>

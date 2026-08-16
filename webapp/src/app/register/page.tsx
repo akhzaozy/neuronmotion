@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import Logo from '@/components/Logo';
@@ -88,7 +89,8 @@ export default function RegisterPage() {
           <div className="docHead">
             <div className="docHead__meta">
               <Link href="/" className={styles.backLink}>
-                {t('common.backHome')}
+                <ArrowLeft size={16} aria-hidden="true" />
+                <span>{t('common.backHome')}</span>
               </Link>
             </div>
             <h1>{t('auth.createAccount')}</h1>

@@ -401,7 +401,7 @@ export default function DoctorPortal() {
                             <thead>
                               <tr>
                                 <th scope="col">{t('hist.biomarker')}</th>
-                                <th scope="col" className="num">{t('demo.measured')}</th>
+                                <th scope="col" className="num">{t('hist.measured')}</th>
                               </tr>
                             </thead>
                             <tbody>

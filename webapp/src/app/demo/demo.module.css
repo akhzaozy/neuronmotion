@@ -9,6 +9,16 @@
   padding: var(--s7) 0 var(--s9);
 }
 
+@media (max-width: 640px) {
+  .pad {
+    padding: var(--s5) 0 var(--s8);
+  }
+
+  .scoreValue {
+    font-size: 2.75rem;
+  }
+}
+
 .homeLink {
   display: inline-flex;
   align-items: center;

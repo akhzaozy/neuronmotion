@@ -97,7 +97,7 @@ export default function LandingPage() {
   const accuracy = useCountUp(modelInfo?.accuracy ?? null, provenanceShown);
 
   const locale = lang === 'en' ? 'en' : 'id';
-  const whole = (v: number | null) => (v === null ? '—' : Math.round(v).toLocaleString(locale));
+  const whole = (v: number | null) => (v === null ? ' - ' : Math.round(v).toLocaleString(locale));
   const num = (v: number) => v.toLocaleString(locale, { maximumFractionDigits: 1 });
 
   useEffect(() => {
@@ -176,10 +176,8 @@ export default function LandingPage() {
 
               <p className={styles.heroLead}>{t('land.desc')}</p>
 
-              {/* Bagi pengguna yang sudah masuk, aksi utama bukan lagi
-                  mencoba peragaan melainkan mengerjakan skrining sungguhan.
-                  Dokter tidak ditawari skrining, karena alat perekamnya
-                  memang bukan untuk dirinya. */}
+              {/* Bagi pengguna yang sudah masuk, aksi utama adalah mengerjakan
+                  skrining sungguhan atau masuk ke dasbor. */}
               <div className={styles.heroActions}>
                 {authLoading ? null : user ? (
                   <>
@@ -436,7 +434,7 @@ export default function LandingPage() {
                       <tr>
                         <th scope="row">{t('land.statAccuracy')}</th>
                         <td className="num">
-                          {accuracy === null ? '—' : `${accuracy.toFixed(1)} %`}
+                          {accuracy === null ? ' - ' : `${accuracy.toFixed(1)} %`}
                         </td>
                       </tr>
                     </tbody>

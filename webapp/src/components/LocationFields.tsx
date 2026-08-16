@@ -46,13 +46,47 @@ export default function LocationFields({ value, onChange, required = false, titl
     if (!value.country) { setCities([]); return; }
     let cancelled = false;
     setLoadingCities(true);
+
     const params = new URLSearchParams({ country: value.country });
     if (value.state) params.set('state', value.state);
-    fetch(`${API_BASE}/api/geo/cities?${params}`)
-      .then(r => r.json())
-      .then(d => { if (!cancelled) setCities(d.cities || []); })
-      .catch(() => { if (!cancelled) setCities([]); })
-      .finally(() => { if (!cancelled) setLoadingCities(false); });
+    const query = params.toString();
+
+    async function fetchCities() {
+      // 1. Coba route internal Next.js terlebih dahulu (bebas CORS & port mismatch)
+      try {
+        const r1 = await fetch(`/api/geo/cities?${query}`);
+        if (r1.ok) {
+          const d1 = await r1.json();
+          if (!cancelled && Array.isArray(d1.cities) && d1.cities.length > 0) {
+            setCities(d1.cities);
+            return;
+          }
+        }
+      } catch {
+        // Abaikan dan lanjut ke backend server
+      }
+
+      // 2. Coba backend server API_BASE jika tersedia
+      try {
+        const r2 = await fetch(`${API_BASE}/api/geo/cities?${query}`);
+        if (r2.ok) {
+          const d2 = await r2.json();
+          if (!cancelled && Array.isArray(d2.cities)) {
+            setCities(d2.cities);
+            return;
+          }
+        }
+      } catch {
+        // Gagal
+      }
+
+      if (!cancelled) setCities([]);
+    }
+
+    fetchCities().finally(() => {
+      if (!cancelled) setLoadingCities(false);
+    });
+
     return () => { cancelled = true; };
   }, [value.country, value.state]);
 

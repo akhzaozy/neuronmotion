@@ -15,13 +15,6 @@
  * Bila nanti ada rekaman sungguhan yang layak, ganti isinya dan setel `kind`
  * ke 'recording'. Keterangan di halaman depan akan ikut berubah sendiri.
  *
- * Cara mengambil rekaman sungguhan:
- *
- *   1. Jalankan aplikasi, buka /demo?export=1
- *   2. Lakukan tes tremor sampai keluar hasilnya
- *   3. Tekan "Salin rekaman (JSON)" di bawah tabel hasil
- *   4. Tempel isinya menggantikan `null` di bawah, lalu simpan
- *
  * Yang direkam hanyalah koordinat pergelangan tangan terhadap waktu. Tidak ada
  * video, tidak ada gambar, dan tidak ada identitas siapa pun di dalamnya.
  */

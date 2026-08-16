@@ -201,14 +201,6 @@ const DICT: Record<string, { id: string; en: string }> = {
   'card.rom': { id: 'Rentang gerak', en: 'Range of motion' },
   'card.romUnit': { id: '°', en: '°' },
 
-  // Panel akun demo di halaman masuk. Sengaja hanya dua tombol kategori:
-  // panel ini perancah untuk mencoba, dan menjelaskan isi datanya panjang
-  // lebar justru membuatnya menyaingi formulir masuk yang ia layani.
-  // Kredensialnya toh langsung terlihat di formulir setelah ditekan.
-  'demoAcc.title': { id: 'Masuk dengan akun demo', en: 'Sign in with a demo account' },
-  'demoAcc.patient': { id: 'Pasien', en: 'Patient' },
-  'demoAcc.doctor': { id: 'Dokter', en: 'Clinician' },
-  'demoAcc.filled': { id: 'Terisi di bawah.', en: 'Filled in below.' },
 
   // Halaman depan bagi pengguna yang sudah masuk.
   'landing.continueScreening': { id: 'Mulai skrining', en: 'Start screening' },
@@ -224,10 +216,13 @@ const DICT: Record<string, { id: string; en: string }> = {
 
   // Autentikasi
   'auth.welcome': { id: 'Selamat Datang', en: 'Welcome' },
+  'auth.welcomeSubtitle': { id: 'Masuk ke portal NeuronMotion untuk melanjutkan', en: 'Sign in to your NeuronMotion portal to continue' },
+  'auth.patientDesc': { id: 'Akses riwayat skrining & pemantauan biomarker motorik mandiri', en: 'Access your screening history & motor biomarker tracking' },
+  'auth.doctorDesc': { id: 'Akses portal klinis, manajemen pasien, dan catatan medis', en: 'Access clinician portal, patient management & clinical notes' },
   'auth.loginAsPatient': { id: 'Masuk sebagai Pasien', en: 'Sign in as Patient' },
-  'auth.loginAsDoctor': { id: 'Masuk sebagai Dokter/Nakes', en: 'Sign in as Clinician' },
+  'auth.loginAsDoctor': { id: 'Masuk sebagai Tenaga Medis', en: 'Sign in as Clinician' },
   'auth.patient': { id: 'Pasien', en: 'Patient' },
-  'auth.doctor': { id: 'Dokter / Nakes', en: 'Doctor / Clinician' },
+  'auth.doctor': { id: 'Tenaga Medis', en: 'Clinician' },
   'auth.email': { id: 'Email', en: 'Email' },
   'auth.password': { id: 'Password', en: 'Password' },
   'auth.createAccount': { id: 'Buat Akun', en: 'Create Account' },
@@ -429,10 +424,11 @@ const DICT: Record<string, { id: string; en: string }> = {
     id: 'NeuronMotion menganalisis tremor, pola jalan, dan biomarker motorik melalui kamera perangkat Anda, membantu deteksi awal Parkinson dan gangguan neurologis lainnya tanpa perangkat tambahan.',
     en: 'NeuronMotion analyses tremor, gait, and motor biomarkers through your device camera, supporting early detection of Parkinson\u2019s and other neurological conditions without extra hardware.',
   },
-  'land.startFree': { id: 'Mulai Skrining Gratis', en: 'Start Free Screening' },
+  'land.startFree': { id: 'Mulai Skrining Mandiri', en: 'Start Self-Screening' },
   'land.hasAccount': { id: 'Sudah Punya Akun', en: 'I Have an Account' },
   'land.tryDemo': { id: 'Coba tanpa akun', en: 'Try without an account' },
   'land.tryDemoSub': { id: 'Tes tremor singkat, tanpa daftar', en: 'Quick tremor test, no sign-up' },
+  'land.heroNote': { id: 'Pemrosesan AI aman langsung di perangkat Anda tanpa sensor khusus', en: 'Secure on-device AI screening without extra hardware' },
   'land.login': { id: 'Masuk', en: 'Sign In' },
   'land.registerFree': { id: 'Daftar Gratis', en: 'Sign Up Free' },
   'land.statProfiles': { id: 'Profil Sintetis Referensi', en: 'Synthetic Reference Profiles' },
@@ -508,6 +504,7 @@ const DICT: Record<string, { id: string; en: string }> = {
   'hist.recommendation': { id: 'Rekomendasi', en: 'Recommendations' },
   'hist.aiAnalysis': { id: 'Analisis AI', en: 'AI Analysis' },
   'hist.biomarker': { id: 'Biomarker', en: 'Biomarkers' },
+  'hist.measured': { id: 'Nilai Terukur', en: 'Measured Value' },
   'hist.worsening': { id: 'memburuk', en: 'worsened' },
   'hist.improving': { id: 'membaik', en: 'improved' },
 
@@ -1028,8 +1025,7 @@ const DICT: Record<string, { id: string; en: string }> = {
   'quest.finish': { id: 'Selesai, lanjut ke tes gerakan', en: 'Done, continue to the movement tests' },
   'quest.needAnswer': { id: 'Pilih salah satu jawaban untuk melanjutkan.', en: 'Choose an answer to continue.' },
 
-  // ── Peragaan ───────────────────────────────────────────────────────────────
-  'demo.kicker': { id: 'Peragaan terbuka', en: 'Open demonstration' },
+  // ── Demonstrasi ────────────────────────────────────────────────────────────
   'demo.title': { id: 'Coba satu pengukuran, tanpa akun', en: 'Try one measurement, no account' },
   'demo.lead': {
     id: 'Satu dari enam tes NeuronMotion, berjalan penuh di perangkat Anda. Video tidak diunggah dan hasilnya tidak disimpan.',
@@ -1045,8 +1041,8 @@ const DICT: Record<string, { id: string; en: string }> = {
   },
   'demo.register': { id: 'Buat akun untuk skrining lengkap', en: 'Create an account for the full screening' },
   'demo.notStored': {
-    id: 'Hasil peragaan ini tidak disimpan di mana pun.',
-    en: 'This demonstration result is not stored anywhere.',
+    id: 'Hasil demo ini tidak disimpan di mana pun.',
+    en: 'This demo result is not stored anywhere.',
   },
 
   // ── Gagal muat ─────────────────────────────────────────────────────────────

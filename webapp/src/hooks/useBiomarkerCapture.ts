@@ -355,14 +355,11 @@ export function useBiomarkerCapture() {
       if (!video || !canvas || !models) return;
 
       /* Aliran kamera dipasang ulang bila elemennya berganti.
-         Halaman skrining dan demo menukar layar instruksi dengan jendela
-         perekaman lewat ternary, sehingga CameraView dibongkar saat pengguna
-         menekan mulai dan dipasang kembali sesudahnya. Elemen video yang baru
-         tidak membawa srcObject milik elemen lama, jadi readyState-nya tetap
-         nol, gelung ini berputar selamanya di penjaga di bawah, dan yang
-         terlihat pengguna adalah bingkai kosong dengan hitungan mundur
-         membeku. Memulihkannya di sini membuat pratinjau tahan terhadap
-         pembongkaran dari sebab apa pun, bukan hanya dari kedua halaman itu. */
+         Halaman skrining menukar layar instruksi dengan jendela perekaman,
+         sehingga CameraView dibongkar saat pengguna menekan mulai dan dipasang
+         kembali sesudahnya. Elemen video yang baru tidak membawa srcObject milik
+         elemen lama, jadi readyState-nya tetap nol. Memulihkannya di sini membuat
+         pratinjau tahan terhadap pembongkaran. */
       const stream = streamRef.current;
       if (stream) {
         if (video.srcObject !== stream) video.srcObject = stream;

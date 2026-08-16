@@ -29,3 +29,6 @@ data/translation-cache.json
 # Keluaran alat desain. Sekelas .claude dan .agents di atas: berguna saat
 # bekerja, tetapi bukan bagian dari produk.
 .impeccable
+
+# PDF & dokumen laporan ekspor
+*.pdf

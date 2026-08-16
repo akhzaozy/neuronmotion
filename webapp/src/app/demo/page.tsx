@@ -123,7 +123,6 @@ export default function DemoPage() {
               <Link href="/" className={styles.homeLink}>
                 <Logo size={15} />
               </Link>
-              <span>{t('demo.kicker')}</span>
             </div>
             <h1>{t('demo.title')}</h1>
             <p className={styles.lead}>{t('demo.lead')}</p>

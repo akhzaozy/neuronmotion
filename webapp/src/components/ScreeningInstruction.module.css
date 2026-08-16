@@ -65,6 +65,18 @@
   }
 }
 
+@media (max-width: 520px) {
+  .body {
+    grid-template-columns: 1fr;
+    gap: var(--s4);
+  }
+
+  .figureBox {
+    max-width: 140px;
+    margin: 0 auto;
+  }
+}
+
 .figureBox {
   background: var(--accent-wash);
   border-radius: var(--radius-lg);
