@@ -1,10 +1,20 @@
+/* Alur skrining, Ruang Periksa Terang.
+   ─────────────────────────────────────────────────────────────────────────────
+   Halaman ini yang paling lama ditatap pengguna, dan ia ditatap sambil cemas.
+   Indeks tes yang sebelumnya berupa daftar isi bergaris kini menjadi kartu
+   putih dengan baris berbentuk pil, dan bidang hasil ikut naik ke permukaan.
+
+   Satu hal sengaja tidak ikut dilunakkan: peringatan mendesak tetap membawa
+   garis kiri 6px dan bidang warna penuh. Ia satu-satunya tempat di produk ini
+   yang boleh terbaca keras. */
+
 .page {
   min-height: 100vh;
   background: var(--sheet);
 }
 
 .pad {
-  padding: var(--s6) 0 var(--s9);
+  padding: var(--s7) 0 var(--s9);
 }
 
 @media (max-width: 720px) {
@@ -54,8 +64,9 @@
 }
 
 .submitError {
-  padding: var(--s3);
-  border-left: 3px solid var(--level-high);
+  padding: var(--s3) var(--s4);
+  border-left: 4px solid var(--level-high);
+  border-radius: var(--radius);
   background: var(--level-high-wash);
   color: var(--level-high);
   font-weight: 600;
@@ -67,8 +78,11 @@
   display: flex;
   flex-direction: column;
   gap: var(--s3);
-  border-top: 2px solid var(--rule-heavy);
-  padding-top: var(--s3);
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--s5);
 }
 
 .indexList {
@@ -86,10 +100,10 @@
   gap: 0 var(--s2);
   width: 100%;
   min-height: var(--touch);
-  padding: var(--s3) var(--s2);
+  padding: var(--s3);
   text-align: left;
-  border-bottom: 1px solid var(--rule-hair);
-  transition: background-color 0.14s ease-out;
+  border-radius: var(--radius);
+  transition: background-color 0.18s ease-out;
 }
 
 .indexRow:hover:not(:disabled) {
@@ -121,19 +135,55 @@
   color: var(--ink-muted);
 }
 
-/* Keadaan ditandai bobot huruf dan garis aksen, bukan warna latar saja. */
+/* Keadaan ditandai bobot huruf DAN garis aksen, bukan warna latar saja. Garis
+   kirinya dipertahankan dari versi sebelumnya justru karena bidang biru bubuk
+   di dunia ini lembut; tanpa garis itu, baris aktif hanya berbeda tipis dari
+   baris yang sedang disentuh kursor. */
 .indexRow[data-active] {
+  background: var(--accent-wash);
   border-left: 3px solid var(--accent);
-  padding-left: calc(var(--s2) - 3px + var(--s1));
+  padding-left: calc(var(--s3) - 3px);
 }
 
 .indexRow[data-active] .indexName {
   font-weight: 800;
+  color: var(--accent);
+}
+
+.indexRow[data-active] .indexNum {
+  color: var(--accent);
 }
 
 .indexRow[data-done] .indexState {
   color: var(--level-low);
   font-weight: 600;
+}
+
+/* Dilewati bukan kegagalan, jadi ia tidak diberi warna tingkat tinggi. Ia
+   diredam dan dimiringkan: pengguna perlu bisa membedakannya dari "belum
+   dikerjakan" tanpa merasa sedang ditegur. */
+.indexRow[data-skipped] .indexState {
+  font-style: italic;
+  color: var(--ink-muted);
+}
+
+/* ── Kirim ──────────────────────────────────────────────────────────────────
+   Berdiri sendiri di bawah kendali tes, bukan berdampingan dengan "Lanjut".
+   Mengirim adalah tindakan yang mengakhiri sesi, dan menaruhnya sebaris
+   dengan tombol navigasi biasa membuatnya mudah tertekan tanpa sengaja. */
+
+.submitRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  padding-top: var(--s4);
+  border-top: 1px solid var(--rule-hair);
+}
+
+.submitHint {
+  font-size: var(--t-record);
+  line-height: 1.55;
+  color: var(--ink-muted);
 }
 
 /* ── Dialog ─────────────────────────────────────────────────────────────── */
@@ -230,10 +280,12 @@
 }
 
 .scoreValue {
+  font-family: var(--font-display), var(--font-sans), system-ui, sans-serif;
   font-size: var(--t-display);
-  font-weight: 800;
-  line-height: 0.92;
-  letter-spacing: -0.04em;
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  color: var(--accent);
   font-variant-numeric: tabular-nums;
 }
 
@@ -277,9 +329,15 @@
   vertical-align: top;
 }
 
+/* Blok eksperimental. Garis putus-putus dipertahankan, karena ia satu-satunya
+   penanda non-warna yang menyatakan "ini belum tervalidasi" dan menggantinya
+   dengan kartu biasa akan menaikkannya ke derajat hasil yang sudah pasti.
+   Yang berubah hanya sudutnya. */
 .experimental {
-  padding: var(--s4);
+  padding: var(--s5);
   border: 1px dashed var(--rule);
+  border-radius: var(--radius-lg);
+  background: var(--inset);
 }
 
 .experimentalHead {
@@ -302,9 +360,10 @@
 }
 
 .urgent {
-  padding: var(--s3) var(--s4);
+  padding: var(--s4);
   background: var(--level-high-wash);
   border-left: 6px solid var(--level-high);
+  border-radius: var(--radius);
   font-weight: 600;
 }
 
@@ -317,8 +376,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--s3);
-  padding-top: var(--s4);
-  border-top: 2px solid var(--rule-heavy);
+  padding-top: var(--s5);
+  border-top: 1px solid var(--rule-hair);
 }
 
 .resultActions > :global(.btn) {

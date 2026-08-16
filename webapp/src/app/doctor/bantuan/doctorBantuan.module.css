@@ -7,7 +7,7 @@
 }
 
 .pad {
-  padding: var(--s6) 0 var(--s9);
+  padding: var(--s7) 0 var(--s9);
 }
 
 .lead {
@@ -22,8 +22,7 @@
 
 .sectionTitle {
   font-size: var(--t-head);
-  padding-bottom: var(--s3);
-  border-bottom: 2px solid var(--rule-heavy);
+  margin-bottom: var(--s5);
 }
 
 /* ── Panduan berlangkah ──────────────────────────────────────────────────── */
@@ -31,6 +30,11 @@
 .steps {
   display: flex;
   flex-direction: column;
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--s2) var(--s5);
 }
 
 .step {
@@ -39,6 +43,10 @@
   gap: var(--s4);
   padding: var(--s5) 0;
   border-bottom: 1px solid var(--rule-hair);
+}
+
+.step:last-child {
+  border-bottom: 0;
 }
 
 @media (max-width: 560px) {
@@ -73,7 +81,12 @@
 /* ── Pertanyaan yang sering diajukan ─────────────────────────────────────── */
 
 .faqItem {
-  border-bottom: 1px solid var(--rule-hair);
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  margin-bottom: var(--s3);
+  padding: 0 var(--s4);
 }
 
 .faqQuestion {
@@ -81,7 +94,8 @@
   align-items: center;
   width: 100%;
   min-height: var(--touch-lg);
-  padding: var(--s3) 0 var(--s3) var(--s3);
+  padding: var(--s3);
+  border-radius: var(--radius);
   text-align: left;
   font-size: var(--t-body);
   font-weight: 600;

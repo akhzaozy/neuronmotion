@@ -15,10 +15,11 @@
   gap: var(--s2);
   min-height: var(--touch);
   padding: var(--s3) var(--s5);
-  background: var(--ink);
-  color: var(--sheet);
-  border: 1px solid var(--ink);
-  border-radius: var(--radius);
+  background: var(--cta-field);
+  color: var(--cta-ink);
+  border: 1px solid var(--cta-field);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-raised);
   font-size: var(--t-body);
   font-weight: 600;
   line-height: 1.25;
@@ -71,16 +72,20 @@
   bottom: calc(var(--touch) + var(--s5) * 2);
   right: var(--s5);
   z-index: 999;
-  width: 380px;
+  /* Dilebarkan dari 380px. Penyusun pesan kini punya isian selebar panel, dan
+     pada 380px kalimat pertanyaan yang wajar masih membungkus tiga baris. */
+  width: 400px;
   max-width: calc(100vw - var(--s6));
-  height: 560px;
+  /* Ditinggikan dari 560px untuk mengganti ruang yang diambil penyusun pesan,
+     sehingga giliran percakapan tidak kehilangan tinggi bacanya. */
+  height: 600px;
   max-height: calc(100vh - var(--s9) * 2);
   display: flex;
   flex-direction: column;
   background: var(--field);
-  border: 1px solid var(--rule);
-  border-top: 3px solid var(--rule-heavy);
-  border-radius: var(--radius);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--lift);
   overflow: hidden;
   opacity: 0;
   pointer-events: none;
@@ -105,7 +110,7 @@
   align-items: center;
   gap: var(--s3);
   padding: var(--s3) var(--s4);
-  border-bottom: 2px solid var(--rule-heavy);
+  border-bottom: 1px solid var(--rule-hair);
   flex-shrink: 0;
 }
 
@@ -221,20 +226,46 @@
 
 /* ── Isian ──────────────────────────────────────────────────────────────── */
 
+/* Penyusun pesan. Isian satu baris penuh, petunjuk dan tombol kirim di
+   bawahnya. Susunan menyamping yang lama menyisakan lebar isian yang tidak
+   cukup bahkan untuk teks contohnya sendiri. */
 .chatInputArea {
   display: flex;
-  align-items: flex-end;
+  flex-direction: column;
   gap: var(--s2);
   padding: var(--s3) var(--s4);
   border-top: 1px solid var(--rule-hair);
   flex-shrink: 0;
 }
 
+.chatInputRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+}
+
+/* Petunjuk tombol Enter. Ia keterangan cara pakai, jadi diredam dan kecil,
+   tetapi tetap di lantai 14px yang dipegang produk ini. */
+.enterHint {
+  font-size: var(--t-record);
+  line-height: 1.35;
+  color: var(--ink-muted);
+  min-width: 0;
+}
+
 .chatInput {
-  flex: 1;
-  min-height: var(--touch);
-  max-height: 120px;
+  display: block;
+  width: 100%;
+  /* Dua baris teks beserta paddingnya. Lantai sentuh 44px terlalu pendek di
+     sini: pada 16px dengan tinggi baris 1,5, satu baris saja sudah menuntut
+     50px, sehingga kotak 44px memotong barisnya sendiri. */
+  min-height: 76px;
+  max-height: 132px;
   resize: none;
+  /* Tingginya diatur useEffect di LiveChat.tsx mengikuti isi. Gulir hanya
+     muncul setelah menyentuh max-height, jadi kotak yang belum penuh tidak
+     lagi menampilkan bilah gulir yang tidak berguna. */
   overflow-y: auto;
   padding: var(--s3);
   background: var(--field);
@@ -243,7 +274,14 @@
   border-radius: var(--radius);
   font-size: var(--t-body);
   line-height: 1.5;
-  transition: border-color 0.14s ease-out, box-shadow 0.14s ease-out;
+  transition: border-color 0.18s ease-out, box-shadow 0.18s ease-out;
+}
+
+/* Fokus memakai cincin biru lembut, sama seperti .input di globals.css. */
+.chatInput:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-wash);
+  outline: none;
 }
 
 .chatInput:hover {
@@ -268,10 +306,10 @@
   flex-shrink: 0;
   min-height: var(--touch);
   padding: var(--s3) var(--s4);
-  background: var(--ink);
-  color: var(--sheet);
-  border: 1px solid var(--ink);
-  border-radius: var(--radius);
+  background: var(--cta-field);
+  color: var(--cta-ink);
+  border: 1px solid var(--cta-field);
+  border-radius: var(--radius-pill);
   font-size: var(--t-record);
   font-weight: 600;
   transition: background-color 0.14s ease-out, border-color 0.14s ease-out;

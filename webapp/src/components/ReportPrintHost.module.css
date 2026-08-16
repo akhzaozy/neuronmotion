@@ -26,8 +26,9 @@
   gap: var(--s4);
   flex-wrap: wrap;
   padding: var(--s3) var(--s5);
-  background: var(--sheet);
-  border-bottom: 2px solid var(--rule-heavy);
+  background: color-mix(in srgb, var(--sheet) 88%, transparent);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--rule-hair);
 }
 
 .hint {

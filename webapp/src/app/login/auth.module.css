@@ -1,21 +1,73 @@
-/* Lembar masuk dan pendaftaran.
-   Satu kolom sempit di atas kertas, tanpa kartu mengambang, tanpa lingkaran
-   latar dekoratif, tanpa blur. */
+/* Lembar masuk dan pendaftaran, Ruang Periksa Terang.
+   ─────────────────────────────────────────────────────────────────────────────
+   Sebelumnya: satu kolom sempit di atas kertas, tanpa kartu mengambang, tanpa
+   bidang warna, tanpa blur. Itu doktrin Basel, dan ia yang membuat halaman
+   masuk terbaca sebagai formulir administrasi.
+
+   Sekarang isian duduk di dalam kartu putih yang melayang di atas ground biru
+   pucat, dengan satu bidang biru lembut jatuh di belakangnya. Bentuk yang sama
+   dengan panel bukti di halaman depan, jadi pengguna yang menekan "Mulai
+   skrining" di sana tiba di dunia yang sama.
+
+   Yang dipertahankan: pilihan peran tetap ditandai lebih dari sekadar warna,
+   dan pesan galat tetap membawa bobot huruf serta garis kiri, bukan warna
+   sendirian. */
 
 .page {
+  position: relative;
   min-height: 100vh;
   background: var(--sheet);
   display: flex;
   flex-direction: column;
+  overflow-x: clip;
 }
 
+/* Bidang biru organik di belakang kartu, saudara .heroBlob di halaman depan.
+   Murni dekoratif, jadi ia pseudo-element dan tidak pernah sampai ke pembaca
+   layar. */
+.page::before {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  top: -12%;
+  right: -18%;
+  width: min(720px, 86vw);
+  aspect-ratio: 1 / 0.92;
+  background: var(--accent-soft);
+  opacity: 0.42;
+  border-radius: 58% 42% 46% 54% / 52% 48% 52% 48%;
+  pointer-events: none;
+}
+
+@media (max-width: 720px) {
+  .page::before {
+    top: auto;
+    bottom: 2%;
+    right: -34%;
+    width: 128vw;
+    opacity: 0.3;
+  }
+}
+
+/* Kop tipis mengambang, sejalan dengan .masthead halaman depan. Garis tebal
+   2px yang memisahkannya dari isi dilepas. */
 .bar {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--s4);
   padding: var(--s3) var(--s5);
-  border-bottom: 2px solid var(--rule-heavy);
+  max-width: 1180px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+@media (max-width: 640px) {
+  .bar {
+    padding: var(--s3) var(--s4);
+  }
 }
 
 .brand {
@@ -27,13 +79,16 @@
 .barActions {
   display: flex;
   align-items: center;
-  gap: var(--s3);
+  gap: var(--s2);
 }
 
 .main {
+  position: relative;
+  z-index: 1;
   flex: 1;
   display: flex;
   justify-content: center;
+  align-items: flex-start;
   padding: var(--s7) var(--s5) var(--s9);
 }
 
@@ -43,64 +98,182 @@
   }
 }
 
+/* Kartu isian. Ini perubahan yang menentukan di berkas ini: kolom telanjang
+   menjadi permukaan yang melayang. */
 .form {
   width: 100%;
-  max-width: 420px;
+  max-width: 460px;
   display: flex;
   flex-direction: column;
   gap: var(--s5);
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-raised);
+  padding: var(--s7);
+}
+
+@media (max-width: 640px) {
+  .form {
+    padding: var(--s5);
+    border-radius: var(--radius-lg);
+  }
 }
 
 .backLink {
   display: inline-flex;
   align-items: center;
   min-height: var(--touch);
+  color: var(--accent);
+  font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 0.25em;
 }
 
+.backLink:hover {
+  color: var(--accent-deep);
+}
+
 /* ── Pilihan peran ──────────────────────────────────────────────────────────
-   Terpilih ditandai bidang tinta dan bobot huruf, bukan warna saja. */
+   Kelompok berbentuk pil yang duduk di bidang cekung, dengan penanda terpilih
+   berupa permukaan putih yang terangkat. Terpilih tetap membawa bobot huruf
+   selain warna dan bayangan, jadi ia terbaca tanpa membedakan warna. */
 
 .roleGroup {
   display: flex;
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  overflow: hidden;
+  gap: var(--s1);
+  padding: var(--s1);
+  background: var(--inset);
+  border-radius: var(--radius-pill);
 }
 
 .roleOption {
   flex: 1;
-  min-height: var(--touch-lg);
+  min-height: var(--touch);
   padding: 0 var(--s3);
+  border-radius: var(--radius-pill);
   font-size: var(--t-body);
-  font-weight: 600;
+  font-weight: 500;
   color: var(--ink-secondary);
   background: transparent;
-  transition: background-color 0.14s ease-out, color 0.14s ease-out;
-}
-
-.roleOption + .roleOption {
-  border-left: 1px solid var(--rule);
+  transition: background-color 0.18s ease-out, color 0.18s ease-out,
+    box-shadow 0.18s ease-out;
 }
 
 .roleOption:hover {
-  background: var(--inset);
   color: var(--ink);
 }
 
 .roleOption[aria-pressed='true'] {
-  background: var(--ink);
-  color: var(--sheet);
+  background: var(--field);
+  color: var(--accent);
   font-weight: 700;
+  box-shadow: var(--shadow-card);
 }
 
+/* Galat. Sudutnya membulat mengikuti dunia ini, tetapi ketiga penandanya utuh:
+   bidang warna, garis kiri tebal, dan bobot huruf. */
 .error {
   padding: var(--s3) var(--s4);
   background: var(--level-high-wash);
   border-left: 4px solid var(--level-high);
+  border-radius: var(--radius);
   color: var(--level-high);
   font-weight: 600;
+}
+
+/* Pemberitahuan sesi berakhir. Bidang biru merek, bukan merah: pengguna tidak
+   melakukan kesalahan, dan mewarnainya merah akan membuat kebijakan keamanan
+   yang normal terbaca sebagai kegagalan yang ia sebabkan. */
+.notice {
+  padding: var(--s4);
+  background: var(--accent-wash);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius);
+}
+
+.noticeTitle {
+  font-weight: 700;
+  color: var(--accent-deep);
+}
+
+.noticeBody {
+  margin-top: var(--s1);
+  font-size: var(--t-record);
+  line-height: 1.55;
+  color: var(--ink-secondary);
+}
+
+[data-theme='dark'] .noticeTitle {
+  color: var(--accent);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .noticeTitle {
+    color: var(--accent);
+  }
+}
+
+/* ── Akun demo ──────────────────────────────────────────────────────────────
+   Satu baris: keterangan singkat di kiri, dua tombol kategori. Versi
+   sebelumnya menjelaskan isi data tiap akun dalam beberapa kalimat, dan di
+   kolom selebar 460px penjelasan itu membungkus jadi enam baris sehingga
+   perancah untuk mencoba justru lebih besar daripada formulir yang ia layani.
+   Kredensialnya tidak lagi ditulis di sini karena ia toh langsung terlihat di
+   isian email dan kata sandi begitu tombolnya ditekan. */
+
+.demo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  padding: var(--s3) var(--s4);
+  background: var(--inset);
+  border-radius: var(--radius-lg);
+}
+
+.demoTitle {
+  font-size: var(--t-record);
+  font-weight: 600;
+  color: var(--ink-secondary);
+}
+
+.demoFilled {
+  font-weight: 400;
+  color: var(--ink-muted);
+}
+
+.demoRow {
+  display: flex;
+  gap: var(--s2);
+}
+
+.demoBtn {
+  min-height: var(--touch);
+  padding: 0 var(--s4);
+  border-radius: var(--radius-pill);
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  font-size: var(--t-record);
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  transition: background-color 0.18s ease-out, border-color 0.18s ease-out,
+    color 0.18s ease-out;
+}
+
+.demoBtn:hover {
+  border-color: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* Terpilih membawa bidang, garis, aria-pressed, dan kalimat "Terisi di bawah"
+   di sebelah judulnya, jadi keadaannya terbaca tanpa membedakan warna. */
+.demoBtn[data-filled] {
+  background: var(--accent-wash);
+  border-color: var(--accent);
+  color: var(--accent-deep);
 }
 
 .fields {
@@ -127,13 +300,13 @@
   padding: 0 var(--s2);
   font-size: var(--t-record);
   font-weight: 600;
-  color: var(--ink-secondary);
+  color: var(--accent);
   text-decoration: underline;
   text-underline-offset: 0.25em;
 }
 
 .reveal:hover {
-  color: var(--accent);
+  color: var(--accent-deep);
 }
 
 .hint {
@@ -149,11 +322,11 @@
 
 .link {
   font-weight: 700;
-  color: var(--ink);
+  color: var(--accent);
   text-decoration: underline;
   text-underline-offset: 0.25em;
 }
 
 .link:hover {
-  color: var(--accent);
+  color: var(--accent-deep);
 }

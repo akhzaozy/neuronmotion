@@ -1,5 +1,15 @@
-/* Portal nakes. Permukaan data terpadat di produk ini, jadi hampir seluruh
-   isinya dibawa tabel pengukuran dan garis rule, bukan kartu. */
+/* Portal nakes, Ruang Periksa Terang.
+   ─────────────────────────────────────────────────────────────────────────────
+   Ini permukaan data terpadat di produk ini, dan sebelumnya seluruh isinya
+   dibawa tabel dan garis rule tanpa satu pun kartu. Alasannya masuk akal di
+   dunia Basel: kepadatan data memang lebih baik dilayani garis daripada kotak.
+
+   Yang berubah bukan kepadatannya melainkan cara mengelompokkannya. Angka
+   ringkasan menjadi empat kartu, daftar pasien menjadi satu kartu berisi baris
+   berbentuk pil, dan tabel pemeriksaan masuk ke kartunya sendiri. Tabelnya
+   sendiri tidak disentuh: rapat, tabular, rata kanan. Dokter membaca ini di
+   sela praktik, dan menambah ruang di dalam tabel akan menukar informasi per
+   layar dengan kelegaan yang tidak ia minta. */
 
 .page {
   min-height: 100vh;
@@ -7,7 +17,7 @@
 }
 
 .pad {
-  padding: var(--s6) 0 var(--s9);
+  padding: var(--s7) 0 var(--s9);
 }
 
 .headRow {
@@ -38,14 +48,13 @@
   gap: var(--s3);
 }
 
-/* Ringkasan angka. Empat kolom yang dipisah garis rambut, bukan empat kartu
-   melayang. Angka memimpin, labelnya mono di bawahnya. */
+/* Ringkasan angka. Empat kartu melayang, bukan empat kolom yang dipisah garis.
+   Angka tetap memimpin dan labelnya tetap di bawahnya. */
 .stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s4);
   margin-top: var(--s7);
-  border-top: 2px solid var(--rule-heavy);
-  border-bottom: 1px solid var(--rule-hair);
 }
 
 @media (max-width: 900px) {
@@ -61,22 +70,21 @@
 }
 
 .stat {
-  padding: var(--s4) var(--s4) var(--s5) 0;
-  border-left: 1px solid var(--rule-hair);
-  padding-left: var(--s4);
-}
-
-.stat:first-child {
-  border-left: 0;
-  padding-left: 0;
+  padding: var(--s5);
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
 }
 
 .statValue {
   display: block;
+  font-family: var(--font-display), var(--font-sans), system-ui, sans-serif;
   font-size: var(--t-title);
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
+  color: var(--accent);
   font-variant-numeric: tabular-nums;
 }
 
@@ -102,8 +110,16 @@
   }
 }
 
+/* Daftar pasien adalah satu kartu. Bagian di dalamnya, yaitu penautan,
+   pencarian, dan daftarnya sendiri, tetap dipisah garis rambut, karena garis
+   rambut memang tugasnya memisahkan di dalam satu kartu. */
 .index {
   min-width: 0;
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--s5);
 }
 
 .indexHead {
@@ -112,7 +128,7 @@
   justify-content: space-between;
   gap: var(--s3);
   padding-bottom: var(--s3);
-  border-bottom: 2px solid var(--rule-heavy);
+  border-bottom: 1px solid var(--rule-hair);
 }
 
 .indexTitle {
@@ -168,6 +184,7 @@
 .linkMsgErr {
   margin-top: var(--s3);
   padding: var(--s2) var(--s3);
+  border-radius: var(--radius);
   font-size: var(--t-record);
   font-weight: 600;
   border-left-style: solid;
@@ -195,8 +212,11 @@
 .listBody {
   display: flex;
   flex-direction: column;
+  gap: var(--s1);
   max-height: 620px;
   overflow-y: auto;
+  /* Ruang untuk bilah gulir supaya baris tidak tertimpa olehnya. */
+  padding-right: var(--s2);
 }
 
 /* Setiap pasien adalah satu baris arsip: nama, data ringkas mono, dan tingkat
@@ -209,13 +229,27 @@
   gap: var(--s3);
   width: 100%;
   min-height: var(--touch-lg);
-  padding: var(--s3) var(--s3) var(--s3) var(--s3);
+  padding: var(--s3);
   text-align: left;
   border: 0;
-  border-bottom: 1px solid var(--rule-hair);
   border-left: 3px solid transparent;
+  border-radius: var(--radius);
   background: transparent;
-  transition: background-color 0.14s ease-out, border-color 0.14s ease-out;
+  transition: background-color 0.18s ease-out, border-color 0.18s ease-out;
+  /* Wajib. .listBody adalah flex kolom bertinggi terbatas, dan anak flex boleh
+     menyusut secara bawaan. Dengan puluhan pasien, setiap baris diperas sampai
+     min-height 56px sementara isinya menuntut lebih, sehingga isi baris ini
+     meluber keluar kotaknya dan menimpa nama pasien di bawahnya. Tinggi baris
+     harus ditentukan isinya, dan yang menggulir adalah wadahnya. */
+  flex: none;
+}
+
+/* Kolom teks harus boleh menyempit. Tanpa min-width:0, nama pasien yang
+   panjang memaksa lebar minimum flex item dan mendorong pil risiko keluar
+   dari kartunya. */
+.patientItem > span:first-child {
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .patientItem:hover {
@@ -229,7 +263,15 @@
   border-left-color: var(--accent);
 }
 
+/* Nama dan baris keterangan wajib display:block.
+   ─────────────────────────────────────────────────────────────────────────
+   Keduanya elemen <span>, jadi tanpa ini keduanya inline: margin-top pada
+   .patientInfo diabaikan sama sekali, dan nama beserta keterangannya mengalir
+   sebagai satu paragraf yang membungkus di tempat yang tidak diduga. Itu yang
+   membuat "Agus Sari" dan "Usia: 76 th" duduk di baris yang sama sementara
+   "Skor: 69" turun sendirian. */
 .patientName {
+  display: block;
   font-weight: 600;
 }
 
@@ -238,6 +280,7 @@
 }
 
 .patientInfo {
+  display: block;
   margin-top: var(--s1);
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: var(--t-record);
@@ -266,12 +309,12 @@
   justify-content: space-between;
   gap: var(--s4);
   padding-bottom: var(--s4);
-  border-bottom: 2px solid var(--rule-heavy);
+  border-bottom: 1px solid var(--rule-hair);
 }
 
 .detailTitle {
   font-size: var(--t-title);
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
 }
 
 .detailMeta {
@@ -335,12 +378,20 @@
 
 .tableScroll {
   overflow-x: auto;
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--s3) var(--s5) var(--s4);
 }
 
 .noteSection {
   margin-top: var(--s8);
-  padding-top: var(--s5);
-  border-top: 2px solid var(--rule-heavy);
+  padding: var(--s6);
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
 }
 
 .noteField {
@@ -348,7 +399,11 @@
 }
 
 .emptyState {
-  padding: var(--s8) 0;
+  padding: var(--s8) var(--s6);
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
 }
 
 .emptyState h2 {

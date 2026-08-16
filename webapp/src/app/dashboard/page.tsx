@@ -1,9 +1,11 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Activity, Footprints, Hand, MoveHorizontal, PersonStanding, RotateCw } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { api, Session } from '@/lib/api';
+import { normalizeBiomarkers } from '@/lib/biomarkers';
 import AppNav from '@/components/AppNav';
 import LiveChat from '@/components/LiveChat';
 import LoadFailure from '@/components/LoadFailure';
@@ -13,10 +15,13 @@ import styles from './dashboard.module.css';
 interface TimelinePoint {
   score: number;
   risk?: string;
+  date?: string;
 }
 
 interface Summary {
   latestScore?: number;
+  averageScore?: number;
+  totalSessions?: number;
   trendDirection?: string;
   trendDelta?: number;
   timeline?: TimelinePoint[];
@@ -35,64 +40,120 @@ function greeting(lang: string) {
   return 'Selamat malam';
 }
 
-/**
- * Jejak pengukuran antar sesi.
- *
- * Digambar sebagai trace di atas kertas bergaris, bukan sparkline dekoratif:
- * ia punya sumbu, punya garis acuan, dan setiap titiknya adalah satu sesi
- * nyata. Pekerjaan produk ini memang memantau perubahan antar waktu, jadi
- * grafik ini adalah isi, bukan hiasan.
- */
-function Trace({ points, label }: { points: TimelinePoint[]; label: string }) {
-  if (points.length < 2) return null;
+const levelOf = (score: number) => (score >= 65 ? 'high' : score >= 35 ? 'mid' : 'low');
 
-  const w = 640;
-  const h = 150;
-  const padX = 8;
-  const padY = 14;
-  const xStep = (w - padX * 2) / (points.length - 1);
-  const yFor = (s: number) => padY + (1 - s / 100) * (h - padY * 2);
-  const path = points
-    .map((p, i) => `${i === 0 ? 'M' : 'L'} ${padX + i * xStep} ${yFor(p.score)}`)
-    .join(' ');
+/* ═══════════════════════════════════════════════════════════════════════════
+   CINCIN SKOR
+
+   Menempati posisi yang pada rujukan diisi gambar jantung tiga dimensi. Yang
+   ditaruh di sini bukan gambar organ, melainkan angkanya sendiri: gambar
+   jantung adalah hiasan yang tidak menyampaikan apa pun tentang pasien yang
+   sedang melihatnya, sedangkan cincin ini panjang busurnya adalah skornya.
+
+   Tiga penanda dibawa sekaligus, sesuai aturan produk ini: panjang busur,
+   warna tingkat, dan label teks penuh di bawahnya. Pengguna yang tidak
+   membedakan warna tetap membaca tingkatnya dari busur dan dari labelnya.
+   ══════════════════════════════════════════════════════════════════════════ */
+function ScoreRing({ score, label }: { score: number; label: string }) {
+  const r = 78;
+  const circumference = 2 * Math.PI * r;
+  const clamped = Math.max(0, Math.min(100, score));
+  const dash = (clamped / 100) * circumference;
 
   return (
-    <figure className={styles.trace}>
-      <figcaption className="label">{label}</figcaption>
-      <svg
-        viewBox={`0 0 ${w} ${h}`}
-        className={styles.traceSvg}
-        preserveAspectRatio="none"
-        role="img"
-        aria-label={`${label}: ${points.map(p => Math.round(p.score)).join(', ')}`}
-      >
-        {/* Garis acuan 35 dan 65, ambang antar tingkat. */}
-        {[35, 65].map(v => (
-          <g key={v}>
-            <line
-              x1={padX}
-              x2={w - padX}
-              y1={yFor(v)}
-              y2={yFor(v)}
-              stroke="var(--rule-hair)"
-              strokeWidth="1"
-            />
-          </g>
-        ))}
-        <path d={path} fill="none" stroke="var(--ink)" strokeWidth="2" />
-        {points.map((p, i) => (
-          <circle
-            key={i}
-            cx={padX + i * xStep}
-            cy={yFor(p.score)}
-            r={i === points.length - 1 ? 4 : 2.5}
-            fill={i === points.length - 1 ? 'var(--accent)' : 'var(--ink)'}
-          />
-        ))}
+    <div className={styles.ringWrap}>
+      <svg viewBox="0 0 200 200" className={styles.ring} role="img" aria-label={`${Math.round(score)} / 100. ${label}`}>
+        <circle cx="100" cy="100" r={r} fill="none" stroke="var(--inset)" strokeWidth="16" />
+        <circle
+          cx="100"
+          cy="100"
+          r={r}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="16"
+          strokeLinecap="round"
+          strokeDasharray={`${dash} ${circumference - dash}`}
+          /* Busur dimulai dari puncak, bukan dari sisi kanan, karena arah baca
+             sebuah takaran selalu bermula di atas. */
+          transform="rotate(-90 100 100)"
+          className={styles.ringArc}
+        />
       </svg>
+      <div className={styles.ringCenter}>
+        <span className={styles.ringValue}>{Math.round(score)}</span>
+        <span className={styles.ringUnit}>{label}</span>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BATANG ANTAR SESI
+
+   Menggantikan grafik detak jantung real-time pada rujukan. Perbedaannya
+   menentukan: grafik di sana menggambar aliran yang terus berjalan, sedangkan
+   di sini setiap batang adalah satu sesi pemeriksaan yang benar-benar
+   dikerjakan seseorang. Jumlah batangnya karena itu tidak pernah dikarang
+   untuk memenuhi lebar panel.
+   ══════════════════════════════════════════════════════════════════════════ */
+function SessionBars({ points, label }: { points: TimelinePoint[]; label: string }) {
+  if (points.length < 2) return null;
+  const shown = points.slice(-14);
+
+  return (
+    <figure className={styles.bars}>
+      <figcaption className={styles.barsHead}>
+        <span className={styles.barsTitle}>{label}</span>
+      </figcaption>
+      <div
+        className={styles.barsRow}
+        role="img"
+        aria-label={`${label}: ${shown.map(p => Math.round(p.score)).join(', ')}`}
+      >
+        {shown.map((p, i) => (
+          <div key={i} className={styles.barSlot}>
+            <div
+              className={`${styles.bar} ${styles[`bar_${levelOf(p.score)}`]}`}
+              /* Lantai 6% supaya sesi berskor sangat rendah tetap punya
+                 batang yang terlihat, bukan garis yang hilang sama sekali. */
+              style={{ height: `${Math.max(6, p.score)}%` }}
+            />
+          </div>
+        ))}
+      </div>
     </figure>
   );
 }
+
+/* Biomarker yang ditampilkan sebagai kartu pengukuran.
+   ─────────────────────────────────────────────────────────────────────────────
+   Daftar ini menempati posisi "Muscle Recovery / Steps / Calories" pada
+   rujukan. Bedanya, ketiga angka di sana adalah metrik kebugaran yang produk
+   ini tidak pernah mengukurnya, sedangkan keenam di sini dibaca langsung dari
+   rekaman kamera pasien.
+
+   Nilainya diambil lewat normalizeBiomarkers, bukan dari rawBiomarkers
+   langsung, karena kolom itu diisi dua penulis dengan nama berbeda. Lihat
+   lib/biomarkers.ts. Null berarti tesnya tidak dikerjakan, dan kartunya tidak
+   dirender sama sekali: menampilkan nol untuk tes yang tidak pernah
+   dijalankan adalah mengarang hasil. */
+type BioRead = {
+  key: string;
+  labelKey: string;
+  unitKey: string;
+  icon: typeof Activity;
+  digits: number;
+  read: (b: ReturnType<typeof normalizeBiomarkers>) => number | null;
+};
+
+const BIOMARKERS: BioRead[] = [
+  { key: 'tremor', labelKey: 'card.tremorFreq', unitKey: 'card.tremorFreqUnit', icon: Activity, digits: 2, read: b => b.tremorHz },
+  { key: 'tap', labelKey: 'card.tapRate', unitKey: 'card.tapRateUnit', icon: Hand, digits: 2, read: b => b.tapRate },
+  { key: 'cadence', labelKey: 'card.cadence', unitKey: 'card.cadenceUnit', icon: Footprints, digits: 0, read: b => b.cadence },
+  { key: 'symmetry', labelKey: 'card.symmetry', unitKey: 'card.symmetryUnit', icon: MoveHorizontal, digits: 0, read: b => b.symmetryPercent },
+  { key: 'sway', labelKey: 'card.sway', unitKey: 'card.swayUnit', icon: PersonStanding, digits: 2, read: b => b.swayAreaCm2 },
+  { key: 'rom', labelKey: 'card.rom', unitKey: 'card.romUnit', icon: RotateCw, digits: 0, read: b => b.romDeg },
+];
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -102,11 +163,11 @@ export default function DashboardPage() {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [history, setHistory] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
-  // Gagal mengambil data bukan hal yang sama dengan tidak punya data. Selama
-  // ini keduanya berakhir di tampilan kosong yang sama, sehingga pasien yang
-  // riwayatnya utuh bisa diberi tahu bahwa ia belum pernah diperiksa.
   const [failed, setFailed] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
+  /* Indeks sesi yang sedang dilihat pada pita tanggal. 0 berarti yang
+     terbaru, karena history datang terurut menurun dari server. */
+  const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
     if (isLoading) return;
@@ -140,6 +201,31 @@ export default function DashboardPage() {
     };
   }, [user, token, isLoading, router, attempt]);
 
+  /* Dibungkus useMemo supaya rujukannya stabil. Tanpa ini, `?? []` membuat
+     array baru pada setiap render, sehingga useMemo di bawahnya menghitung
+     ulang terus-menerus dan tidak pernah benar-benar menjadi memo. */
+  const timeline = useMemo(() => summary?.timeline ?? [], [summary]);
+
+  /* Terendah dan tertinggi dihitung dari timeline, bukan diminta ke server.
+     Datanya sudah ada di tangan, dan menambah endpoint untuk dua angka yang
+     bisa diturunkan dari array yang sama hanya menambah tempat untuk tidak
+     sinkron. */
+  const stats = useMemo(() => {
+    if (!timeline.length) return null;
+    const scores = timeline.map(p => p.score);
+    return {
+      average: summary?.averageScore ?? scores.reduce((a, b) => a + b, 0) / scores.length,
+      lowest: Math.min(...scores),
+      highest: Math.max(...scores),
+      total: summary?.totalSessions ?? scores.length,
+    };
+  }, [timeline, summary]);
+
+  const activeSession = history[activeIndex] ?? null;
+  const previousSession = history[activeIndex + 1] ?? null;
+  const activeBio = useMemo(() => normalizeBiomarkers(activeSession), [activeSession]);
+  const previousBio = useMemo(() => normalizeBiomarkers(previousSession), [previousSession]);
+
   if (isLoading || loading) {
     return (
       <div className={styles.page}>
@@ -153,21 +239,14 @@ export default function DashboardPage() {
     );
   }
 
-  // Bila pengambilan gagal, halaman berhenti di sini. Menampilkan kop
-  // dokumen lalu tabel kosong di bawahnya akan membuat kegagalan terbaca
-  // sebagai hasil pemeriksaan yang nihil.
   if (failed) {
     return (
       <div className={styles.page}>
         <AppNav />
         <main className="sheet" id="main">
           <div className={styles.pad}>
-            <header className="docHead">
-              <div className="docHead__meta">
-                <span>{t('dash.registeredPatient')}</span>
-                <span data-no-translate="">{user?.name}</span>
-              </div>
-              <h1>{t('dash.recentHistory')}</h1>
+            <header className={styles.pageHead}>
+              <h1 className={styles.pageTitle}>{t('dash.recentHistory')}</h1>
             </header>
             <LoadFailure
               detail={failed}
@@ -183,21 +262,18 @@ export default function DashboardPage() {
     );
   }
 
-  const timeline = summary?.timeline;
-  const latestRisk =
-    timeline?.[timeline.length - 1]?.risk ||
-    ((summary?.latestScore ?? 0) >= 65 ? 'HIGH' : (summary?.latestScore ?? 0) >= 35 ? 'MEDIUM' : 'LOW');
-  const level = latestRisk === 'HIGH' ? 'high' : latestRisk === 'MEDIUM' ? 'mid' : 'low';
+  const hasData = history.length > 0 && summary?.latestScore !== undefined;
+  const latestScore = summary?.latestScore ?? 0;
+  const latestRisk = timeline[timeline.length - 1]?.risk;
+  const level = latestRisk === 'HIGH' ? 'high' : latestRisk === 'MEDIUM' ? 'mid' : levelOf(latestScore);
   const riskLabel =
-    latestRisk === 'HIGH' ? t('risk.high') : latestRisk === 'MEDIUM' ? t('risk.medium') : t('risk.low');
+    level === 'high' ? t('risk.high') : level === 'mid' ? t('risk.medium') : t('risk.low');
   const trendWord =
     summary?.trendDirection === 'WORSENING'
       ? t('dash.worsening')
       : summary?.trendDirection === 'IMPROVING'
         ? t('dash.improving')
         : t('dash.stable');
-
-  const hasScore = summary?.latestScore !== undefined;
 
   return (
     <div className={styles.page}>
@@ -206,119 +282,241 @@ export default function DashboardPage() {
 
       <main className="sheet" id="main">
         <div className={styles.pad}>
-          <header className="docHead">
-            <div className="docHead__meta">
-              <span>{t('dash.registeredPatient')}</span>
-              <span data-no-translate="">{user?.name}</span>
+          {/* ── Kop ──────────────────────────────────────────────────────── */}
+          <header className={styles.pageHead}>
+            <div className={styles.pageHeadText}>
+              <h1 className={styles.pageTitle}>
+                {greeting(lang)}, <span data-no-translate="">{user?.name?.split(' ')[0]}</span>
+              </h1>
+              <p className={styles.pageLead}>{t('dash.overviewTitle')}</p>
             </div>
-            <h1>
-              {greeting(lang)}, <span data-no-translate="">{user?.name?.split(' ')[0]}</span>
-            </h1>
-            <p className={styles.lead}>{t('dash.subtitle')}</p>
+            <Link href="/screening" className="btn btn--primary btn--lg">
+              {t('dash.startNow')}
+            </Link>
           </header>
 
-          <div className={styles.layout}>
-            <section className={styles.primary}>
-              {hasScore ? (
-                <>
-                  <h2 className="label">{t('dash.latestScore')}</h2>
-                  <p className={styles.scoreLine}>
-                    <span className={styles.scoreValue}>{Math.round(summary!.latestScore!)}</span>
-                    <span className={styles.scoreOf}>{t('res.scoreOf')}</span>
-                  </p>
+          {!hasData ? (
+            /* Keadaan kosong.
+               ───────────────────────────────────────────────────────────────
+               Ini yang dilihat setiap akun baru, jadi ia dirancang sebagai
+               halaman utuh dan bukan sisa dari tata letak yang datanya belum
+               datang. Panel kanan tidak ditampilkan sebagai kerangka kosong:
+               cincin skor bernilai nol akan terbaca sebagai hasil pengukuran
+               yang sangat baik, padahal belum ada pengukuran apa pun. */
+            <section className={styles.empty}>
+              <h2 className={styles.emptyTitle}>{t('dash.noData')}</h2>
+              <p className={styles.emptyBody}>{t('dash.emptyBody')}</p>
+              <Link href="/screening" className="btn btn--primary btn--lg">
+                {t('dash.startNow')}
+              </Link>
+            </section>
+          ) : (
+            <div className={styles.layout}>
+              {/* ══ Kolom utama ══════════════════════════════════════════ */}
+              <div className={styles.main}>
+                {/* Kartu biomarker. */}
+                <section aria-labelledby="measuresHead">
+                  <div className={styles.sectionHead}>
+                    <h2 id="measuresHead" className={styles.sectionTitle}>
+                      {t('dash.latestMeasures')}
+                    </h2>
+                    <span className={styles.sectionMeta}>
+                      {activeSession &&
+                        new Date(activeSession.timestamp).toLocaleDateString(dateLocale(lang), {
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric',
+                        })}
+                    </span>
+                  </div>
+
+                  <div className={styles.bioGrid}>
+                    {activeSession &&
+                      BIOMARKERS.map(b => {
+                        const value = b.read(activeBio);
+                        if (value === null) return null;
+                        const prev = previousSession ? b.read(previousBio) : null;
+                        const delta = prev !== null ? value - prev : null;
+                        const Icon = b.icon;
+
+                        return (
+                          <article key={b.key} className={styles.bioCard}>
+                            <div className={styles.bioHead}>
+                              <span className={styles.bioIcon}>
+                                <Icon size={18} strokeWidth={2} aria-hidden="true" />
+                              </span>
+                              <h3 className={styles.bioLabel}>{t(b.labelKey)}</h3>
+                            </div>
+                            <p className={styles.bioValue}>
+                              {value.toFixed(b.digits)}
+                              <span className={styles.bioUnit}>{t(b.unitKey)}</span>
+                            </p>
+                            {/* Perubahan dibawa kata dan tanda, bukan panah
+                                berwarna sendirian. Arah "membaik" berbeda per
+                                biomarker, jadi di sini hanya dinyatakan
+                                selisihnya tanpa menghakimi baik atau buruk. */}
+                            <p className={styles.bioDelta}>
+                              {delta === null ? (
+                                t('dash.noPrevious')
+                              ) : (
+                                <>
+                                  <span className={styles.bioDeltaValue}>
+                                    {delta > 0 ? '+' : ''}
+                                    {delta.toFixed(b.digits)}
+                                  </span>{' '}
+                                  {t('dash.vsPrevious')}
+                                </>
+                              )}
+                            </p>
+                          </article>
+                        );
+                      })}
+                  </div>
+                </section>
+
+                {/* Pita tanggal sesi. Menggantikan jadwal pemeriksaan pada
+                    rujukan. Produk ini tidak punya penjadwalan, dan menaruh
+                    janji temu karangan di sini adalah hal pertama yang akan
+                    dibongkar penilai. Yang ditaruh justru tanggal sesi yang
+                    benar-benar ada, dan setiap tanggal bisa dibuka. */}
+                {history.length > 1 && (
+                  <section aria-labelledby="stripHead">
+                    <div className={styles.sectionHead}>
+                      <h2 id="stripHead" className={styles.sectionTitle}>
+                        {t('dash.sessionStrip')}
+                      </h2>
+                      <Link href="/riwayat" className={styles.sectionLink}>
+                        {t('dash.viewAll')}
+                      </Link>
+                    </div>
+
+                    <div className={styles.strip}>
+                      {history.slice(0, 10).map((s, i) => {
+                        const d = new Date(s.timestamp);
+                        const active = i === activeIndex;
+                        return (
+                          <button
+                            key={s.id}
+                            type="button"
+                            className={styles.stripItem}
+                            data-active={active ? '' : undefined}
+                            aria-pressed={active}
+                            onClick={() => setActiveIndex(i)}
+                          >
+                            <span className={styles.stripDay}>
+                              {d.toLocaleDateString(dateLocale(lang), { weekday: 'short' })}
+                            </span>
+                            <span className={styles.stripDate}>{d.getDate()}</span>
+                            <span className={styles.stripScore}>{Math.round(s.compositeScore)}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </section>
+                )}
+
+                {/* Tabel riwayat. */}
+                <section aria-labelledby="histHead">
+                  <div className={styles.sectionHead}>
+                    <h2 id="histHead" className={styles.sectionTitle}>
+                      {t('dash.recentHistory')}
+                    </h2>
+                    <Link href="/riwayat" className={styles.sectionLink}>
+                      {t('dash.viewAll')}
+                    </Link>
+                  </div>
+
+                  <div className={styles.tableCard}>
+                    <table className="dataTable">
+                      <thead>
+                        <tr>
+                          <th scope="col">{t('hist.date')}</th>
+                          <th scope="col">{t('hist.finding')}</th>
+                          <th scope="col" className="num">
+                            {t('res.compositeScore')}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {history.slice(0, 5).map(session => (
+                          <tr key={session.id}>
+                            <td>
+                              <time dateTime={String(session.timestamp)}>
+                                {new Date(session.timestamp).toLocaleDateString(dateLocale(lang), {
+                                  day: 'numeric',
+                                  month: 'long',
+                                  year: 'numeric',
+                                })}
+                              </time>
+                            </td>
+                            <td>
+                              {session.mlPrediction?.predictedLabel
+                                ? translateServerLabel(session.mlPrediction.predictedLabel, lang)
+                                : t('dash.motorScreening')}
+                              {session.doctorNote && (
+                                <span className={styles.doctorNote}>
+                                  <strong>{t('hist.doctorNote')}:</strong>{' '}
+                                  <span data-no-translate="">{session.doctorNote}</span>
+                                </span>
+                              )}
+                            </td>
+                            <td className="num">{Math.round(session.compositeScore)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              </div>
+
+              {/* ══ Panel skor ═══════════════════════════════════════════ */}
+              <aside className={styles.aside}>
+                <section className={`${styles.scorePanel} ${styles[`panel_${level}`]}`}>
+                  <h2 className={styles.scorePanelTitle}>{t('dash.scorePanel')}</h2>
+
+                  <ScoreRing score={latestScore} label={t('dash.scoreUnit')} />
 
                   <p className={`level level--${level} ${styles.levelChip}`}>{riskLabel}</p>
 
                   <p className={styles.trend}>
                     {t('dash.trend')}: <strong>{trendWord}</strong>
-                    {typeof summary?.trendDelta === 'number' && (
-                      <>
+                    {typeof summary?.trendDelta === 'number' && summary.trendDelta !== 0 && (
+                      <span className={styles.delta}>
                         {' '}
-                        <span className={styles.delta}>
-                          ({summary.trendDelta > 0 ? '+' : ''}
-                          {summary.trendDelta})
-                        </span>
-                      </>
+                        ({summary.trendDelta > 0 ? '+' : ''}
+                        {summary.trendDelta})
+                      </span>
                     )}
                   </p>
 
-                  {timeline && timeline.length > 1 && (
-                    <Trace points={timeline} label={t('dash.traceLabel')} />
+                  <p className={styles.lowerBetter}>{t('dash.lowerBetter')}</p>
+
+                  {stats && (
+                    <dl className={styles.miniStats}>
+                      <div className={styles.miniStat}>
+                        <dt className={styles.miniLabel}>{t('dash.statAverage')}</dt>
+                        <dd className={styles.miniValue}>{Math.round(stats.average)}</dd>
+                      </div>
+                      <div className={styles.miniStat}>
+                        <dt className={styles.miniLabel}>{t('dash.statLowest')}</dt>
+                        <dd className={styles.miniValue}>{Math.round(stats.lowest)}</dd>
+                      </div>
+                      <div className={styles.miniStat}>
+                        <dt className={styles.miniLabel}>{t('dash.statHighest')}</dt>
+                        <dd className={styles.miniValue}>{Math.round(stats.highest)}</dd>
+                      </div>
+                    </dl>
                   )}
-                </>
-              ) : (
-                <div className={styles.empty}>
-                  <h2>{t('dash.noData')}</h2>
-                  <p>{t('dash.emptyBody')}</p>
-                </div>
-              )}
-            </section>
+                </section>
 
-            <aside className={styles.action}>
-              <h2 className={styles.actionTitle}>{t('dash.startScreening')}</h2>
-              <p className={styles.actionBody}>{t('dash.quickSub')}</p>
-              <Link href="/screening" className="btn btn--primary btn--lg btn--block">
-                {t('dash.startNow')}
-              </Link>
-            </aside>
-          </div>
-
-          {/* ── Riwayat terbaru ──────────────────────────────────────────── */}
-          <section className={styles.historySection}>
-            <div className={styles.historyHead}>
-              <h2 className={styles.historyTitle}>{t('dash.recentHistory')}</h2>
-              {history.length > 0 && (
-                <Link href="/riwayat" className="btn">
-                  {t('dash.viewAll')}
-                </Link>
-              )}
+                {timeline.length > 1 && (
+                  <section className={styles.chartCard}>
+                    <SessionBars points={timeline} label={t('dash.trendChart')} />
+                  </section>
+                )}
+              </aside>
             </div>
-
-            {history.length > 0 ? (
-              <div className={styles.tableScroll}>
-                <table className="dataTable">
-                  <thead>
-                    <tr>
-                      <th scope="col">{t('hist.date')}</th>
-                      <th scope="col">{t('hist.finding')}</th>
-                      <th scope="col" className="num">
-                        {t('res.compositeScore')}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {history.slice(0, 5).map(session => (
-                      <tr key={session.id}>
-                        <td>
-                          <time dateTime={String(session.timestamp)}>
-                            {new Date(session.timestamp).toLocaleDateString(dateLocale(lang), {
-                              day: 'numeric',
-                              month: 'long',
-                              year: 'numeric',
-                            })}
-                          </time>
-                        </td>
-                        <td>
-                          {session.mlPrediction?.predictedLabel
-                            ? translateServerLabel(session.mlPrediction.predictedLabel, lang)
-                            : t('dash.motorScreening')}
-                          {session.doctorNote && (
-                            <span className={styles.doctorNote}>
-                              <strong>{t('hist.doctorNote')}:</strong>{' '}
-                              <span data-no-translate="">{session.doctorNote}</span>
-                            </span>
-                          )}
-                        </td>
-                        <td className="num">{Math.round(session.compositeScore)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <p className={styles.emptyRow}>{t('dash.noHistory')}</p>
-            )}
-          </section>
+          )}
         </div>
       </main>
     </div>

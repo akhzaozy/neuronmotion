@@ -1,7 +1,14 @@
-/* Lembar riwayat.
-   Modus arsip: satu kolom dokumen, bagian dipisah garis kepala dan garis
-   rambut. Angka tabular dan rata kanan pada kolomnya. Tidak ada kartu
-   mengambang, tidak ada pil, tidak ada bayangan. */
+/* Lembar riwayat, Ruang Periksa Terang.
+   ─────────────────────────────────────────────────────────────────────────────
+   Sebelumnya modus arsip: satu kolom dokumen, bagian dipisah garis kepala 2px,
+   tanpa kartu mengambang dan tanpa bayangan.
+
+   Yang berubah adalah wadahnya, bukan isinya. Setiap blok data kini duduk di
+   kartu putih yang melayang, dan garis kepala digantikan ruang. Aturan ketiga
+   dunia ini dipertahankan utuh justru di halaman ini: angka tetap tabular,
+   tetap rata kanan pada kolomnya, satuan selalu ikut. Riwayat adalah tempat dua
+   sesi dibandingkan baris per baris, dan itu pekerjaan yang tidak boleh
+   dikorbankan demi tampilan. */
 
 .page {
   min-height: 100vh;
@@ -9,7 +16,7 @@
 }
 
 .pad {
-  padding: var(--s6) 0 var(--s9);
+  padding: var(--s7) 0 var(--s9);
 }
 
 .loading {
@@ -42,8 +49,6 @@
   align-items: baseline;
   justify-content: space-between;
   gap: var(--s4);
-  padding-bottom: var(--s3);
-  border-bottom: 2px solid var(--rule-heavy);
   margin-bottom: var(--s5);
 }
 
@@ -74,9 +79,9 @@
   font-weight: 700;
   letter-spacing: 0.22em;
   font-variant-numeric: tabular-nums;
-  color: var(--ink);
-  background: var(--inset);
-  border: 1px solid var(--rule);
+  color: var(--accent);
+  background: var(--accent-wash);
+  border: 1px solid transparent;
   border-radius: var(--radius);
   padding: var(--s3) var(--s4);
   min-height: var(--touch);
@@ -103,6 +108,11 @@
 .chartWrap {
   width: 100%;
   overflow-x: auto;
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--s5);
 }
 
 /* ── Perbandingan dua sesi ──────────────────────────────────────────────── */
@@ -139,7 +149,11 @@
 
 .deltaList {
   display: block;
-  border-top: 1px solid var(--rule-hair);
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--s2) var(--s5);
 }
 
 .deltaItem {
@@ -149,6 +163,10 @@
   align-items: baseline;
   padding: var(--s3) 0;
   border-bottom: 1px solid var(--rule-hair);
+}
+
+.deltaItem:last-child {
+  border-bottom: 0;
 }
 
 .deltaLabel {
@@ -193,6 +211,11 @@
 
 .tableScroll {
   overflow-x: auto;
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--s3) var(--s5) var(--s4);
 }
 
 .noteCell {
@@ -206,7 +229,11 @@
 }
 
 .emptyState {
-  padding: var(--s6) 0;
+  padding: var(--s6);
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
   color: var(--ink-secondary);
 }
 
@@ -230,10 +257,12 @@
 }
 
 .detailScoreValue {
+  font-family: var(--font-display), var(--font-sans), system-ui, sans-serif;
   font-size: var(--t-display);
-  font-weight: 800;
-  line-height: 0.92;
-  letter-spacing: -0.04em;
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  color: var(--accent);
   font-variant-numeric: tabular-nums;
 }
 
@@ -244,7 +273,7 @@
 .biomarkerList {
   display: block;
   margin: var(--s5) 0;
-  border-top: 2px solid var(--rule-heavy);
+  border-top: 1px solid var(--rule);
 }
 
 .biomarkerItem {
@@ -321,9 +350,11 @@
 }
 
 .correlationItem {
-  padding: var(--s2) 0 var(--s2) var(--s3);
+  padding: var(--s3) var(--s4);
+  margin-bottom: var(--s2);
+  background: var(--inset);
+  border-radius: var(--radius);
   border-left-style: solid;
-  border-bottom: 1px solid var(--rule-hair);
 }
 
 /* Konsisten dan tidak konsisten dibedakan bobot garis kiri, bukan warna
@@ -367,6 +398,7 @@
   max-width: 68ch;
   background: var(--level-high-wash);
   border-left: 6px solid var(--level-high);
+  border-radius: var(--radius);
   color: var(--level-high);
   font-weight: 700;
 }

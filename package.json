@@ -11,6 +11,8 @@
     "server:dev": "nodemon --env-file=.env server/index.js",
     "dev:all": "concurrently -n SERVER,WEB -c blue,green \"npm:server:dev\" \"npm:web:dev\"",
     "seed": "node --env-file=.env prisma/seed.js",
+    "db:push": "prisma db push",
+    "setup": "node scripts/setup.mjs",
     "lint:dash": "node scripts/check-em-dash.mjs"
   },
   "dependencies": {

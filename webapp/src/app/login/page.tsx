@@ -26,6 +26,33 @@ function LoginForm() {
   // pengguna ke sini, supaya sesi bisa dilanjutkan di tempat yang sama.
   const next = params.get('next');
 
+  // AuthProvider menambahkan ?expired=1 ketika server menolak token yang
+  // sudah lewat 24 jam. Tanpa penanda ini, pengguna tiba di halaman masuk
+  // tanpa tahu mengapa ia dikeluarkan dari alat kesehatan yang menyimpan
+  // riwayat pemeriksaannya.
+  const sessionExpired = params.get('expired') === '1';
+
+  /* Panel akun demo.
+     ───────────────────────────────────────────────────────────────────────
+     Menampilkan kredensial di halaman masuk adalah hal yang tidak boleh ikut
+     terbawa ke pemasangan yang bisa dijangkau publik, jadi ia dikendalikan
+     saklar dan bukan dipasang mati. Bawaannya menyala supaya orang yang baru
+     meng-clone proyek ini tidak perlu menyetel apa pun; untuk mematikannya,
+     isi NEXT_PUBLIC_SHOW_DEMO_ACCOUNTS dengan 'false'. */
+  const showDemoAccounts = process.env.NEXT_PUBLIC_SHOW_DEMO_ACCOUNTS !== 'false';
+  const [filledDemo, setFilledDemo] = useState<'PATIENT' | 'DOCTOR' | null>(null);
+
+  /* Mengisi formulir, bukan langsung masuk. Pengguna tetap melihat email dan
+     kata sandi yang dipakainya, sehingga ia bisa mencatatnya, dan tetap
+     menekan tombol masuk sendiri. */
+  const fillDemo = (which: 'PATIENT' | 'DOCTOR') => {
+    setRole(which);
+    setEmail(which === 'DOCTOR' ? 'dr.dewi@neuronmotion.id' : 'pasien@neuronmotion.id');
+    setPassword(which === 'DOCTOR' ? 'doctor123' : 'password123');
+    setError('');
+    setFilledDemo(which);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -93,6 +120,49 @@ function LoginForm() {
             </div>
             <h1>{t('auth.welcome')}</h1>
           </div>
+
+          {/* Pemberitahuan, bukan galat: pengguna tidak melakukan kesalahan
+              apa pun, jadi ia tidak diberi bidang merah. */}
+          {sessionExpired && (
+            <div className={styles.notice} role="status">
+              <p className={styles.noticeTitle}>{t('session.expiredTitle')}</p>
+              <p className={styles.noticeBody}>{t('session.expiredBody')}</p>
+            </div>
+          )}
+
+          {/* Akun demo. Ditaruh di atas pemilih peran karena menekannya juga
+              menyetel perannya, jadi urutan bacanya harus dari sini ke bawah. */}
+          {showDemoAccounts && (
+            <section className={styles.demo} aria-labelledby="demoHead">
+              <p id="demoHead" className={styles.demoTitle}>
+                {t('demoAcc.title')}
+                {filledDemo && (
+                  <span className={styles.demoFilled} role="status">
+                    {' '}
+                    {t('demoAcc.filled')}
+                  </span>
+                )}
+              </p>
+
+              <div className={styles.demoRow}>
+                {([
+                  ['PATIENT', 'demoAcc.patient'],
+                  ['DOCTOR', 'demoAcc.doctor'],
+                ] as const).map(([which, labelKey]) => (
+                  <button
+                    key={which}
+                    type="button"
+                    className={styles.demoBtn}
+                    data-filled={filledDemo === which ? '' : undefined}
+                    aria-pressed={filledDemo === which}
+                    onClick={() => fillDemo(which)}
+                  >
+                    {t(labelKey)}
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* Peran dipilih lewat dua tombol berlabel teks penuh. */}
           <div className={styles.roleGroup} role="group" aria-label={t('auth.roleLabel')}>

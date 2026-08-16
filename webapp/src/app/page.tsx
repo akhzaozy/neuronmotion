@@ -20,6 +20,7 @@ import {
 import heroDoctor from '@/assets/hero-doctor.jpg';
 import consultPhoto from '@/assets/consult.jpg';
 import { api, ModelAccuracy } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
 import Logo from '@/components/Logo';
 import TremorPlate from '@/components/TremorPlate';
 import TraceWave from '@/components/TraceWave';
@@ -66,6 +67,21 @@ const TEST_ICON: Record<string, ComponentType<{ size?: number; strokeWidth?: num
  */
 export default function LandingPage() {
   const { t, lang } = useI18n();
+
+  /* Halaman depan mengenali pengguna yang sudah masuk.
+     ───────────────────────────────────────────────────────────────────────────
+     Sebelumnya halaman ini selalu menawarkan "Masuk" dan "Daftar", termasuk
+     kepada pasien yang tokennya masih berlaku dan riwayatnya sudah berisi.
+     Ia juga tidak pernah menautkan ke /screening sama sekali, sehingga jalan
+     terpendek menuju pekerjaan utama produk ini tidak ada di halaman yang
+     paling banyak dibuka.
+
+     isLoading dipakai untuk menahan tombol sampai localStorage terbaca. Tanpa
+     itu, pengguna yang sudah masuk melihat "Daftar" berkedip lebih dulu. */
+  const { user, isLoading: authLoading } = useAuth();
+  const isDoctor = user?.role === 'DOCTOR';
+  const homeHref = isDoctor ? '/doctor' : '/dashboard';
+  const homeLabel = isDoctor ? t('landing.toPortal') : t('landing.toDashboard');
   const [modelInfo, setModelInfo] = useState<ModelAccuracy | null>(null);
   const [stuck, setStuck] = useState(false);
 
@@ -128,12 +144,20 @@ export default function LandingPage() {
           <div className={styles.mastheadActions}>
             <LanguageToggle />
             <ThemeToggle size="sm" />
-            <Link href="/login" className={`btn ${styles.mastheadLogin}`}>
-              {t('land.login')}
-            </Link>
-            <Link href="/demo" className={`btn btn--primary ${styles.mastheadCta}`}>
-              {t('land.tryDemo')}
-            </Link>
+            {authLoading ? null : user ? (
+              <Link href={homeHref} className={`btn btn--primary ${styles.mastheadCta}`}>
+                {homeLabel}
+              </Link>
+            ) : (
+              <>
+                <Link href="/login" className={`btn ${styles.mastheadLogin}`}>
+                  {t('land.login')}
+                </Link>
+                <Link href="/demo" className={`btn btn--primary ${styles.mastheadCta}`}>
+                  {t('land.tryDemo')}
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -152,13 +176,35 @@ export default function LandingPage() {
 
               <p className={styles.heroLead}>{t('land.desc')}</p>
 
+              {/* Bagi pengguna yang sudah masuk, aksi utama bukan lagi
+                  mencoba peragaan melainkan mengerjakan skrining sungguhan.
+                  Dokter tidak ditawari skrining, karena alat perekamnya
+                  memang bukan untuk dirinya. */}
               <div className={styles.heroActions}>
-                <Link href="/demo" className="btn btn--primary btn--lg">
-                  {t('land.tryDemo')}
-                </Link>
-                <Link href="/register" className="btn btn--lg">
-                  {t('land.startFree')}
-                </Link>
+                {authLoading ? null : user ? (
+                  <>
+                    {!isDoctor && (
+                      <Link href="/screening" className="btn btn--primary btn--lg">
+                        {t('landing.continueScreening')}
+                      </Link>
+                    )}
+                    <Link
+                      href={homeHref}
+                      className={`btn btn--lg${isDoctor ? ' btn--primary' : ''}`}
+                    >
+                      {homeLabel}
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/demo" className="btn btn--primary btn--lg">
+                      {t('land.tryDemo')}
+                    </Link>
+                    <Link href="/register" className="btn btn--lg">
+                      {t('land.startFree')}
+                    </Link>
+                  </>
+                )}
               </div>
 
               <p className={styles.heroNote}>
@@ -442,12 +488,23 @@ export default function LandingPage() {
                 <h2 className={styles.closingTitle}>{t('land.ctaTitle')}</h2>
                 <p className={styles.closingLead}>{t('land.ctaDesc')}</p>
                 <div className={styles.closingActions}>
-                  <Link href="/register" className="btn btn--primary btn--lg">
-                    {t('land.ctaButton')}
-                  </Link>
-                  <Link href="/login" className="btn btn--lg">
-                    {t('land.hasAccount')}
-                  </Link>
+                  {authLoading ? null : user ? (
+                    <Link
+                      href={isDoctor ? homeHref : '/screening'}
+                      className="btn btn--primary btn--lg"
+                    >
+                      {isDoctor ? homeLabel : t('landing.continueScreening')}
+                    </Link>
+                  ) : (
+                    <>
+                      <Link href="/register" className="btn btn--primary btn--lg">
+                        {t('land.ctaButton')}
+                      </Link>
+                      <Link href="/login" className="btn btn--lg">
+                        {t('land.hasAccount')}
+                      </Link>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

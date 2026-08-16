@@ -25,6 +25,9 @@ const STORE_KEY = 'nm.screening.session.v1';
 
 interface StoredSession {
   completed: Record<string, unknown>;
+  /** Tipe tes yang sengaja dilewati, supaya indeks tidak menyebutnya "belum
+      dikerjakan" padahal pengguna sudah memutuskan untuk melewatinya. */
+  skipped?: string[];
   questionnaire: QuestionnaireAnswers | null;
   phase: 'questionnaire' | 'tests';
   step: number;
@@ -45,6 +48,7 @@ export default function ScreeningPage() {
   const [restored, setRestored] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [completedTests, setCompletedTests] = useState<Record<string, unknown>>({});
+  const [skippedTests, setSkippedTests] = useState<string[]>([]);
   const [questionnaire, setQuestionnaire] = useState<QuestionnaireAnswers | null>(null);
   const [phase, setPhase] = useState<'questionnaire' | 'tests'>('questionnaire');
   const [showIntro, setShowIntro] = useState(false);
@@ -73,6 +77,7 @@ export default function ScreeningPage() {
       if (raw) {
         const s = JSON.parse(raw) as StoredSession;
         setCompletedTests(s.completed ?? {});
+        setSkippedTests(s.skipped ?? []);
         setQuestionnaire(s.questionnaire ?? null);
         setPhase(s.phase ?? 'questionnaire');
         setCurrentStep(Math.min(s.step ?? 0, TEST_SEQUENCE.length - 1));
@@ -91,6 +96,7 @@ export default function ScreeningPage() {
     try {
       const payload: StoredSession = {
         completed: completedTests,
+        skipped: skippedTests,
         questionnaire,
         phase,
         step: currentStep,
@@ -99,7 +105,7 @@ export default function ScreeningPage() {
     } catch {
       /* Penyimpanan penuh atau diblokir. Alur tetap berjalan tanpa pemulihan. */
     }
-  }, [restored, completedTests, questionnaire, phase, currentStep]);
+  }, [restored, completedTests, skippedTests, questionnaire, phase, currentStep]);
 
   /* Peringatan sebelum menutup tab selagi ada rekaman yang belum dikirim. */
   useEffect(() => {
@@ -112,13 +118,13 @@ export default function ScreeningPage() {
     return () => window.removeEventListener('beforeunload', onBeforeUnload);
   }, [hasWork, result]);
 
-  /* Simpan hasil rekaman yang lolos quality gate. */
+  /* Simpan hasil rekaman yang lolos quality gate. Tes yang sebelumnya
+     dilewati lalu dikerjakan ulang tidak lagi berstatus dilewati. */
   useEffect(() => {
     if (capturedData?.testType) {
-      setCompletedTests(prev => ({
-        ...prev,
-        [capturedData.testType as string]: capturedData.payload,
-      }));
+      const type = capturedData.testType as string;
+      setCompletedTests(prev => ({ ...prev, [type]: capturedData.payload }));
+      setSkippedTests(prev => prev.filter(s => s !== type));
     }
   }, [capturedData]);
 
@@ -136,8 +142,11 @@ export default function ScreeningPage() {
 
   const skipCurrentTest = useCallback(() => {
     setInstructionFor(null);
+    setSkippedTests(prev =>
+      prev.includes(currentTest.type) ? prev : [...prev, currentTest.type],
+    );
     setCurrentStep(s => Math.min(s + 1, TEST_SEQUENCE.length - 1));
-  }, []);
+  }, [currentTest.type]);
 
   const submitScreening = async () => {
     if (!user || !token) return;
@@ -246,30 +255,56 @@ export default function ScreeningPage() {
                 />
               )}
 
-              {cameraReady && poseReady && !isCapturing && !instructionFor && (
-                <div className={styles.controls}>
-                  <button
-                    type="button"
-                    className="btn btn--primary btn--lg"
-                    onClick={() => beginTest(currentTest.type)}
-                  >
-                    {completedTests[currentTest.type] ? t('scr.retake') : t('scr.beginTest')}
-                  </button>
+              {/* Tiga aksi terpisah, bukan satu tombol bermakna ganda.
+                  ───────────────────────────────────────────────────────────
+                  Sebelumnya tombol kedua adalah "Lanjut" yang berubah menjadi
+                  "Kirim" hanya ketika pengguna kebetulan berada di tes
+                  keenam. Akibatnya seseorang yang menyelesaikan tiga tes lalu
+                  ingin berhenti harus menekan "Lanjut" tiga kali melewati tes
+                  yang justru sedang ia lewati, hanya untuk memunculkan tombol
+                  kirimnya. Padahal server menerima data sebagian.
 
-                  {doneCount > 0 && (
+                  Sekarang "Kirim" berdiri sendiri dan muncul begitu ada satu
+                  tes selesai, di posisi mana pun pengguna berada. */}
+              {cameraReady && poseReady && !isCapturing && !instructionFor && (
+                <>
+                  <div className={styles.controls}>
                     <button
                       type="button"
-                      className="btn btn--lg"
-                      onClick={
-                        currentStep === TEST_SEQUENCE.length - 1
-                          ? submitScreening
-                          : () => setCurrentStep(s => s + 1)
-                      }
+                      className="btn btn--primary btn--lg"
+                      onClick={() => beginTest(currentTest.type)}
                     >
-                      {currentStep === TEST_SEQUENCE.length - 1 ? t('scr.submit') : t('scr.next')}
+                      {completedTests[currentTest.type] ? t('scr.retake') : t('scr.beginTest')}
                     </button>
+
+                    {currentStep < TEST_SEQUENCE.length - 1 && (
+                      <button
+                        type="button"
+                        className="btn btn--lg"
+                        onClick={() => setCurrentStep(s => s + 1)}
+                      >
+                        {t('scr.next')}
+                      </button>
+                    )}
+                  </div>
+
+                  {doneCount > 0 && (
+                    <div className={styles.submitRow}>
+                      <button
+                        type="button"
+                        className="btn btn--primary btn--lg btn--block"
+                        onClick={submitScreening}
+                      >
+                        {doneCount === TEST_SEQUENCE.length
+                          ? t('scr.submitAll')
+                          : t('scr.submitPartial').replace('{n}', String(doneCount))}
+                      </button>
+                      {doneCount < TEST_SEQUENCE.length && (
+                        <p className={styles.submitHint}>{t('scr.partialHint')}</p>
+                      )}
+                    </div>
                   )}
-                </div>
+                </>
               )}
 
               {submitError && (
@@ -286,6 +321,7 @@ export default function ScreeningPage() {
               <ol className={styles.indexList}>
                 {TEST_SEQUENCE.map((spec, i) => {
                   const done = !!completedTests[spec.type];
+                  const skipped = !done && skippedTests.includes(spec.type);
                   const active = i === currentStep;
                   return (
                     <li key={spec.type}>
@@ -294,6 +330,7 @@ export default function ScreeningPage() {
                         className={styles.indexRow}
                         data-active={active ? '' : undefined}
                         data-done={done ? '' : undefined}
+                        data-skipped={skipped ? '' : undefined}
                         onClick={() => setCurrentStep(i)}
                         aria-current={active ? 'step' : undefined}
                         disabled={isCapturing}
@@ -301,7 +338,13 @@ export default function ScreeningPage() {
                         <span className={styles.indexNum}>{String(i + 1).padStart(2, '0')}</span>
                         <span className={styles.indexName}>{t(spec.nameKey)}</span>
                         <span className={styles.indexState}>
-                          {done ? t('scr.done') : active ? t('scr.current') : t('scr.pending')}
+                          {done
+                            ? t('scr.done')
+                            : skipped
+                              ? t('scr.skipped')
+                              : active
+                                ? t('scr.current')
+                                : t('scr.pending')}
                         </span>
                       </button>
                     </li>

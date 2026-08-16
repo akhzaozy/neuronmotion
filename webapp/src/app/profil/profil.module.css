@@ -8,7 +8,7 @@
 }
 
 .pad {
-  padding: var(--s6) 0 var(--s9);
+  padding: var(--s7) 0 var(--s9);
   max-width: 760px;
 }
 
@@ -51,8 +51,6 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--s4);
-  padding-bottom: var(--s3);
-  border-bottom: 2px solid var(--rule-heavy);
   margin-bottom: var(--s4);
 }
 
@@ -69,6 +67,11 @@
 
 .infoList {
   display: block;
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--s2) var(--s5);
 }
 
 .infoRow {
@@ -78,6 +81,10 @@
   align-items: baseline;
   padding: var(--s3) 0;
   border-bottom: 1px solid var(--rule-hair);
+}
+
+.infoRow:last-child {
+  border-bottom: 0;
 }
 
 .infoRow:last-child {

@@ -36,9 +36,15 @@ const DICT: Record<string, { id: string; en: string }> = {
   'bot.q1': { id: 'Apa arti skor risiko saya?', en: 'What does my risk score mean?' },
   'bot.q2': { id: 'Apa itu tremor Parkinson?', en: 'What is a Parkinsonian tremor?' },
   'bot.q3': { id: 'Kapan saya harus ke dokter?', en: 'When should I see a doctor?' },
-  'bot.placeholder': { id: 'Ketik pertanyaan Anda... (Enter kirim)', en: 'Type your question... (Enter to send)' },
+  /* Petunjuk tombol Enter dikeluarkan dari placeholder. Digabung begitu,
+     teksnya membungkus jadi dua baris di dalam kotak setinggi satu baris
+     sehingga separuhnya terpotong, dan petunjuk yang terpotong tidak
+     menolong siapa pun. Ia kini punya barisnya sendiri di bawah isian. */
+  'bot.placeholder': { id: 'Ketik pertanyaan Anda', en: 'Type your question' },
+  'bot.enterHint': { id: 'Enter kirim, Shift+Enter baris baru', en: 'Enter to send, Shift+Enter for a new line' },
   'bot.messageLabel': { id: 'Pesan untuk NeuroBot', en: 'Message for NeuroBot' },
   'bot.send': { id: 'Kirim pesan', en: 'Send message' },
+  'bot.sendShort': { id: 'Kirim', en: 'Send' },
   // Label penutur pada tiap giliran percakapan. Ia menggantikan avatar berikon
   // dan sisi kiri kanan gelembung sebagai penanda siapa yang berbicara.
   'bot.you': { id: 'Anda', en: 'You' },
@@ -152,6 +158,63 @@ const DICT: Record<string, { id: string; en: string }> = {
   'common.backHome': { id: 'Kembali ke Beranda', en: 'Back to Home' },
   'common.notFilled': { id: 'Belum diisi', en: 'Not provided' },
   'common.years': { id: 'tahun', en: 'years' },
+
+  // Sesi berakhir. Teksnya menyebut sebabnya dan menyatakan bahwa data aman,
+  // karena pengguna yang tiba-tiba dikeluarkan pada alat kesehatan akan
+  // menduga datanya hilang sebelum menduga tokennya kedaluwarsa.
+  'session.expiredTitle': { id: 'Sesi Anda telah berakhir', en: 'Your session has ended' },
+  'session.expiredBody': {
+    id: 'Demi keamanan, Anda otomatis keluar setelah 24 jam. Riwayat pemeriksaan Anda tetap tersimpan. Silakan masuk kembali untuk melanjutkan.',
+    en: 'For your security, you are signed out automatically after 24 hours. Your examination history is safely stored. Please sign in again to continue.',
+  },
+
+  // Dashboard pasien.
+  'dash.overviewTitle': { id: 'Ringkasan kesehatan gerak Anda', en: 'Your movement health overview' },
+  'dash.scorePanel': { id: 'Skor risiko Anda', en: 'Your risk score' },
+  'dash.statAverage': { id: 'Rata-rata', en: 'Average' },
+  'dash.statLowest': { id: 'Terendah', en: 'Lowest' },
+  'dash.statHighest': { id: 'Tertinggi', en: 'Highest' },
+  'dash.statSessions': { id: 'Total sesi', en: 'Total sessions' },
+  'dash.scoreUnit': { id: 'dari 100', en: 'of 100' },
+  'dash.trendChart': { id: 'Perubahan antar sesi', en: 'Change between sessions' },
+  'dash.sessionStrip': { id: 'Sesi pemeriksaan Anda', en: 'Your examination sessions' },
+  'dash.latestMeasures': { id: 'Pengukuran terakhir', en: 'Latest measurements' },
+  'dash.vsPrevious': { id: 'dibanding sesi sebelumnya', en: 'vs previous session' },
+  'dash.noPrevious': { id: 'Sesi pertama Anda', en: 'Your first session' },
+  'dash.notMeasured': { id: 'Tes ini belum dikerjakan', en: 'This test has not been done' },
+  'dash.selectSession': { id: 'Lihat sesi ini', en: 'View this session' },
+  'dash.lowerBetter': { id: 'Makin rendah makin baik', en: 'Lower is better' },
+
+  // Kartu pengukuran di beranda. Diberi awalan tersendiri karena namespace
+  // 'bio.' sudah dipakai pustaka edukasi untuk nama dan penjelasan tes.
+  // Satuan selalu ikut angkanya dan tidak pernah dilepas.
+  'card.tremorFreq': { id: 'Frekuensi tremor', en: 'Tremor frequency' },
+  'card.tremorFreqUnit': { id: 'Hz', en: 'Hz' },
+  'card.tapRate': { id: 'Laju ketukan jari', en: 'Finger tap rate' },
+  'card.tapRateUnit': { id: '/detik', en: '/sec' },
+  'card.cadence': { id: 'Irama langkah', en: 'Step cadence' },
+  'card.cadenceUnit': { id: '/menit', en: '/min' },
+  'card.symmetry': { id: 'Simetri langkah', en: 'Gait symmetry' },
+  'card.symmetryUnit': { id: '%', en: '%' },
+  'card.sway': { id: 'Goyang postur', en: 'Postural sway' },
+  'card.swayUnit': { id: 'cm²', en: 'cm²' },
+  'card.rom': { id: 'Rentang gerak', en: 'Range of motion' },
+  'card.romUnit': { id: '°', en: '°' },
+
+  // Panel akun demo di halaman masuk. Sengaja hanya dua tombol kategori:
+  // panel ini perancah untuk mencoba, dan menjelaskan isi datanya panjang
+  // lebar justru membuatnya menyaingi formulir masuk yang ia layani.
+  // Kredensialnya toh langsung terlihat di formulir setelah ditekan.
+  'demoAcc.title': { id: 'Masuk dengan akun demo', en: 'Sign in with a demo account' },
+  'demoAcc.patient': { id: 'Pasien', en: 'Patient' },
+  'demoAcc.doctor': { id: 'Dokter', en: 'Clinician' },
+  'demoAcc.filled': { id: 'Terisi di bawah.', en: 'Filled in below.' },
+
+  // Halaman depan bagi pengguna yang sudah masuk.
+  'landing.continueScreening': { id: 'Mulai skrining', en: 'Start screening' },
+  'landing.toDashboard': { id: 'Buka dashboard', en: 'Open dashboard' },
+  'landing.toPortal': { id: 'Buka portal nakes', en: 'Open clinician portal' },
+  'landing.welcomeBack': { id: 'Anda sudah masuk', en: 'You are signed in' },
 
   // Risiko
   'risk.high': { id: 'Tinggi', en: 'High' },
@@ -664,6 +727,16 @@ const DICT: Record<string, { id: string; en: string }> = {
   'scr.submit': { id: 'Kirim hasil skrining', en: 'Submit screening' },
   'scr.done': { id: 'Selesai', en: 'Done' },
   'scr.pending': { id: 'Belum dikerjakan', en: 'Not yet done' },
+  'scr.skipped': { id: 'Dilewati', en: 'Skipped' },
+
+  // Kirim sebagian. Jumlah tes disebut di tombolnya sendiri supaya pengguna
+  // tahu persis apa yang sedang ia kirim sebelum menekannya.
+  'scr.submitPartial': { id: 'Kirim {n} tes yang sudah selesai', en: 'Submit {n} completed tests' },
+  'scr.submitAll': { id: 'Kirim hasil skrining', en: 'Submit screening' },
+  'scr.partialHint': {
+    id: 'Anda boleh mengirim tanpa menyelesaikan keenam tes. Semakin banyak tes yang terisi, semakin lengkap gambaran yang bisa dibaca.',
+    en: 'You may submit without finishing all six tests. The more tests you complete, the fuller the picture your results can show.',
+  },
   'scr.current': { id: 'Sedang dikerjakan', en: 'In progress' },
   'scr.sequence': { id: 'Urutan tes', en: 'Test sequence' },
   'scr.stepOf': { id: 'Tes {a} dari {b}', en: 'Test {a} of {b}' },

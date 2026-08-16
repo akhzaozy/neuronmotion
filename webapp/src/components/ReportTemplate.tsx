@@ -1,5 +1,6 @@
 'use client';
 import { Session } from '@/lib/api';
+import { normalizeBiomarkers } from '@/lib/biomarkers';
 import Logo from './Logo';
 import styles from './ReportTemplate.module.css';
 
@@ -90,6 +91,7 @@ function TrendChart({ sessions }: { sessions: Session[] }) {
  */
 export default function ReportTemplate({ patient, sessions, meta }: Props) {
   const latest = sessions[0];
+  const nb = normalizeBiomarkers(latest);
   const age = patient.age ?? calcAge(patient.dateOfBirth);
   const location = [patient.city, patient.state, patient.countryName].filter(Boolean).join(', ');
   const printedAt = new Date().toLocaleString('id-ID', {
@@ -180,27 +182,26 @@ export default function ReportTemplate({ patient, sessions, meta }: Props) {
             <thead>
               <tr><th>Parameter</th><th>Nilai</th><th>Satuan</th></tr>
             </thead>
+            {/* Dibaca lewat penormal, bukan dari rawBiomarkers langsung.
+                Sebelumnya simetri langkah, asimetri ayunan lengan, sway area,
+                dan ROM tidak pernah tercetak untuk pasien yang datanya berasal
+                dari seed, karena keempatnya menyebut nama field yang hanya
+                ditulis analisator live. Ini laporan yang masuk rekam medis,
+                jadi baris yang diam-diam hilang adalah persoalan yang lebih
+                besar daripada tampilan. Lihat lib/biomarkers.ts. */}
             <tbody>
-              {latest.rawBiomarkers.tremor?.dominantFrequencyHz !== undefined && (
-                <tr><td>Frekuensi tremor</td><td>{latest.rawBiomarkers.tremor.dominantFrequencyHz}</td><td>Hz</td></tr>
-              )}
-              {latest.rawBiomarkers.fingerTapping?.tapRatePerSecond !== undefined && (
-                <tr><td>Kecepatan finger tapping</td><td>{latest.rawBiomarkers.fingerTapping.tapRatePerSecond}</td><td>ketuk/detik</td></tr>
-              )}
-              {latest.rawBiomarkers.gait?.symmetryPercent !== undefined && (
-                <tr><td>Simetri langkah</td><td>{latest.rawBiomarkers.gait.symmetryPercent}</td><td>%</td></tr>
-              )}
-              {latest.rawBiomarkers.gait?.cadencePerMin !== undefined && (
-                <tr><td>Kadense</td><td>{latest.rawBiomarkers.gait.cadencePerMin}</td><td>langkah/menit</td></tr>
-              )}
-              {latest.rawBiomarkers.armSwing?.asymmetryPercent !== undefined && (
-                <tr><td>Asimetri ayunan lengan</td><td>{latest.rawBiomarkers.armSwing.asymmetryPercent}</td><td>%</td></tr>
-              )}
-              {latest.rawBiomarkers.posturalStability?.swayAreaCm2 !== undefined && (
-                <tr><td>Sway area postural</td><td>{latest.rawBiomarkers.posturalStability.swayAreaCm2}</td><td>cm²</td></tr>
-              )}
-              {latest.rawBiomarkers.rom?.romDeg !== undefined && (
-                <tr><td>Range of motion lutut</td><td>{latest.rawBiomarkers.rom.romDeg}</td><td>derajat</td></tr>
+              {([
+                ['Frekuensi tremor', 'Hz', nb.tremorHz],
+                ['Kecepatan finger tapping', 'ketuk/detik', nb.tapRate],
+                ['Simetri langkah', '%', nb.symmetryPercent],
+                ['Kadense', 'langkah/menit', nb.cadence],
+                ['Asimetri ayunan lengan', '%', nb.armAsymmetryPercent],
+                ['Sway area postural', 'cm²', nb.swayAreaCm2],
+                ['Range of motion lutut', 'derajat', nb.romDeg],
+              ] as [string, string, number | null][]).map(([label, unit, value]) =>
+                value === null ? null : (
+                  <tr key={label}><td>{label}</td><td>{value.toFixed(2)}</td><td>{unit}</td></tr>
+                ),
               )}
             </tbody>
           </table>

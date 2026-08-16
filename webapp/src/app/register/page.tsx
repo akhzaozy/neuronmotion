@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
 import Logo from '@/components/Logo';
 
 import { ThemeToggle } from '@/lib/theme';
@@ -14,6 +15,7 @@ const SPECIALIZATIONS = ['Neurolog', 'Dokter Umum', 'Fisioterapis', 'Perawat'];
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const { t, lang } = useI18n();
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
@@ -48,14 +50,22 @@ export default function RegisterPage() {
         state: location.state,
         city: location.city,
       });
-      // Auto-login after register
+      /* Langsung masuk memakai kredensial yang baru saja diketik.
+         ─────────────────────────────────────────────────────────────────────
+         Sebelumnya baris ini memanggil api.login, membuang hasilnya, lalu
+         memindahkan pengguna ke /login, sehingga orang yang baru mendaftar
+         harus mengetik email dan kata sandi yang sama untuk kedua kalinya
+         berturut-turut. Konteks autentikasi memang tersedia di sini lewat
+         useAuth, jadi tidak ada alasan menyimpan token itu lalu membuangnya. */
       const data = await api.login(email, password);
-      // We don't have direct access to auth context here without wrapping or importing,
-      // but usually register redirects to login or handles it.
-      // Let's just redirect to login for simplicity.
-      router.push('/login');
-    } catch (err: any) {
-      setError(err.message || t('auth.registerFailed'));
+      login(data.user, data.token);
+
+      /* Diarahkan sesuai peran, bukan ke satu tujuan tetap. Dokter yang tiba
+         di dashboard pasien hanya akan dipantulkan kembali oleh penjaga
+         rutenya sendiri. */
+      router.replace(data.user.role === 'DOCTOR' ? '/doctor' : '/dashboard');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('auth.registerFailed'));
     } finally {
       setLoading(false);
     }

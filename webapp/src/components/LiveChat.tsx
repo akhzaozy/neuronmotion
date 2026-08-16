@@ -55,6 +55,23 @@ export default function LiveChat() {
     else if (messages.length > 1) setHasUnread(true);
   }, [messages, isOpen, scrollToBottom]);
 
+  /* Tinggi isian mengikuti isinya.
+     ─────────────────────────────────────────────────────────────────────────
+     Tanpa ini, isian terkunci pada rows dan pertanyaan panjang menggulir di
+     dalam kotak setinggi dua baris, sehingga pengguna hanya pernah melihat
+     dua baris terakhir dari kalimat yang sedang ia susun sendiri. Itu terasa
+     terutama bagi pengguna yang mengetik pelan.
+
+     Tinggi direset ke 'auto' lebih dulu supaya kotak juga menyusut kembali
+     ketika teksnya dihapus, bukan hanya membesar. Batas atasnya disamakan
+     dengan max-height di berkas modulnya; melewati itu barulah ia menggulir. */
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 132)}px`;
+  }, [input, isOpen]);
+
   async function sendMessage() {
     const text = input.trim();
     if (!text || loading) return;
@@ -214,7 +231,13 @@ export default function LiveChat() {
           </div>
         )}
 
-        {/* Input */}
+        {/* Penyusun pesan.
+            ─────────────────────────────────────────────────────────────────
+            Isian mengambil satu baris penuh, dan petunjuk beserta tombol
+            kirim turun ke baris di bawahnya. Sebelumnya ketiganya berdesakan
+            dalam satu baris: di panel selebar 380px, tombol "Kirim pesan"
+            memakan sekitar sepertiga lebarnya, menyisakan kotak yang terlalu
+            sempit bahkan untuk teks contohnya sendiri. */}
         <div className={styles.chatInputArea}>
           <textarea
             id="livechat-input"
@@ -224,19 +247,22 @@ export default function LiveChat() {
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={t('bot.placeholder')}
-            rows={1}
+            rows={2}
             disabled={loading}
             aria-label={t('bot.messageLabel')}
           />
-          <button
-            id="livechat-send-btn"
-            className={`${styles.sendBtn} ${(!input.trim() || loading) ? styles.sendBtnDisabled : ''}`}
-            onClick={sendMessage}
-            disabled={!input.trim() || loading}
-            aria-label={t('bot.send')}
-          >
-            {loading ? t('common.loading') : t('bot.send')}
-          </button>
+          <div className={styles.chatInputRow}>
+            <span className={styles.enterHint}>{t('bot.enterHint')}</span>
+            <button
+              id="livechat-send-btn"
+              className={`${styles.sendBtn} ${(!input.trim() || loading) ? styles.sendBtnDisabled : ''}`}
+              onClick={sendMessage}
+              disabled={!input.trim() || loading}
+              aria-label={t('bot.send')}
+            >
+              {loading ? t('common.loading') : t('bot.sendShort')}
+            </button>
+          </div>
         </div>
         <div className={styles.disclaimer}>
           {t('bot.disclaimer')}

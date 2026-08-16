@@ -15,8 +15,8 @@
   padding: var(--s6);
   background: var(--field);
   border: 1px solid var(--rule-hair);
-  border-top: 3px solid var(--accent);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
 }
 
 .title {

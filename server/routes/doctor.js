@@ -208,10 +208,22 @@ router.get('/dashboard/:doctorId', async (req, res) => {
   try {
     const doctorId = resolveDoctorId(req, req.params.doctorId);
 
+    /* Statistik dihitung dari SELURUH pasien tertaut, bukan dari 50 terbaru.
+       ───────────────────────────────────────────────────────────────────────
+       Sebelumnya kueri ini memakai take: 50, lalu melaporkan panjang larik
+       hasilnya sebagai totalPatients. Akibatnya bukan sekadar daftar yang
+       terpotong melainkan angkanya sendiri yang keliru: kelima dokter di data
+       contoh sama-sama menampilkan "50" padahal masing-masing menaungi 283
+       sampai 315 pasien. Sebaran risiko, sebaran kondisi, dan peta wilayah
+       juga ikut dihitung dari 50 sampel itu tetapi disajikan sebagai total.
+
+       Yang dibatasi memang seharusnya daftar pasien di endpoint /patients,
+       karena daftar itu yang dirender; statistik cukup mengambil id-nya saja,
+       dan satu kolom integer untuk beberapa ratus baris jauh lebih murah
+       daripada angka yang salah. */
     const links = await prisma.doctorPatient.findMany({
       where: { doctorId, status: 'ACTIVE' },
       select: { patientId: true },
-      take: 50,
       orderBy: { linkedAt: 'desc' },
     });
     const patientIds = links.map(l => l.patientId);

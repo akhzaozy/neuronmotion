@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { api, Session } from '@/lib/api';
+import { normalizeBiomarkers } from '@/lib/biomarkers';
 import AppNav from '@/components/AppNav';
 import ReportTemplate from '@/components/ReportTemplate';
 import ReportPrintHost from '@/components/ReportPrintHost';
@@ -114,14 +115,18 @@ interface BiomarkerDelta {
 }
 
 function getBiomarkerDeltas(a: Session, b: Session, t: (k: string) => string): BiomarkerDelta[] {
-  const ra = a.rawBiomarkers, rb = b.rawBiomarkers;
+  /* Dibaca lewat penormal, bukan dari rawBiomarkers langsung. Sebelumnya baris
+     simetri, sway, ROM, dan asimetri lengan di sini membaca nama field yang
+     hanya ditulis analisator live, sehingga keempatnya kosong untuk seluruh
+     pasien yang datanya berasal dari seed. Lihat lib/biomarkers.ts. */
+  const ra = normalizeBiomarkers(a), rb = normalizeBiomarkers(b);
   return [
-    { label: t('bio.tremorShort'), unit: 'Hz', from: ra?.tremor?.dominantFrequencyHz, to: rb?.tremor?.dominantFrequencyHz, higherIsWorse: true },
-    { label: t('bio.fingerTapping'), unit: t('unit.tapsPerSec'), from: ra?.fingerTapping?.tapRatePerSecond, to: rb?.fingerTapping?.tapRatePerSecond, higherIsWorse: false },
-    { label: t('bio.gaitSymmetry'), unit: '%', from: ra?.gait?.symmetryPercent, to: rb?.gait?.symmetryPercent, higherIsWorse: false },
-    { label: t('bio.armAsymmetry'), unit: '%', from: ra?.armSwing?.asymmetryPercent, to: rb?.armSwing?.asymmetryPercent, higherIsWorse: true },
-    { label: t('bio.swayArea'), unit: 'cm²', from: ra?.posturalStability?.swayAreaCm2, to: rb?.posturalStability?.swayAreaCm2, higherIsWorse: true },
-    { label: t('bio.kneeRom'), unit: '°', from: ra?.rom?.romDeg, to: rb?.rom?.romDeg, higherIsWorse: false },
+    { label: t('bio.tremorShort'), unit: 'Hz', from: ra.tremorHz ?? undefined, to: rb.tremorHz ?? undefined, higherIsWorse: true },
+    { label: t('bio.fingerTapping'), unit: t('unit.tapsPerSec'), from: ra.tapRate ?? undefined, to: rb.tapRate ?? undefined, higherIsWorse: false },
+    { label: t('bio.gaitSymmetry'), unit: '%', from: ra.symmetryPercent ?? undefined, to: rb.symmetryPercent ?? undefined, higherIsWorse: false },
+    { label: t('bio.armAsymmetry'), unit: '%', from: ra.armAsymmetryPercent ?? undefined, to: rb.armAsymmetryPercent ?? undefined, higherIsWorse: true },
+    { label: t('bio.swayArea'), unit: 'cm²', from: ra.swayAreaCm2 ?? undefined, to: rb.swayAreaCm2 ?? undefined, higherIsWorse: true },
+    { label: t('bio.kneeRom'), unit: '°', from: ra.romDeg ?? undefined, to: rb.romDeg ?? undefined, higherIsWorse: false },
   ];
 }
 
@@ -236,6 +241,7 @@ export default function RiwayatPage() {
       header,
       ...sessions.map(s => {
         const b = s.rawBiomarkers || {};
+        const nb = normalizeBiomarkers(s);
         const t = (s.tremorResult || {}) as Record<string, unknown>;
         return [
           String(s.id),
@@ -249,11 +255,11 @@ export default function RiwayatPage() {
           num(t.amplitudeMillimeter),
           num(b.fingerTapping?.tapRatePerSecond),
           num((s.fingerTappingResult as Record<string, unknown> | undefined)?.decrementPercent),
-          num(b.gait?.symmetryPercent),
-          num(b.gait?.cadencePerMin),
-          num(b.armSwing?.asymmetryPercent),
-          num(b.posturalStability?.swayAreaCm2),
-          num(b.rom?.romDeg),
+          num(nb.symmetryPercent),
+          num(nb.cadence),
+          num(nb.armAsymmetryPercent),
+          num(nb.swayAreaCm2),
+          num(nb.romDeg),
           (s.aiAnalysis?.ringkasan || '').replace(/\n/g, ' '),
           s.aiAnalysis?.tingkatKeyakinan || '',
           (s.aiAnalysis?.saranTindakLanjut || []).join(' | ').replace(/\n/g, ' '),
@@ -523,37 +529,29 @@ export default function RiwayatPage() {
                   </p>
                 )}
 
+                {/* Dibaca lewat penormal. Empat dari enam baris di bawah ini
+                    sebelumnya tidak pernah muncul untuk pasien seed, karena
+                    keduanya menyebut nama field yang hanya ditulis analisator
+                    live. Lihat lib/biomarkers.ts. */}
                 <dl className={styles.biomarkerList}>
-                  {detail.rawBiomarkers?.tremor?.dominantFrequencyHz !== undefined && (
-                    <BiomarkerRow label={t('bio.tremorShort')}>
-                      {detail.rawBiomarkers.tremor.dominantFrequencyHz} Hz
-                    </BiomarkerRow>
-                  )}
-                  {detail.rawBiomarkers?.fingerTapping?.tapRatePerSecond !== undefined && (
-                    <BiomarkerRow label={t('bio.fingerTapping')}>
-                      {detail.rawBiomarkers.fingerTapping.tapRatePerSecond} {t('unit.perSec')}
-                    </BiomarkerRow>
-                  )}
-                  {detail.rawBiomarkers?.gait?.symmetryPercent !== undefined && (
-                    <BiomarkerRow label={t('bio.gaitSymmetry')}>
-                      {detail.rawBiomarkers.gait.symmetryPercent}%
-                    </BiomarkerRow>
-                  )}
-                  {detail.rawBiomarkers?.armSwing?.asymmetryPercent !== undefined && (
-                    <BiomarkerRow label={t('bio.armAsymmetry')}>
-                      {detail.rawBiomarkers.armSwing.asymmetryPercent}%
-                    </BiomarkerRow>
-                  )}
-                  {detail.rawBiomarkers?.posturalStability?.swayAreaCm2 !== undefined && (
-                    <BiomarkerRow label={t('bio.swayArea')}>
-                      {detail.rawBiomarkers.posturalStability.swayAreaCm2} cm²
-                    </BiomarkerRow>
-                  )}
-                  {detail.rawBiomarkers?.rom?.romDeg !== undefined && (
-                    <BiomarkerRow label={t('bio.kneeRom')}>
-                      {detail.rawBiomarkers.rom.romDeg}°
-                    </BiomarkerRow>
-                  )}
+                  {(() => {
+                    const nb = normalizeBiomarkers(detail);
+                    const rows: [string, string, number | null][] = [
+                      [t('bio.tremorShort'), 'Hz', nb.tremorHz],
+                      [t('bio.fingerTapping'), t('unit.perSec'), nb.tapRate],
+                      [t('bio.gaitSymmetry'), '%', nb.symmetryPercent],
+                      [t('bio.armAsymmetry'), '%', nb.armAsymmetryPercent],
+                      [t('bio.swayArea'), 'cm²', nb.swayAreaCm2],
+                      [t('bio.kneeRom'), '°', nb.romDeg],
+                    ];
+                    return rows.map(([label, unit, value]) =>
+                      value === null ? null : (
+                        <BiomarkerRow key={label} label={label}>
+                          {value.toFixed(2)} {unit}
+                        </BiomarkerRow>
+                      ),
+                    );
+                  })()}
                 </dl>
 
                 {/* Analisis AI yang tersimpan dari sesi ini, supaya rekomendasinya

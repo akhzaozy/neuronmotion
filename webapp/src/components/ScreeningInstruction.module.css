@@ -11,8 +11,8 @@
   gap: var(--s5);
   background: var(--field);
   border: 1px solid var(--rule-hair);
-  border-top: 3px solid var(--rule-heavy);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
   padding: var(--s6);
 }
 
@@ -66,8 +66,8 @@
 }
 
 .figureBox {
-  background: var(--inset);
-  border-radius: var(--radius);
+  background: var(--accent-wash);
+  border-radius: var(--radius-lg);
   padding: var(--s3);
 }
 

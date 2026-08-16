@@ -1,6 +1,11 @@
-/* Pustaka edukasi.
-   Modus baca: indeks dokumen dengan ukuran ukur nyaman, bukan galeri kartu.
-   Tiap bacaan adalah satu baris yang dipisah garis rambut. */
+/* Pustaka edukasi, Ruang Periksa Terang.
+   ─────────────────────────────────────────────────────────────────────────────
+   Tetap modus baca, dan tetap indeks, bukan galeri kartu: judul dan cuplikan
+   yang berjajar dalam satu kolom jauh lebih cepat dipindai daripada enam kotak
+   yang masing-masing menuntut perhatian sendiri.
+
+   Yang berubah, indeksnya kini duduk di dalam satu kartu putih. Jadi ia satu
+   permukaan berisi banyak baris, bukan banyak permukaan. */
 
 .page {
   min-height: 100vh;
@@ -8,7 +13,7 @@
 }
 
 .pad {
-  padding: var(--s6) 0 var(--s9);
+  padding: var(--s7) 0 var(--s9);
 }
 
 .lead {
@@ -25,16 +30,24 @@
 
 .indexHead {
   font-size: var(--t-head);
-  padding-bottom: var(--s3);
-  border-bottom: 2px solid var(--rule-heavy);
+  margin-bottom: var(--s5);
 }
 
 .list {
   list-style: none;
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--s3) var(--s4);
 }
 
 .row {
   border-bottom: 1px solid var(--rule-hair);
+}
+
+.row:last-child {
+  border-bottom: 0;
 }
 
 /* Baris penuh dapat ditekan. Lantai sentuh dijaga lewat padding dan
@@ -47,15 +60,16 @@
   align-items: baseline;
   width: 100%;
   min-height: var(--touch-lg);
-  padding: var(--s4) var(--s2);
+  padding: var(--s4) var(--s3);
   text-align: left;
   color: var(--ink);
   background: transparent;
-  transition: background-color 0.14s ease-out;
+  border-radius: var(--radius);
+  transition: background-color 0.18s ease-out;
 }
 
 .entry:hover {
-  background: var(--field);
+  background: var(--accent-wash);
 }
 
 .entry:active {

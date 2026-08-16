@@ -1,10 +1,23 @@
-/* Kepala dokumen, bukan bilah navigasi mengambang.
-   Ia duduk di atas lembar, dipisahkan garis tebal, dan tidak memakai blur
-   atau bayangan. */
+/* Bilah navigasi mengambang, sejalan dengan kop halaman depan.
+   ─────────────────────────────────────────────────────────────────────────────
+   Sebelumnya berkas ini adalah kepala dokumen: menempel di lembar, dipisahkan
+   garis tebal 2px, tanpa blur dan tanpa bayangan. Ia sengaja dibuat begitu di
+   dunia Basel. Tetapi halaman depan kini membuka dengan bilah yang melayang di
+   atas ground biru pucat, dan pengguna yang masuk lewat halaman itu menemukan
+   dunia yang berbeda satu klik kemudian.
+
+   Yang dipertahankan utuh dari versi sebelumnya: keadaan aktif tetap membawa
+   dua penanda selain warna, yaitu bobot huruf dan bidang latar, sehingga
+   tautan yang sedang dibuka tetap terbaca tanpa membedakan warna. */
 
 .nav {
-  background: var(--sheet);
-  border-bottom: 2px solid var(--rule-heavy);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  padding: var(--s3) 0;
+  background: color-mix(in srgb, var(--sheet) 82%, transparent);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--rule-hair);
 }
 
 .inner {
@@ -15,7 +28,7 @@
   display: flex;
   align-items: center;
   gap: var(--s5);
-  min-height: 64px;
+  min-height: var(--touch);
 }
 
 .brand {
@@ -27,60 +40,61 @@
 
 .links {
   display: flex;
-  align-items: stretch;
-  gap: var(--s5);
+  align-items: center;
+  gap: var(--s1);
   margin-left: auto;
 }
 
-/* Tautan navigasi adalah teks penuh. Keadaan aktif ditandai bobot huruf DAN
-   garis aksen di bawahnya, jadi ia tetap terbaca tanpa membedakan warna. */
+/* Tautan adalah pil, sama seperti .navLink di halaman depan. Huruf besar mono
+   dilepas: nama halaman adalah prosa, dan menyetelnya sebagai label arsip
+   adalah kostum teknis yang persis dikeluhkan sebagai kaku. */
 .link {
   display: inline-flex;
   align-items: center;
   min-height: var(--touch);
-  padding: 0 var(--s1);
-  font-size: var(--t-record);
+  padding: 0 var(--s4);
+  border-radius: var(--radius-pill);
+  font-size: var(--t-body);
   font-weight: 500;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
   color: var(--ink-secondary);
-  border-bottom: 2px solid transparent;
-  margin-bottom: -2px;
-  transition: color 0.14s ease-out, border-color 0.14s ease-out;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 0.18s ease-out, color 0.18s ease-out;
 }
 
 .link:hover {
-  color: var(--ink);
-  border-bottom-color: var(--rule);
+  background: var(--accent-wash);
+  color: var(--accent);
 }
 
+/* Aktif: bidang biru bubuk terisi penuh plus bobot 700. Dua penanda non-warna
+   tetap ada, seperti pada versi bergaris bawah yang digantikannya. */
 .linkActive {
-  color: var(--ink);
+  background: var(--accent-wash);
+  color: var(--accent);
   font-weight: 700;
-  border-bottom-color: var(--accent);
 }
 
 .actions {
   display: flex;
   align-items: center;
-  gap: var(--s3);
-  padding-left: var(--s5);
+  gap: var(--s2);
+  padding-left: var(--s4);
   border-left: 1px solid var(--rule-hair);
 }
 
-/* Penanda portal nakes. Label teks bergaris aksen, bukan lencana berwarna:
-   pengguna harus bisa membacanya, bukan menebaknya dari warna. */
+/* Penanda portal nakes. Sebelumnya label mono huruf besar bergaris kiri; kini
+   pil biru bubuk, sama seperti .panelTag di halaman depan. Ia tetap teks
+   penuh yang terbaca, bukan titik warna. */
 .roleTag {
   display: inline-flex;
   align-items: center;
   padding: var(--s1) var(--s3);
-  font-family: var(--font-mono), ui-monospace, monospace;
+  border-radius: var(--radius-pill);
+  background: var(--accent-wash);
   font-size: var(--t-record);
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-weight: 600;
   color: var(--accent);
-  border-left: 2px solid var(--accent);
   white-space: nowrap;
 }
 
@@ -88,6 +102,27 @@
   .roleTag {
     display: none;
   }
+}
+
+/* Keluar. Diredam warnanya karena ia bukan aksi yang ingin didorong, tetapi
+   tetap memenuhi lantai sentuh 44px dan tetap berupa kata, bukan ikon pintu:
+   pengguna utama produk ini lansia, dan ikon pintu keluar tidak universal. */
+.logout {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+  padding: 0 var(--s3);
+  border-radius: var(--radius-pill);
+  font-size: var(--t-record);
+  font-weight: 600;
+  color: var(--ink-muted);
+  white-space: nowrap;
+  transition: background-color 0.18s ease-out, color 0.18s ease-out;
+}
+
+.logout:hover {
+  background: var(--inset);
+  color: var(--ink);
 }
 
 /* ── Layar sempit ───────────────────────────────────────────────────────────
@@ -98,9 +133,8 @@
 @media (max-width: 860px) {
   .inner {
     flex-wrap: wrap;
-    padding: var(--s3) var(--s4);
+    padding: 0 var(--s4);
     gap: var(--s3);
-    min-height: 0;
   }
 
   .actions {
@@ -113,7 +147,7 @@
     order: 3;
     width: 100%;
     margin-left: 0;
-    gap: var(--s4);
+    gap: var(--s1);
     overflow-x: auto;
     scrollbar-width: none;
     border-top: 1px solid var(--rule-hair);
@@ -125,6 +159,6 @@
   }
 
   .link {
-    white-space: nowrap;
+    padding: 0 var(--s3);
   }
 }

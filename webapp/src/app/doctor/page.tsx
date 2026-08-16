@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { api, PatientDetail } from '@/lib/api';
+import { normalizeBiomarkers } from '@/lib/biomarkers';
 import DoctorNav from '@/components/DoctorNav';
 import GeoBreakdown from '@/components/GeoBreakdown';
 import { useI18n, translateServerLabel, dateLocale } from '@/lib/i18n';
@@ -165,6 +166,12 @@ export default function DoctorPortal() {
     : patients;
 
   const session = activePatient?.sessions[activeSessionIndex];
+  /* Endpoint pasien mengurai hasil tes menjadi field datar, bukan
+     rawBiomarkers. Penormal menerima kedua bentuk, jadi angka di portal
+     ini akhirnya terisi untuk pasien seed; sebelumnya ketiga barisnya
+     dibaca lewat `as any` sehingga selalu menampilkan tanda hubung tanpa
+     satu pun galat yang terlihat. */
+  const nb = normalizeBiomarkers(session);
 
   return (
     <div className={styles.page}>
@@ -399,27 +406,27 @@ export default function DoctorPortal() {
                             </thead>
                             <tbody>
                               <tr>
-                                <th scope="row">Tremor Amplitude</th>
+                                <th scope="row">Frekuensi Tremor</th>
                                 <td className="num">
-                                  {(session.tremorResult as any)?.amplitudeMillimeter || '-'} mm
+                                  {nb.tremorHz === null ? '-' : `${nb.tremorHz.toFixed(2)} Hz`}
                                 </td>
                               </tr>
                               <tr>
                                 <th scope="row">Finger Tapping Rate</th>
                                 <td className="num">
-                                  {(session.fingerTappingResult as any)?.tapRatePerSecond || '-'} tap/s
+                                  {nb.tapRate === null ? '-' : nb.tapRate.toFixed(2)} tap/s
                                 </td>
                               </tr>
                               <tr>
                                 <th scope="row">Gait Symmetry</th>
                                 <td className="num">
-                                  {(session.gaitResult as any)?.symmetryPercent || '-'}%
+                                  {nb.symmetryPercent === null ? '-' : nb.symmetryPercent.toFixed(1)}%
                                 </td>
                               </tr>
                               <tr>
                                 <th scope="row">Postural Sway Area</th>
                                 <td className="num">
-                                  {(session.posturalResult as any)?.swayAreaCm2 || '-'} cm²
+                                  {nb.swayAreaCm2 === null ? '-' : nb.swayAreaCm2.toFixed(2)} cm²
                                 </td>
                               </tr>
                             </tbody>

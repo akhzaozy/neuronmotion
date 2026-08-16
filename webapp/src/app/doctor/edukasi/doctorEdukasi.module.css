@@ -7,7 +7,7 @@
 }
 
 .pad {
-  padding: var(--s6) 0 var(--s9);
+  padding: var(--s7) 0 var(--s9);
 }
 
 .lead {
@@ -21,8 +21,7 @@
 }
 
 .sectionHead {
-  padding-bottom: var(--s3);
-  border-bottom: 2px solid var(--rule-heavy);
+  margin-bottom: var(--s5);
 }
 
 .sectionTitle {
@@ -37,6 +36,11 @@
 .entries {
   display: flex;
   flex-direction: column;
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--s2) var(--s5);
 }
 
 .entry {
@@ -46,6 +50,10 @@
   gap: var(--s4);
   padding: var(--s4) 0;
   border-bottom: 1px solid var(--rule-hair);
+}
+
+.entry:last-child {
+  border-bottom: 0;
 }
 
 .entryOpen {

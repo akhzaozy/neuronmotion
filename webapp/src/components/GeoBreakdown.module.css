@@ -12,8 +12,7 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: var(--s4);
-  padding-bottom: var(--s3);
-  border-bottom: 2px solid var(--rule-heavy);
+  margin-bottom: var(--s5);
 }
 
 .title {
@@ -46,9 +45,9 @@
   color: var(--ink-secondary);
   background: transparent;
   border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  transition: background-color 0.14s ease-out, border-color 0.14s ease-out,
-    color 0.14s ease-out;
+  border-radius: var(--radius-pill);
+  transition: background-color 0.18s ease-out, border-color 0.18s ease-out,
+    color 0.18s ease-out;
 }
 
 .tab:hover {
@@ -57,16 +56,24 @@
   color: var(--ink);
 }
 
+/* Terpilih ditandai bidang biru penuh DAN bobot 700, bukan warna saja.
+   Tokennya --cta-field, bukan --accent: --accent dibalik terangnya di tema
+   gelap menjadi biru muda, dan teks putih di atasnya hanya 1,98:1. Pasangan
+   --cta-field dan --cta-ink justru tetap gelap-terang di kedua tema. */
 .tabActive {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: var(--sheet);
+  background: var(--cta-field);
+  border-color: var(--cta-field);
+  color: var(--cta-ink);
   font-weight: 700;
 }
 
 .tableScroll {
   overflow-x: auto;
-  margin-top: var(--s4);
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--s3) var(--s5) var(--s4);
 }
 
 .name {
@@ -78,8 +85,10 @@
    jadi tidak ada informasi yang hanya dibawa warna. */
 .bar {
   display: flex;
+  overflow: hidden;
   min-width: 120px;
   height: 8px;
+  border-radius: var(--radius-pill);
   background: var(--inset);
 }
 

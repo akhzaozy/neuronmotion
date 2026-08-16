@@ -1,5 +1,24 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
+/**
+ * Nama peristiwa yang ditembakkan ketika server menolak token.
+ *
+ * Lapisan ini sengaja tidak memanggil konteks autentikasi secara langsung:
+ * berkas ini bukan komponen React dan tidak boleh menjadi komponen React
+ * hanya demi keperluan ini. Yang mendengarkan adalah AuthProvider, yang
+ * memang sudah memegang wewenang mengeluarkan pengguna.
+ */
+export const SESSION_EXPIRED_EVENT = 'nm:session-expired';
+
+/** Ditandai supaya pemanggil bisa membedakannya dari galat biasa. */
+export class SessionExpiredError extends Error {
+  readonly sessionExpired = true;
+  constructor(message: string) {
+    super(message);
+    this.name = 'SessionExpiredError';
+  }
+}
+
 async function request<T>(method: string, path: string, body?: object, token?: string): Promise<T> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -10,7 +29,24 @@ async function request<T>(method: string, path: string, body?: object, token?: s
     body: body ? JSON.stringify(body) : undefined,
   });
 
-  const data = await res.json();
+  const data = await res.json().catch(() => ({}));
+
+  /* Token ditolak. Sebelumnya keadaan ini jatuh ke Error generik yang sama
+     dengan kegagalan jaringan, sehingga halaman menampilkan "gagal memuat"
+     beserta tombol Coba lagi yang tidak akan pernah berhasil, sementara
+     portal nakes menelannya diam-diam dan terus menjajak tiap 30 detik.
+
+     Permintaan tanpa token dikecualikan: masuk dengan kata sandi keliru juga
+     menjawab 401, dan mengeluarkan pengguna yang memang belum masuk hanya
+     akan menampilkan pemberitahuan sesi berakhir di halaman masuk itu
+     sendiri. */
+  if (res.status === 401 && token) {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent(SESSION_EXPIRED_EVENT));
+    }
+    throw new SessionExpiredError(data.error || 'Sesi berakhir');
+  }
+
   if (!res.ok) throw new Error(data.error || 'API error');
   return data as T;
 }
@@ -172,13 +208,51 @@ export interface Session {
   doctorNote?: string;
   questionnaireScore?: number | null;
   aiAnalysis?: AiAnalysis | null;
+  /* Biomarker mentah, dalam DUA bentuk yang sama-sama sah.
+     ─────────────────────────────────────────────────────────────────────────
+     Ada dua penulis ke kolom-kolom ini dan keduanya memakai nama berbeda:
+
+       analisator live (server/services/biomarkers.js)
+         gait     -> symmetryPercent, strideSymmetryIndex, cadencePerMin
+         postural -> swayAreaCm2, swayAreaNorm, swayLengthNorm
+       data seed (prisma/seed.js)
+         gait     -> symmetryIndex, cadencePerMin
+         postural -> swayAreaNorm, swayLengthNorm
+
+     Karena semuanya opsional, TypeScript tidak pernah mengeluh, sehingga
+     halaman yang hanya membaca bentuk pertama diam-diam menampilkan kosong
+     untuk seluruh pasien seed. Itu terjadi di riwayat, di laporan cetak, dan
+     di portal nakes sekaligus.
+
+     Tipe di sini memuat kedua bentuk supaya keduanya terbaca, dan
+     `lib/biomarkers.ts` yang bertugas menyatukannya menjadi satu satuan.
+     Jangan membaca field ini langsung dari komponen; pakai penormal itu. */
   rawBiomarkers?: {
-    tremor?: { dominantFrequencyHz?: number } | null;
-    fingerTapping?: { tapRatePerSecond?: number } | null;
-    gait?: { symmetryPercent?: number; cadencePerMin?: number } | null;
-    armSwing?: { asymmetryPercent?: number } | null;
-    rom?: { romDeg?: number } | null;
-    posturalStability?: { swayAreaCm2?: number } | null;
+    tremor?: { dominantFrequencyHz?: number; amplitude?: number; category?: string; score?: number } | null;
+    fingerTapping?: { tapRatePerSecond?: number; decrementPercent?: number; category?: string; score?: number } | null;
+    gait?: {
+      symmetryPercent?: number;
+      strideSymmetryIndex?: number;
+      symmetryIndex?: number;
+      cadencePerMin?: number;
+      category?: string;
+      score?: number;
+    } | null;
+    armSwing?: {
+      asymmetryPercent?: number;
+      leftAmplitudeDeg?: number;
+      rightAmplitudeDeg?: number;
+      category?: string;
+      score?: number;
+    } | null;
+    rom?: { romDeg?: number; maxAngleDeg?: number; minAngleDeg?: number; category?: string; score?: number } | null;
+    posturalStability?: {
+      swayAreaCm2?: number;
+      swayAreaNorm?: number;
+      swayLengthNorm?: number;
+      category?: string;
+      score?: number;
+    } | null;
   };
 }
 
