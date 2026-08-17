@@ -2,6 +2,17 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import * as Dialog from '@radix-ui/react-dialog';
+import {
+  User,
+  Mail,
+  MapPin,
+  Calendar,
+  ShieldCheck,
+  Check,
+  AlertCircle,
+  LogOut,
+  Building2,
+} from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { api, UserProfile } from '@/lib/api';
 import AppNav from '@/components/AppNav';
@@ -154,220 +165,258 @@ export default function ProfilPage() {
 
   const age = calcAge(profile.dateOfBirth);
 
+  const locationText = [profile.city, profile.state, profile.countryName]
+    .filter(Boolean).join(', ') || t('common.notFilled');
+
   return (
     <div className={styles.page}>
       <AppNav />
 
       <main className="sheet" id="main">
         <div className={styles.pad}>
-          <header className="docHead">
-            <div className="docHead__meta">
-              <span data-no-translate={isDoctor ? '' : undefined}>
-                {isDoctor
-                  ? `${profile.specialization || t('prof.doctorNakes')}${profile.institution ? ` · ${profile.institution}` : ''}`
-                  : t('dash.registeredPatient')}
+          {/* ── Header Halaman ────────────────────────────────────────────── */}
+          <header className={styles.header}>
+            <div className={styles.metaPillGroup}>
+              <span className={styles.metaChip}>
+                {isDoctor ? (
+                  <Building2 size={14} color="var(--accent)" />
+                ) : (
+                  <User size={14} color="var(--accent)" />
+                )}
+                {isDoctor ? (profile.specialization || t('prof.doctorNakes')) : t('dash.registeredPatient')}
               </span>
-              <span data-no-translate="">{profile.email}</span>
+              <span className={styles.metaChip}>
+                <ShieldCheck size={14} color="var(--accent)" />
+                {t('prof.privacyPdp')}
+              </span>
             </div>
-            <h1 data-no-translate="">{profile.name}</h1>
+            <h1 className={styles.title}>{t('prof.title')}</h1>
+            <p className={styles.lead}>{t('prof.lead')}</p>
           </header>
 
+          {/* ── Kartu Hero Profil ─────────────────────────────────────────── */}
+          <div className={styles.profileHeroCard}>
+            <div className={styles.avatarWrap}>
+              {isDoctor ? <Building2 size={32} /> : <User size={32} />}
+            </div>
+            <div className={styles.heroDetails}>
+              <h2 className={styles.heroName} data-no-translate="">{profile.name}</h2>
+              <div className={styles.heroMeta}>
+                <span className={styles.heroMetaItem} data-no-translate="">
+                  <Mail size={15} color="var(--accent)" />
+                  {profile.email}
+                </span>
+                <span className={styles.heroMetaItem} data-no-translate="">
+                  <MapPin size={15} color="var(--accent)" />
+                  {locationText}
+                </span>
+              </div>
+            </div>
+          </div>
+
           {message && (
-            <p className={styles.successMsg} role="status">{message}</p>
+            <p className={styles.successMsg} role="status">
+              <Check size={18} />
+              <span>{message}</span>
+            </p>
           )}
           {error && (
-            <p className={styles.errorMsg} role="alert">{error}</p>
+            <p className={styles.errorMsg} role="alert">
+              <AlertCircle size={18} />
+              <span>{error}</span>
+            </p>
           )}
 
-          {/* ── Data pribadi ──────────────────────────────────────────────── */}
+          {/* ── Data Pribadi ──────────────────────────────────────────────── */}
           <section className={styles.section}>
-            <div className={styles.sectionHead}>
-              <h2 className={styles.sectionTitle}>{t('prof.personalInfo')}</h2>
-              {!editing && (
-                <button className="btn" onClick={() => setEditing(true)}>{t('common.edit')}</button>
+            <div className={styles.sectionCard}>
+              <div className={styles.sectionHead}>
+                <h2 className={styles.sectionTitle}>{t('prof.personalInfo')}</h2>
+                {!editing && (
+                  <button className="btn" onClick={() => setEditing(true)}>{t('common.edit')}</button>
+                )}
+              </div>
+
+              {!editing ? (
+                <dl className={styles.infoList}>
+                  <InfoRow label={t('prof.name')}>
+                    <span data-no-translate="">{profile.name}</span>
+                  </InfoRow>
+                  {!isDoctor && (
+                    <InfoRow label={t('prof.dob')}>
+                      {formatDob(profile.dateOfBirth, lang, t('common.notFilled'))}
+                      {age !== null ? ` (${age} ${t('common.years')})` : ''}
+                    </InfoRow>
+                  )}
+                  <InfoRow label={t('prof.gender')}>
+                    {profile.gender === 'M' ? t('prof.male') : profile.gender === 'F' ? t('prof.female') : t('common.notFilled')}
+                  </InfoRow>
+                  <InfoRow label={t('prof.region')}>
+                    <span data-no-translate="">{locationText}</span>
+                  </InfoRow>
+                  {isDoctor && (
+                    <>
+                      <InfoRow label={t('prof.profession')}>
+                        {profile.specialization || t('common.notFilled')}
+                      </InfoRow>
+                      <InfoRow label={t('prof.institution')}>
+                        <span data-no-translate="">{profile.institution || t('common.notFilled')}</span>
+                      </InfoRow>
+                    </>
+                  )}
+                </dl>
+              ) : (
+                <div className={styles.form}>
+                  <div className={styles.formGroup}>
+                    <label className="label" htmlFor="prof-name">{t('prof.name')}</label>
+                    <input id="prof-name" className="input" value={name} onChange={e => setName(e.target.value)} />
+                  </div>
+                  {!isDoctor && (
+                    <>
+                      <div className={styles.formGroup}>
+                        <label className="label" htmlFor="prof-gender">{t('prof.gender')}</label>
+                        <select id="prof-gender" className="input" value={gender} onChange={e => setGender(e.target.value)}>
+                          <option value="">{t('common.notFilled')}</option>
+                          <option value="M">{t('prof.male')}</option>
+                          <option value="F">{t('prof.female')}</option>
+                        </select>
+                      </div>
+                      <div className={styles.formGroup}>
+                        <label className="label" htmlFor="prof-dob">{t('prof.dob')}</label>
+                        <input id="prof-dob" type="date" className="input" value={dateOfBirth} onChange={e => setDateOfBirth(e.target.value)} />
+                      </div>
+                    </>
+                  )}
+                  {isDoctor && (
+                    <>
+                      <div className={styles.formGroup}>
+                        <label className="label" htmlFor="prof-specialization">{t('prof.profession')}</label>
+                        <select id="prof-specialization" className="input" value={specialization} onChange={e => setSpecialization(e.target.value)}>
+                          <option value="">{t('common.notFilled')}</option>
+                          {SPECIALIZATIONS.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </div>
+                      <div className={styles.formGroup}>
+                        <label className="label" htmlFor="prof-institution">{t('prof.institution')}</label>
+                        <input id="prof-institution" className="input" value={institution} onChange={e => setInstitution(e.target.value)} />
+                      </div>
+                    </>
+                  )}
+
+                  <LocationFields
+                    value={location}
+                    onChange={setLocation}
+                    title={isDoctor ? t('loc.practice') : t('loc.residence')}
+                  />
+
+                  <div className={styles.actionRow}>
+                    <button className="btn btn--primary" onClick={saveProfile} disabled={busy}>
+                      {busy ? t('common.loading') : t('prof.saveChanges')}
+                    </button>
+                    <button className="btn" onClick={() => setEditing(false)} disabled={busy}>
+                      {t('common.cancel')}
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
-
-            {!editing ? (
-              <dl className={styles.infoList}>
-                <InfoRow label={t('prof.name')}>
-                  <span data-no-translate="">{profile.name}</span>
-                </InfoRow>
-                {!isDoctor && (
-                  <InfoRow label={t('prof.dob')}>
-                    {formatDob(profile.dateOfBirth, lang, t('common.notFilled'))}
-                    {age !== null ? ` (${age} ${t('common.years')})` : ''}
-                  </InfoRow>
-                )}
-                <InfoRow label={t('prof.gender')}>
-                  {profile.gender === 'M' ? t('prof.male') : profile.gender === 'F' ? t('prof.female') : t('common.notFilled')}
-                </InfoRow>
-                <InfoRow label={t('prof.region')}>
-                  <span data-no-translate="">
-                    {[profile.city, profile.state, profile.countryName].filter(Boolean).join(', ') || t('common.notFilled')}
-                  </span>
-                </InfoRow>
-                {isDoctor && (
-                  <>
-                    <InfoRow label={t('prof.profession')}>
-                      {profile.specialization || t('common.notFilled')}
-                    </InfoRow>
-                    <InfoRow label={t('prof.institution')}>
-                      <span data-no-translate="">{profile.institution || t('common.notFilled')}</span>
-                    </InfoRow>
-                  </>
-                )}
-              </dl>
-            ) : (
-              <div className={styles.form}>
-                <div className={styles.formGroup}>
-                  <label className="label" htmlFor="prof-name">{t('prof.fullName')}</label>
-                  <input id="prof-name" className="input" value={name} onChange={e => setName(e.target.value)} />
-                </div>
-                {!isDoctor && (
-                  <div className={styles.formGroup}>
-                    <label className="label" htmlFor="prof-dob">{t('prof.dob')}</label>
-                    <input
-                      id="prof-dob"
-                      type="date"
-                      className="input"
-                      value={dateOfBirth}
-                      onChange={e => setDateOfBirth(e.target.value)}
-                      max={new Date().toISOString().split('T')[0]}
-                    />
-                  </div>
-                )}
-                <div className={styles.formGroup}>
-                  <label className="label" htmlFor="prof-gender">{t('prof.gender')}</label>
-                  <select id="prof-gender" className="input" value={gender} onChange={e => setGender(e.target.value)}>
-                    <option value="">{t('prof.preferNotSay')}</option>
-                    <option value="M">{t('prof.male')}</option>
-                    <option value="F">{t('prof.female')}</option>
-                  </select>
-                </div>
-                {isDoctor && (
-                  <>
-                    <div className={styles.formGroup}>
-                      <label className="label" htmlFor="prof-specialization">{t('prof.profession')}</label>
-                      <select id="prof-specialization" className="input" value={specialization} onChange={e => setSpecialization(e.target.value)}>
-                        <option value="">{t('prof.selectProfession')}</option>
-                        {SPECIALIZATIONS.map(s => <option key={s} value={s}>{s}</option>)}
-                      </select>
-                    </div>
-                    <div className={styles.formGroup}>
-                      <label className="label" htmlFor="prof-institution">{t('prof.institutionLabel')}</label>
-                      <input id="prof-institution" className="input" value={institution} onChange={e => setInstitution(e.target.value)} />
-                    </div>
-                  </>
-                )}
-
-                <LocationFields
-                  value={location}
-                  onChange={setLocation}
-                  title={isDoctor ? t('loc.practice') : t('loc.residence')}
-                />
-
-                <div className={styles.actionRow}>
-                  <button className="btn btn--primary" onClick={saveProfile} disabled={busy}>
-                    {busy ? t('common.loading') : t('prof.saveChanges')}
-                  </button>
-                  <button className="btn" onClick={() => setEditing(false)} disabled={busy}>
-                    {t('common.cancel')}
-                  </button>
-                </div>
-              </div>
-            )}
           </section>
 
           {/* ── Keamanan ──────────────────────────────────────────────────── */}
           <section className={styles.section}>
-            <div className={styles.sectionHead}>
-              <h2 className={styles.sectionTitle}>{t('prof.security')}</h2>
-              {!showPwForm && (
-                <button className="btn" onClick={() => setShowPwForm(true)}>{t('prof.changePassword')}</button>
-              )}
-            </div>
+            <div className={styles.sectionCard}>
+              <div className={styles.sectionHead}>
+                <h2 className={styles.sectionTitle}>{t('prof.security')}</h2>
+                {!showPwForm && (
+                  <button className="btn" onClick={() => setShowPwForm(true)}>{t('prof.changePassword')}</button>
+                )}
+              </div>
 
-            {!showPwForm ? (
-              <p className={styles.note}>{t('prof.securityNote')}</p>
-            ) : (
-              <div className={styles.form}>
-                <div className={styles.formGroup}>
-                  <label className="label" htmlFor="prof-current-pw">{t('prof.currentPassword')}</label>
-                  <input
-                    id="prof-current-pw"
-                    type={showPw ? 'text' : 'password'}
-                    className="input"
-                    value={currentPassword}
-                    onChange={e => setCurrentPassword(e.target.value)}
-                  />
-                </div>
-                <div className={styles.formGroup}>
-                  <div className={styles.labelRow}>
-                    <label className="label" htmlFor="prof-new-pw">{t('prof.newPassword')}</label>
-                    {/* Pengalih kata sandi memakai kata, bukan ikon mata, dan
-                        tetap memenuhi lantai sasaran sentuh. */}
+              {!showPwForm ? (
+                <p className={styles.note}>{t('prof.securityNote')}</p>
+              ) : (
+                <div className={styles.form}>
+                  <div className={styles.formGroup}>
+                    <label className="label" htmlFor="prof-current-pw">{t('prof.currentPassword')}</label>
+                    <input
+                      id="prof-current-pw"
+                      type={showPw ? 'text' : 'password'}
+                      className="input"
+                      value={currentPassword}
+                      onChange={e => setCurrentPassword(e.target.value)}
+                    />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <div className={styles.labelRow}>
+                      <label className="label" htmlFor="prof-new-pw">{t('prof.newPassword')}</label>
+                      <button
+                        type="button"
+                        className={styles.reveal}
+                        onClick={() => setShowPw(v => !v)}
+                        aria-pressed={showPw}
+                      >
+                        {showPw ? t('prof.hidePassword') : t('prof.showPassword')}
+                      </button>
+                    </div>
+                    <input
+                      id="prof-new-pw"
+                      type={showPw ? 'text' : 'password'}
+                      className="input"
+                      value={newPassword}
+                      onChange={e => setNewPassword(e.target.value)}
+                      minLength={6}
+                    />
+                  </div>
+                  <div className={styles.actionRow}>
                     <button
-                      type="button"
-                      className={styles.reveal}
-                      onClick={() => setShowPw(v => !v)}
-                      aria-pressed={showPw}
+                      className="btn btn--primary"
+                      onClick={savePassword}
+                      disabled={busy || !currentPassword || newPassword.length < 6}
                     >
-                      {showPw ? t('prof.hidePassword') : t('prof.showPassword')}
+                      {busy ? t('common.loading') : t('prof.savePassword')}
+                    </button>
+                    <button
+                      className="btn"
+                      onClick={() => { setShowPwForm(false); setCurrentPassword(''); setNewPassword(''); }}
+                      disabled={busy}
+                    >
+                      {t('common.cancel')}
                     </button>
                   </div>
-                  <input
-                    id="prof-new-pw"
-                    type={showPw ? 'text' : 'password'}
-                    className="input"
-                    value={newPassword}
-                    onChange={e => setNewPassword(e.target.value)}
-                    minLength={6}
-                  />
                 </div>
-                <div className={styles.actionRow}>
-                  <button
-                    className="btn btn--primary"
-                    onClick={savePassword}
-                    disabled={busy || !currentPassword || newPassword.length < 6}
-                  >
-                    {busy ? t('common.loading') : t('prof.savePassword')}
-                  </button>
-                  <button
-                    className="btn"
-                    onClick={() => { setShowPwForm(false); setCurrentPassword(''); setNewPassword(''); }}
-                    disabled={busy}
-                  >
-                    {t('common.cancel')}
-                  </button>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </section>
 
           {/* ── Privasi dan data ──────────────────────────────────────────── */}
           <section className={styles.section}>
-            <div className={styles.sectionHead}>
-              <h2 className={styles.sectionTitle}>{t('prof.privacyData')}</h2>
-            </div>
-            <p className={styles.note}>{t('prof.privacyNote')}</p>
-            <div className={styles.actionRow}>
-              {!isDoctor && (
-                <button className="btn btn--danger" onClick={() => setConfirmAction('history')} disabled={busy}>
-                  {t('prof.deleteHistory')}
+            <div className={styles.sectionCard}>
+              <div className={styles.sectionHead}>
+                <h2 className={styles.sectionTitle}>{t('prof.privacyData')}</h2>
+              </div>
+              <p className={styles.note}>{t('prof.privacyNote')}</p>
+              <div className={styles.actionRow}>
+                {!isDoctor && (
+                  <button className="btn btn--danger" onClick={() => setConfirmAction('history')} disabled={busy}>
+                    {t('prof.deleteHistory')}
+                  </button>
+                )}
+                <button className="btn btn--danger" onClick={() => setConfirmAction('account')} disabled={busy}>
+                  {t('prof.deleteMyAccount')}
                 </button>
-              )}
-              <button className="btn btn--danger" onClick={() => setConfirmAction('account')} disabled={busy}>
-                {t('prof.deleteMyAccount')}
-              </button>
+              </div>
             </div>
           </section>
 
-          {/* Keluar adalah tindakan biasa yang bisa dibatalkan dengan masuk
-              kembali, jadi ia tombol netral, bukan bidang merah. */}
+          {/* ── Tombol Keluar ─────────────────────────────────────────────── */}
           <div className={styles.logoutRow}>
-            <button className="btn btn--block" onClick={() => { logout(); router.push('/login'); }}>
-              {t('common.logout')}
+            <button
+              className="btn btn--block"
+              onClick={() => { logout(); router.push('/login'); }}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+            >
+              <LogOut size={16} />
+              <span>{t('common.logout')}</span>
             </button>
           </div>
         </div>

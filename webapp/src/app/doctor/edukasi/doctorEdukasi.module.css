@@ -1,5 +1,7 @@
-/* Edukasi nakes. Artikel disusun sebagai daftar arsip bergaris, bukan grid
-   kartu, karena yang dicari pembaca di sini adalah judul dan tagnya. */
+/* ═══════════════════════════════════════════════════════════════════════════
+   EDUKASI & REFERENSI KLINIS TENAGA KESEHATAN
+   Tampilan berkelas, bersih, modern, dan presisi di tengah layar.
+   ══════════════════════════════════════════════════════════════════════════ */
 
 .page {
   min-height: 100vh;
@@ -8,13 +10,57 @@
 
 .pad {
   padding: var(--s7) 0 var(--s9);
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+/* ── Header Halaman ──────────────────────────────────────────────────────── */
+
+.header {
+  margin-bottom: var(--s7);
+  padding-bottom: var(--s5);
+  border-bottom: 1px solid var(--rule-hair);
+}
+
+.metaPillGroup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2);
+  margin-bottom: var(--s3);
+}
+
+.metaChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-pill);
+  font-size: var(--t-caption);
+  font-weight: 600;
+  color: var(--ink-secondary);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--t-display);
+  font-weight: 750;
+  color: var(--ink);
+  letter-spacing: -0.025em;
+  line-height: 1.15;
 }
 
 .lead {
-  margin-top: var(--s3);
+  margin: var(--s2) 0 0;
   font-size: var(--t-lead);
   color: var(--ink-secondary);
+  max-width: 72ch;
+  line-height: 1.5;
 }
+
+/* ── Bagian Materi ───────────────────────────────────────────────────────── */
 
 .section {
   margin-top: var(--s8);
@@ -25,114 +71,200 @@
 }
 
 .sectionTitle {
+  margin: 0;
   font-size: var(--t-head);
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.015em;
 }
 
 .sectionDesc {
-  margin-top: var(--s2);
+  margin: var(--s1) 0 0;
+  font-size: var(--t-body);
   color: var(--ink-secondary);
 }
 
-.entries {
-  display: flex;
-  flex-direction: column;
+/* ── Grid Kartu Artikel ─────────────────────────────────────────────────── */
+
+.articleGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  gap: var(--s4);
+}
+
+@media (max-width: 640px) {
+  .articleGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.articleCard {
   background: var(--field);
   border: 1px solid var(--rule-hair);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
-  padding: var(--s2) var(--s5);
-}
-
-.entry {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--s4);
-  padding: var(--s4) 0;
-  border-bottom: 1px solid var(--rule-hair);
-}
-
-.entry:last-child {
-  border-bottom: 0;
-}
-
-.entryOpen {
-  flex: 1 1 420px;
+  padding: var(--s5);
   display: flex;
   flex-direction: column;
-  gap: var(--s2);
-  min-width: 0;
-  min-height: var(--touch);
-  padding: 0;
-  text-align: left;
-  background: transparent;
-  border: 0;
-  border-left: 3px solid transparent;
-  transition: border-color 0.14s ease-out, color 0.14s ease-out;
+  justify-content: space-between;
+  gap: var(--s4);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.2s ease-out;
 }
 
-.entryOpen:hover {
-  padding-left: var(--s3);
-  border-left-color: var(--accent);
+.articleCard:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-raised);
+  border-color: var(--accent-soft);
 }
 
-.entryHead {
+.cardHead {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--s2) var(--s5);
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  margin-bottom: var(--s2);
 }
 
-.entryTime {
+.tagBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: var(--accent-wash);
+  color: var(--accent);
+  border-radius: var(--radius-pill);
+  font-size: var(--t-caption);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.timeBadge {
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: var(--t-record);
-  letter-spacing: 0.04em;
+  font-size: var(--t-caption);
   color: var(--ink-muted);
 }
 
-.entryTitle {
-  font-size: var(--t-lead);
+.cardMain {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  flex: 1;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 1.125rem;
   font-weight: 700;
+  color: var(--ink);
+  line-height: 1.35;
   letter-spacing: -0.01em;
 }
 
-.entryExcerpt {
+.cardExcerpt {
+  margin: 0;
+  font-size: var(--t-record);
   color: var(--ink-secondary);
-  max-width: 68ch;
+  line-height: 1.55;
 }
 
-/* ── Pembaca artikel ─────────────────────────────────────────────────────── */
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  padding-top: var(--s3);
+  border-top: 1px solid var(--rule-hair);
+}
+
+.readBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--t-record);
+  font-weight: 600;
+  color: var(--accent);
+  background: transparent;
+  border: 0;
+  padding: 4px 0;
+  cursor: pointer;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.readBtn:hover {
+  color: var(--accent-deep);
+  transform: translateX(3px);
+}
+
+.shareBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: var(--t-caption);
+  font-weight: 600;
+  border-radius: var(--radius-pill);
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  color: var(--ink-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.shareBtn:hover {
+  background: var(--accent-wash);
+  color: var(--accent);
+  border-color: var(--accent-soft);
+}
+
+.shareBtnActive {
+  background: var(--level-low-wash);
+  color: var(--level-low);
+  border-color: var(--level-low);
+}
+
+/* ── Modal Pembaca Artikel ────────────────────────────────────────────────── */
 
 .readerTitle {
+  margin: 0 0 var(--s2);
   font-size: var(--t-head);
-  font-weight: 700;
-  line-height: 1.15;
+  font-weight: 750;
+  color: var(--ink);
   letter-spacing: -0.02em;
 }
 
 .readerMeta {
-  margin-top: var(--s2);
-  padding-bottom: var(--s4);
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  margin-bottom: var(--s4);
+  padding-bottom: var(--s3);
   border-bottom: 1px solid var(--rule-hair);
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: var(--t-record);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
   color: var(--ink-muted);
 }
 
 .readerBody {
-  padding: var(--s5) 0;
+  font-size: var(--t-body);
+  color: var(--ink);
+  line-height: 1.65;
+  max-height: 55vh;
+  overflow-y: auto;
+  padding-right: var(--s2);
 }
 
 .readerBody h3 {
-  margin-top: var(--s5);
-  margin-bottom: var(--s2);
+  margin: var(--s5) 0 var(--s2);
   font-size: var(--t-lead);
+  font-weight: 700;
+  color: var(--ink);
 }
 
 .readerBody p {
-  margin-bottom: var(--s3);
+  margin: 0 0 var(--s3);
   color: var(--ink-secondary);
 }
 
@@ -145,8 +277,6 @@
   margin-bottom: var(--s2);
 }
 
-/* Blok penekanan: garis kiri tebal di atas ground inset, bukan latar penuh. */
-/* Tampilannya datang dari .note di globals.css. */
 .disclaimer {
-  margin-bottom: var(--s5);
+  margin: var(--s5) 0;
 }

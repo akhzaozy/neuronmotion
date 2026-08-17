@@ -375,6 +375,12 @@ const DICT: Record<string, { id: string; en: string }> = {
   'scr.allowCamera': { id: 'Izinkan Akses Kamera', en: 'Allow Camera Access' },
 
   // Profil
+  'prof.title': { id: 'Profil Saya', en: 'My Profile' },
+  'prof.lead': {
+    id: 'Kelola informasi identitas pribadi, domisili, dan preferensi privasi akun Anda.',
+    en: 'Manage your personal identity, residence, and account privacy preferences.',
+  },
+  'prof.privacyPdp': { id: 'Privasi PDP', en: 'PDP Privacy' },
   'prof.loading': { id: 'Memuat profil...', en: 'Loading profile...' },
   'prof.loadFailed': { id: 'Gagal memuat profil.', en: 'Failed to load profile.' },
   'prof.saved': { id: 'Data pribadi berhasil diperbarui.', en: 'Your personal details have been updated.' },

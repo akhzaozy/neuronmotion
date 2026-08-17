@@ -1,5 +1,7 @@
-/* Bantuan nakes. Berkas ini dibuat baru supaya halaman dokter tidak lagi
-   menumpang modul milik rute pasien; keduanya kini berdiri sendiri. */
+/* ═══════════════════════════════════════════════════════════════════════════
+   PUSAT BANTUAN & PANDUAN TENAGA KESEHATAN (DOCTOR PORTAL)
+   Layout terpusat (dead-centered), bersih, modern, dan estetik.
+   ══════════════════════════════════════════════════════════════════════════ */
 
 .page {
   min-height: 100vh;
@@ -8,135 +10,394 @@
 
 .pad {
   padding: var(--s7) 0 var(--s9);
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+/* ── Header Halaman ──────────────────────────────────────────────────────── */
+
+.header {
+  margin-bottom: var(--s7);
+  padding-bottom: var(--s5);
+  border-bottom: 1px solid var(--rule-hair);
+}
+
+.metaPillGroup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2);
+  margin-bottom: var(--s3);
+}
+
+.metaChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-pill);
+  font-size: var(--t-caption);
+  font-weight: 600;
+  color: var(--ink-secondary);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--t-display);
+  font-weight: 750;
+  color: var(--ink);
+  letter-spacing: -0.025em;
+  line-height: 1.15;
 }
 
 .lead {
-  margin-top: var(--s3);
+  margin: var(--s2) 0 0;
   font-size: var(--t-lead);
   color: var(--ink-secondary);
+  max-width: 72ch;
+  line-height: 1.5;
 }
+
+/* ── Disclaimer Medis Klinis ─────────────────────────────────────────────── */
+
+.disclaimerCard {
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  padding: var(--s5) var(--s6);
+  margin-bottom: var(--s7);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s4);
+}
+
+.disclaimerIconWrap {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-lg);
+  background: var(--accent-wash);
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+}
+
+.disclaimerContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.disclaimerTitle {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 750;
+  color: var(--ink);
+}
+
+.disclaimerText {
+  margin: 0;
+  font-size: var(--t-record);
+  line-height: 1.6;
+  color: var(--ink-secondary);
+}
+
+/* ── Bagian Seksi ────────────────────────────────────────────────────────── */
 
 .section {
   margin-top: var(--s8);
 }
 
-.sectionTitle {
-  font-size: var(--t-head);
+.sectionHead {
   margin-bottom: var(--s5);
 }
 
-/* ── Panduan berlangkah ──────────────────────────────────────────────────── */
-
-.steps {
-  display: flex;
-  flex-direction: column;
-  background: var(--field);
-  border: 1px solid var(--rule-hair);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
-  padding: var(--s2) var(--s5);
-}
-
-.step {
-  display: grid;
-  grid-template-columns: var(--s7) minmax(0, 1fr);
-  gap: var(--s4);
-  padding: var(--s5) 0;
-  border-bottom: 1px solid var(--rule-hair);
-}
-
-.step:last-child {
-  border-bottom: 0;
-}
-
-@media (max-width: 560px) {
-  .step {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--s2);
-  }
-}
-
-/* Nomor langkah adalah satu-satunya tempat aksen tampil di halaman ini, dan
-   ia penanda struktur, bukan peringatan. */
-.stepNum {
-  font-family: var(--font-mono), ui-monospace, monospace;
+.sectionTitle {
+  margin: 0;
   font-size: var(--t-head);
-  font-weight: 500;
-  line-height: 1.1;
-  color: var(--accent);
-  font-variant-numeric: tabular-nums;
+  font-weight: 750;
+  color: var(--ink);
+  letter-spacing: -0.015em;
 }
 
-.stepTitle {
-  font-size: var(--t-lead);
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-
-.stepDesc {
-  margin-top: var(--s2);
+.sectionDesc {
+  margin: var(--s1) 0 0;
+  font-size: var(--t-body);
   color: var(--ink-secondary);
 }
 
-/* ── Pertanyaan yang sering diajukan ─────────────────────────────────────── */
+/* ── Grid 4 Langkah Alur Kerja ──────────────────────────────────────────── */
+
+.stepGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--s4);
+}
+
+.stepCard {
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  padding: var(--s5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.2s ease-out;
+}
+
+.stepCard:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-raised);
+  border-color: var(--accent-soft);
+}
+
+.stepCardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stepBadge {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: var(--t-caption);
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--accent-wash);
+  border-radius: var(--radius-pill);
+  padding: 3px 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.stepIconWrap {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-lg);
+  background: var(--inset);
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+  transition: transform 0.2s ease;
+}
+
+.stepCard:hover .stepIconWrap {
+  transform: scale(1.08);
+}
+
+.stepTitle {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 750;
+  color: var(--ink);
+  line-height: 1.35;
+}
+
+.stepDesc {
+  margin: 0;
+  font-size: var(--t-record);
+  color: var(--ink-secondary);
+  line-height: 1.55;
+  flex-grow: 1;
+}
+
+/* ── FAQ Accordion ───────────────────────────────────────────────────────── */
+
+.faqRoot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
 
 .faqItem {
   background: var(--field);
   border: 1px solid var(--rule-hair);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
-  margin-bottom: var(--s3);
-  padding: 0 var(--s4);
+  overflow: hidden;
+  transition: border-color 0.18s ease-out, box-shadow 0.18s ease-out;
+}
+
+.faqItem:hover {
+  border-color: var(--rule);
+}
+
+.faqItem[data-state='open'] {
+  border-color: var(--accent-soft);
+  box-shadow: var(--shadow-raised);
+}
+
+.faqHeader {
+  margin: 0;
+}
+
+.faqTrigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--s4) var(--s5);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+  gap: var(--s4);
+}
+
+.faqTrigger:hover .faqQuestion {
+  color: var(--accent);
 }
 
 .faqQuestion {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  min-height: var(--touch-lg);
-  padding: var(--s3);
-  border-radius: var(--radius);
-  text-align: left;
-  font-size: var(--t-body);
-  font-weight: 600;
-  color: var(--ink);
-  background: transparent;
-  border: 0;
-  border-left: 3px solid transparent;
-  transition: border-color 0.14s ease-out, background-color 0.14s ease-out;
-}
-
-.faqQuestion:hover {
-  background: var(--inset);
-}
-
-/* Keadaan terbuka dibawa bobot huruf dan garis kiri aksen sekaligus, jadi ia
-   terbaca tanpa membedakan warna dan tanpa tanda panah. */
-.faqOpen {
+  font-size: 1rem;
   font-weight: 700;
-  border-left-color: var(--accent);
+  color: var(--ink);
+  line-height: 1.4;
+  transition: color 0.15s ease;
+}
+
+.chevronIcon {
+  flex-shrink: 0;
+  color: var(--ink-muted);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), color 0.15s ease;
+}
+
+.faqItem[data-state='open'] .chevronIcon {
+  transform: rotate(180deg);
+  color: var(--accent);
+}
+
+.faqContent {
+  overflow: hidden;
+}
+
+.faqContent[data-state='open'] {
+  animation: slideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.faqContent[data-state='closed'] {
+  animation: slideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideDown {
+  from {
+    height: 0;
+    opacity: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    height: var(--radix-accordion-content-height);
+    opacity: 1;
+  }
+  to {
+    height: 0;
+    opacity: 0;
+  }
+}
+
+.faqAnswerWrap {
+  padding: 0 var(--s5) var(--s5);
+  border-top: 1px dashed var(--rule-hair);
 }
 
 .faqAnswer {
-  padding: 0 0 var(--s5) var(--s3);
+  margin: var(--s3) 0 0;
+  font-size: var(--t-record);
+  line-height: 1.65;
   color: var(--ink-secondary);
 }
 
-/* ── Kontak ──────────────────────────────────────────────────────────────── */
+/* ── Kontak & Dukungan ───────────────────────────────────────────────────── */
 
 .contactGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: var(--s5);
-  margin-top: var(--s5);
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--s4);
 }
 
-.contactValue {
-  margin-top: var(--s2);
+.contactCard {
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  padding: var(--s5);
+  display: flex;
+  gap: var(--s4);
+  align-items: flex-start;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.contactCard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-raised);
+}
+
+.contactIconWrap {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-lg);
+  background: var(--accent-wash);
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+}
+
+.contactBody {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.contactTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 750;
+  color: var(--ink);
+}
+
+.contactText {
+  margin: 0;
+  font-size: var(--t-record);
+  color: var(--ink-secondary);
+  line-height: 1.5;
+}
+
+.contactLink {
+  margin-top: 6px;
+  display: inline-block;
+  font-size: var(--t-record);
   font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  transition: color 0.15s ease;
 }
 
-/* Tampilannya datang dari .note di globals.css. */
-.disclaimer {
-  margin-top: var(--s6);
+.contactLink:hover {
+  color: var(--accent-deep);
+  text-decoration: underline;
+}
+
+.contactBadge {
+  margin-top: 6px;
+  display: inline-block;
+  padding: 2px 8px;
+  background: var(--level-low-wash);
+  color: var(--level-low);
+  border-radius: var(--radius-pill);
+  font-size: var(--t-caption);
+  font-weight: 600;
+  width: fit-content;
 }

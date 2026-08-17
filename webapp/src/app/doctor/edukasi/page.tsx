@@ -2,6 +2,17 @@
 import { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { useRouter } from 'next/navigation';
+import {
+  GraduationCap,
+  BookOpen,
+  Sparkles,
+  Clock,
+  ArrowRight,
+  Share2,
+  Check,
+  Layers,
+  FileText,
+} from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import DoctorNav from '@/components/DoctorNav';
 import LoadingScreen from '@/components/LoadingScreen';
@@ -211,24 +222,51 @@ export default function DoctorEdukasiPage() {
     }
   }
 
-  /* Setiap artikel adalah satu baris arsip: label mono, judul, ringkasan, dan
-     lama baca. Tidak ada kartu dan tidak ada ikon; pemisahnya garis rambut. */
-  const renderRow = (a: Article, shareable = false) => (
-    <div key={a.id} className={styles.entry}>
-      <button type="button" className={styles.entryOpen} onClick={() => setReading(a)}>
-        <span className={styles.entryHead}>
-          <span className="label">{a.tag}</span>
-          <span className={styles.entryTime}>{a.readTime}</span>
-        </span>
-        <span className={styles.entryTitle}>{a.title}</span>
-        <span className={styles.entryExcerpt}>{a.excerpt}</span>
-      </button>
-      {shareable && (
-        <button type="button" className="btn" onClick={() => shareArticle(a)}>
-          {copied === a.id ? t('edu.copied') : t('edu.copyForPatient')}
+  const renderCard = (a: Article, shareable = false) => (
+    <article key={a.id} className={styles.articleCard}>
+      <div>
+        <div className={styles.cardHead}>
+          <span className={styles.tagBadge}>{a.tag}</span>
+          <span className={styles.timeBadge}>
+            <Clock size={13} style={{ display: 'inline', verticalAlign: '-1px', marginRight: 4 }} />
+            {a.readTime}
+          </span>
+        </div>
+        <div className={styles.cardMain}>
+          <h3 className={styles.cardTitle}>{a.title}</h3>
+          <p className={styles.cardExcerpt}>{a.excerpt}</p>
+        </div>
+      </div>
+      <div className={styles.cardFooter}>
+        <button
+          type="button"
+          className={styles.readBtn}
+          onClick={() => setReading(a)}
+        >
+          <span>Baca Selengkapnya</span>
+          <ArrowRight size={15} />
         </button>
-      )}
-    </div>
+        {shareable && (
+          <button
+            type="button"
+            className={`${styles.shareBtn} ${copied === a.id ? styles.shareBtnActive : ''}`}
+            onClick={() => shareArticle(a)}
+          >
+            {copied === a.id ? (
+              <>
+                <Check size={14} />
+                <span>Tersalin!</span>
+              </>
+            ) : (
+              <>
+                <Share2 size={14} />
+                <span>Bagi ke Pasien</span>
+              </>
+            )}
+          </button>
+        )}
+      </div>
+    </article>
   );
 
   return (
@@ -237,38 +275,48 @@ export default function DoctorEdukasiPage() {
 
       <main className="sheet" id="main">
         <div className={styles.pad}>
-          <header className="docHead">
-            <div className="docHead__meta">
-              <span>Edukasi</span>
-              <span>Portal Tenaga Kesehatan</span>
+          <header className={styles.header}>
+            <div className={styles.metaPillGroup}>
+              <span className={styles.metaChip}>
+                <GraduationCap size={14} color="var(--accent)" />
+                Portal Klinis
+              </span>
+              <span className={styles.metaChip}>
+                <BookOpen size={14} color="var(--accent)" />
+                {CLINICAL_ARTICLES.length + PATIENT_ARTICLES.length} Referensi
+              </span>
+              <span className={styles.metaChip}>
+                <Sparkles size={14} color="var(--accent)" />
+                Metodologi & Evidensi
+              </span>
             </div>
-            <h1>Edukasi</h1>
+            <h1 className={styles.title}>Pusat Edukasi & Referensi</h1>
             <p className={styles.lead}>
-              Referensi klinis, panduan interpretasi, dan evidensi untuk tenaga kesehatan.
+              Kumpulan referensi metodologi klinis, panduan interpretasi biomarker motorik, dan materi edukasi siap pakai untuk pasien Anda.
             </p>
           </header>
 
           <section className={styles.section}>
             <div className={styles.sectionHead}>
-              <h2 className={styles.sectionTitle}>Materi Klinis</h2>
+              <h2 className={styles.sectionTitle}>Materi Klinis & Metodologi</h2>
               <p className={styles.sectionDesc}>
-                Dasar perhitungan, cara membaca biomarker, dan batas kemampuan sistem.
+                Dasar perhitungan skor risiko, cara membaca biomarker, dan batas kemampuan sistem.
               </p>
             </div>
-            <div className={styles.entries}>
-              {CLINICAL_ARTICLES.map(a => renderRow(a))}
+            <div className={styles.articleGrid}>
+              {CLINICAL_ARTICLES.map(a => renderCard(a))}
             </div>
           </section>
 
           <section className={styles.section}>
             <div className={styles.sectionHead}>
-              <h2 className={styles.sectionTitle}>Materi untuk Pasien</h2>
+              <h2 className={styles.sectionTitle}>Materi Edukasi untuk Pasien</h2>
               <p className={styles.sectionDesc}>
-                Penjelasan berbahasa awam yang dapat Anda bagikan kepada pasien sebagai bahan edukasi.
+                Penjelasan berbahasa awam yang dapat Anda bagikan langsung kepada pasien sebagai bahan konsultasi.
               </p>
             </div>
-            <div className={styles.entries}>
-              {PATIENT_ARTICLES.map(a => renderRow(a, true))}
+            <div className={styles.articleGrid}>
+              {PATIENT_ARTICLES.map(a => renderCard(a, true))}
             </div>
           </section>
         </div>

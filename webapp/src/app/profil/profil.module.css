@@ -1,6 +1,7 @@
-/* Lembar profil.
-   Modus kerja: baris data yang bisa dipindai, bagian dipisah garis kepala dan
-   garis rambut. Tidak ada avatar bulat dan tidak ada kartu mengambang. */
+/* ═══════════════════════════════════════════════════════════════════════════
+   PROFIL PENGGUNA & DOKTER
+   Tata letak presisi di tengah (dead-centered), bersih, modern, dan informatif.
+   ══════════════════════════════════════════════════════════════════════════ */
 
 .page {
   min-height: 100vh;
@@ -9,7 +10,8 @@
 
 .pad {
   padding: var(--s7) 0 var(--s9);
-  max-width: 760px;
+  max-width: 860px;
+  margin: 0 auto;
 }
 
 .loading {
@@ -17,32 +19,148 @@
   color: var(--ink-secondary);
 }
 
-/* ── Pesan keadaan ──────────────────────────────────────────────────────────
-   Warna tidak berdiri sendiri: keduanya membawa garis kiri dengan bobot
-   berbeda dan bobot huruf yang naik. */
+/* ── Header Halaman ──────────────────────────────────────────────────────── */
+
+.header {
+  margin-bottom: var(--s6);
+  padding-bottom: var(--s5);
+  border-bottom: 1px solid var(--rule-hair);
+}
+
+.metaPillGroup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2);
+  margin-bottom: var(--s3);
+}
+
+.metaChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-pill);
+  font-size: var(--t-caption);
+  font-weight: 600;
+  color: var(--ink-secondary);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--t-display);
+  font-weight: 750;
+  color: var(--ink);
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+.lead {
+  margin: var(--s2) 0 0;
+  font-size: var(--t-lead);
+  color: var(--ink-secondary);
+  line-height: 1.5;
+}
+
+/* ── Kartu Hero Profil ───────────────────────────────────────────────────── */
+
+.profileHeroCard {
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  padding: var(--s5) var(--s6);
+  display: flex;
+  align-items: center;
+  gap: var(--s5);
+  margin-bottom: var(--s6);
+}
+
+.avatarWrap {
+  flex: none;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-lg);
+  background: var(--accent-wash);
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 4px 12px rgba(29, 109, 134, 0.12);
+}
+
+.heroDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.heroName {
+  margin: 0;
+  font-size: var(--t-head);
+  font-weight: 750;
+  color: var(--ink);
+  letter-spacing: -0.015em;
+}
+
+.heroMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s3);
+  font-size: var(--t-record);
+  color: var(--ink-secondary);
+}
+
+.heroMetaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* ── Pesan status ────────────────────────────────────────────────────────── */
 
 .successMsg {
   margin-bottom: var(--s5);
   padding: var(--s3) var(--s4);
   background: var(--level-low-wash);
-  border-left: 2px solid var(--level-low);
+  border-left: 3px solid var(--level-low);
+  border-radius: var(--radius);
   color: var(--level-low);
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
 }
 
 .errorMsg {
   margin-bottom: var(--s5);
   padding: var(--s3) var(--s4);
   background: var(--level-high-wash);
-  border-left: 6px solid var(--level-high);
+  border-left: 4px solid var(--level-high);
+  border-radius: var(--radius);
   color: var(--level-high);
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
 }
 
-/* ── Bagian ─────────────────────────────────────────────────────────────── */
+/* ── Bagian Konten ───────────────────────────────────────────────────────── */
 
 .section {
-  margin-top: var(--s7);
+  margin-top: var(--s6);
+}
+
+.sectionCard {
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  padding: var(--s5) var(--s6);
+  margin-top: var(--s3);
 }
 
 .sectionHead {
@@ -55,23 +173,26 @@
 }
 
 .sectionTitle {
+  margin: 0;
   font-size: var(--t-head);
+  font-weight: 750;
+  color: var(--ink);
+  letter-spacing: -0.015em;
 }
 
 .note {
-  max-width: 68ch;
+  margin: 0;
+  font-size: var(--t-record);
   color: var(--ink-secondary);
+  line-height: 1.55;
 }
 
-/* ── Baris keterangan ───────────────────────────────────────────────────── */
+/* ── Baris Keterangan ───────────────────────────────────────────────────── */
 
 .infoList {
-  display: block;
-  background: var(--field);
-  border: 1px solid var(--rule-hair);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
-  padding: var(--s2) var(--s5);
+  display: flex;
+  flex-direction: column;
+  margin: 0;
 }
 
 .infoRow {
@@ -87,17 +208,18 @@
   border-bottom: 0;
 }
 
-.infoRow:last-child {
-  border-bottom: 0;
-}
-
 .infoLabel {
   margin: 0;
+  font-size: var(--t-record);
+  font-weight: 600;
+  color: var(--ink-muted);
 }
 
 .infoValue {
   margin: 0;
+  font-size: var(--t-body);
   font-weight: 600;
+  color: var(--ink);
   overflow-wrap: anywhere;
   font-variant-numeric: tabular-nums;
 }
@@ -138,6 +260,9 @@
   color: var(--ink-secondary);
   text-decoration: underline;
   text-underline-offset: 0.25em;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
 }
 
 .reveal:hover {
