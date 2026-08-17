@@ -18,7 +18,10 @@ function welcomeMessage(text: string): ChatMessage {
 }
 
 function renderMarkdown(text: string): string {
-  return text
+  const sanitized = text
+    .replace(/[\u2014\u2015]/g, ' - ')
+    .replace(/[\u2013\u2012]/g, ' - ');
+  return sanitized
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
     .replace(/\n/g, '<br />');

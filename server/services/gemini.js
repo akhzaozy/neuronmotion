@@ -255,7 +255,8 @@ ATURAN PENTING:
 1. Anda BUKAN dokter dan TIDAK BOLEH memberikan diagnosis medis formal. Ingatkan selalu untuk berkonsultasi dengan dokter spesialis saraf jika ada keluhan berlanjut.
 2. Berikan jawaban yang ramah, ringkas, padat, dan langsung menjawab inti pertanyaan (maksimal 2-3 paragraf singkat atau poin-poin jelas).
 3. Gunakan bahasa yang mudah dipahami orang awam tanpa istilah rumit yang membingungkan.
-4. Fokus pada edukasi kesehatan motorik, penjelasan skor skrining, dan tips gaya hidup sehat.`;
+4. Fokus pada edukasi kesehatan motorik, penjelasan skor skrining, dan tips gaya hidup sehat.
+5. DILARANG menggunakan tanda garis panjang em-dash atau en-dash. Gunakan tanda hubung biasa (-) atau titik dua (:).`;
 
 // Batasi riwayat yang dikirim agar permintaan tetap cepat dan efisien
 const MAX_CHAT_HISTORY = 12;
@@ -265,9 +266,31 @@ const MAX_CHAT_HISTORY = 12;
  * supaya jawaban asisten mengikuti bahasa yang dipilih pengguna.
  */
 const CHAT_LANGUAGE_INSTRUCTION = {
-  id: '\n5. Selalu jawab dalam Bahasa Indonesia yang baik dan hangat.',
-  en: '\n5. Always answer in clear, concise English.',
+  id: '\n6. Selalu jawab dalam Bahasa Indonesia yang baik dan hangat.',
+  en: '\n6. Always answer in clear, concise English.',
 };
+
+function sanitizeDashes(text) {
+  if (typeof text !== 'string') return text;
+  return text
+    .replace(/[\u2014\u2015]/g, ' - ') // em-dash
+    .replace(/[\u2013\u2012]/g, ' - ') // en-dash
+    .replace(/\s{2,}/g, ' ');
+}
+
+function sanitizeObjectDashes(obj) {
+  if (!obj || typeof obj !== 'object') {
+    return typeof obj === 'string' ? sanitizeDashes(obj) : obj;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(sanitizeObjectDashes);
+  }
+  const result = {};
+  for (const [key, val] of Object.entries(obj)) {
+    result[key] = sanitizeObjectDashes(val);
+  }
+  return result;
+}
 
 function buildChatSystemPrompt(lang = 'id', patientContext = null) {
   let instruction = CHAT_SYSTEM_INSTRUCTION + (CHAT_LANGUAGE_INSTRUCTION[lang] || CHAT_LANGUAGE_INSTRUCTION.id);
@@ -291,7 +314,8 @@ PETUNJUK PENTING:
 3. Panggil nama pengguna (${patientContext.name}) dengan ramah dan sopan.
 4. Jelaskan apa arti skor ${patientContext.compositeScore}/100 tersebut dengan nada empatik, edukatif, dan menenangkan, serta berikan rekomendasi langkah selanjutnya.
 5. Tegaskan bahwa hasil skrining kamera ini adalah deteksi awal penunjang dan anjurkan konsultasi ke dokter spesialis saraf bila memerlukan evaluasi medis definitif.
-6. Sampaikan penjelasan Anda secara lengkap, tuntas, dan terstruktur rapi tanpa terpotong di tengah kalimat.`;
+6. Sampaikan penjelasan Anda secara lengkap, tuntas, dan terstruktur rapi tanpa terpotong di tengah kalimat.
+7. JANGAN gunakan tanda garis panjang em-dash atau en-dash, hanya gunakan tanda hubung biasa (-).`;
     } else {
       instruction += `\n\nDATA PENGGUNA:
 - Pengguna (${patientContext.name}) sudah masuk ke akun, namun BELUM pernah melakukan skrining di sistem.
@@ -334,7 +358,7 @@ async function callGeminiChat(model, messages, apiKey, lang = 'id', patientConte
     const data = await res.json();
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!text) throw new Error('Respons Gemini kosong');
-    return text;
+    return sanitizeDashes(text);
   } finally {
     clearTimeout(timeout);
   }
@@ -402,8 +426,8 @@ export async function generateCombinedAnalysis(input) {
 
   for (const model of models) {
     try {
-      const { parsed, modelUsed } = await callGemini(model, prompt, apiKey);
-      return { available: true, model: modelUsed, ...parsed };
+      const sanitized = sanitizeObjectDashes(parsed);
+      return { available: true, model: modelUsed, ...sanitized };
     } catch (err) {
       console.warn(`Analisis Gemini (${model}) gagal:`, err.message);
       errors.push(`${model}: ${err.message}`);
