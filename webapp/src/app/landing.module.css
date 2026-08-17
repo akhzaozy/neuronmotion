@@ -143,7 +143,7 @@
 }
 
 /* ── Hero ───────────────────────────────────────────────────────────────────
-   Dua kolom. Kiri membawa kalimatnya, kanan membawa buktinya. */
+   Tata letak simetris di tengah (dead-centered), bersih, modern, dan seimbang. */
 
 .hero {
   position: relative;
@@ -153,8 +153,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--s5) 0 var(--s7);
+  padding: var(--s6) 0 var(--s9);
   box-sizing: border-box;
+  text-align: center;
 }
 
 @media (max-width: 900px) {
@@ -164,58 +165,69 @@
   }
 }
 
-/* Bidang biru lembut yang jatuh di belakang panel bukti. */
+/* Bidang biru lembut yang jatuh di belakang hero. */
 .heroBlob {
   position: absolute;
   z-index: 0;
-  top: 50%;
-  right: -4%;
-  transform: translateY(-50%);
-  width: min(600px, 54vw);
-  aspect-ratio: 1 / 1;
-  background: radial-gradient(circle, var(--accent-soft) 0%, rgba(142, 191, 210, 0.2) 60%, transparent 75%);
-  opacity: 0.7;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(800px, 92vw);
+  height: 520px;
+  background: radial-gradient(circle, var(--accent-soft) 0%, rgba(142, 191, 210, 0.25) 50%, transparent 75%);
+  opacity: 0.8;
   border-radius: 50%;
-  filter: blur(40px);
+  filter: blur(50px);
   pointer-events: none;
 }
 
-@media (max-width: 900px) {
-  .heroBlob {
-    top: auto;
-    bottom: 0;
-    right: 50%;
-    transform: translateX(50%);
-    width: 90vw;
-    opacity: 0.4;
-  }
-}
-
-.heroGrid {
+.heroInner {
   position: relative;
   z-index: 1;
-  display: grid;
-  grid-template-columns: 1.05fr 0.95fr;
-  gap: var(--s7);
-  align-items: center;
   width: 100%;
-  max-width: 1180px;
+  max-width: 1100px;
   margin: 0 auto;
+  padding: 0 var(--s5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-sizing: border-box;
 }
 
-@media (max-width: 900px) {
-  .heroGrid {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--s6);
-  }
+.heroBadgeGroup {
+  display: inline-flex;
+  justify-content: center;
+  margin-bottom: var(--s4);
+}
+
+.heroBadgeChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 18px;
+  border-radius: var(--radius-pill);
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.heroBadgeIcon {
+  color: var(--accent);
 }
 
 .heroTitle {
-  font-size: clamp(2.25rem, 4.6vw, 3.85rem);
-  font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: -0.025em;
-  max-width: 17ch;
+  font-size: clamp(2.4rem, 5vw, 4.1rem);
+  font-weight: 850;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  max-width: 22ch;
+  margin: 0 auto;
+  text-align: center;
+  color: var(--ink);
 }
 
 /* Kata terakhir judul diberi warna merek. */
@@ -224,28 +236,32 @@
 }
 
 .heroLead {
-  margin-top: var(--s4);
-  font-size: clamp(1rem, 1.35vw, 1.125rem);
-  line-height: 1.6;
+  margin: var(--s4) auto 0;
+  font-size: clamp(1.05rem, 1.35vw, 1.2rem);
+  line-height: 1.65;
   color: var(--ink-secondary);
-  max-width: 50ch;
+  max-width: 60ch;
+  text-align: center;
 }
 
 .heroActions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
   gap: var(--s3);
-  margin-top: var(--s5);
+  margin: var(--s6) auto 0;
 }
 
 .heroNote {
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: var(--s2);
-  margin-top: var(--s3);
-  font-size: var(--t-record);
+  margin: var(--s3) auto 0;
+  font-size: 13px;
   color: var(--ink-muted);
-  max-width: 60ch;
+  text-align: center;
 }
 
 .heroNoteIcon {
@@ -253,25 +269,41 @@
   color: var(--accent);
 }
 
-/* ── Figur hero ───────────────────────────────────────────────────────────── */
+/* ── Centered Showcase Card ───────────────────────────────────────────────── */
 
-.heroFigure {
-  position: relative;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.heroShowcase {
+  margin-top: var(--s7);
   width: 100%;
-  max-width: 490px;
-  margin: 0 auto;
+  max-width: 980px;
 }
 
-.heroPhoto {
-  width: 100%;
+.heroShowcaseGrid {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: var(--s5);
+  align-items: stretch;
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-2xl);
+  box-shadow: 0 20px 48px -12px rgba(18, 49, 61, 0.14), 0 0 0 1px rgba(0, 0, 0, 0.02);
+  padding: var(--s5);
+  text-align: left;
+}
+
+@media (max-width: 860px) {
+  .heroShowcaseGrid {
+    grid-template-columns: 1fr;
+    gap: var(--s4);
+    padding: var(--s4);
+  }
+}
+
+.heroPhotoWrap {
   border-radius: var(--radius-xl);
   overflow: hidden;
-  box-shadow: 0 16px 36px -12px rgba(18, 49, 61, 0.16);
-  aspect-ratio: 4 / 3.5;
+  position: relative;
+  min-height: 240px;
+  background: var(--inset);
 }
 
 .heroPhotoImg {
@@ -282,38 +314,23 @@
   object-position: 50% 18%;
 }
 
-@media (max-width: 900px) {
-  .heroFigure {
-    max-width: 540px;
-  }
-
-  .heroPhoto {
-    aspect-ratio: 16 / 10;
-  }
-}
-
 /* ── Panel bukti ──────────────────────────────────────────────────────────── */
 
 .panel {
   position: relative;
   z-index: 2;
-  width: 94%;
-  margin: -50px auto 0;
-  background: var(--field);
+  width: 100%;
+  margin: 0;
+  background: var(--inset);
   border: 1px solid var(--rule-hair);
   border-radius: var(--radius-xl);
-  box-shadow: 0 20px 48px -12px rgba(18, 49, 61, 0.2);
+  box-shadow: none;
   padding: var(--s4) var(--s5);
   min-width: 0;
   box-sizing: border-box;
-}
-
-@media (max-width: 900px) {
-  .panel {
-    width: 100%;
-    margin-top: var(--s4);
-    padding: var(--s4);
-  }
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .panelHead {
