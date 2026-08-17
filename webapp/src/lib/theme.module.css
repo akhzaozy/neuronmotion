@@ -16,10 +16,11 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--ink-secondary);
-  background: transparent;
+  background: var(--field);
   border: 1px solid var(--rule-hair);
   border-radius: var(--radius-pill);
   white-space: nowrap;
+  cursor: pointer;
   transition: color 0.18s ease-out, border-color 0.18s ease-out,
     background-color 0.18s ease-out;
 }
@@ -28,4 +29,13 @@
   color: var(--accent);
   border-color: var(--accent);
   background: var(--accent-wash);
+}
+
+@media (max-width: 640px) {
+  .toggle {
+    min-height: 34px;
+    min-width: 34px;
+    padding: 0 8px;
+    font-size: 11px;
+  }
 }

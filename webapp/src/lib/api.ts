@@ -143,8 +143,8 @@ export const api = {
     request<{ message: string }>('DELETE', `/api/doctor/patients/${patientId}`, undefined, token),
 
   // Chat asisten (NeuroBot)
-  chat: (messages: ChatApiMessage[], lang: 'id' | 'en' = 'id') =>
-    request<{ reply: string }>('POST', '/api/chat', { messages, lang }),
+  chat: (messages: ChatApiMessage[], lang: 'id' | 'en' = 'id', token?: string) =>
+    request<{ reply: string }>('POST', '/api/chat', { messages, lang }, token),
 
   // Admin
   getStats: () => request('GET', '/api/admin/stats'),

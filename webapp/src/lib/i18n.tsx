@@ -51,6 +51,14 @@ const DICT: Record<string, { id: string; en: string }> = {
   'bot.you': { id: 'Anda', en: 'You' },
   // Penanda pesan yang belum dibaca, menggantikan titik warna pada tombol.
   'bot.newMessage': { id: 'Pesan baru', en: 'New message' },
+  'bot.analyzing': { id: 'Menganalisis pertanyaan...', en: 'Analyzing question...' },
+  'bot.identifyingData': { id: 'Mengidentifikasi rekam data skrining Anda...', en: 'Identifying your screening record...' },
+  'bot.processingContext': { id: 'Memproses konteks medis...', en: 'Processing medical context...' },
+  'bot.processingResults': { id: 'Mengolah hasil identifikasi...', en: 'Compiling findings & formulating response...' },
+  'bot.waitingLong': {
+    id: 'AI sedang membaca data dan mengidentifikasi, silakan tunggu sebentar...',
+    en: 'AI is reading your data and identifying, please wait a moment...',
+  },
   'bot.disclaimer': {
     id: 'NeuroBot bukan dokter, selalu konsultasikan kondisi Anda ke tenaga medis',
     en: 'NeuroBot is not a doctor, always consult a healthcare professional about your condition',

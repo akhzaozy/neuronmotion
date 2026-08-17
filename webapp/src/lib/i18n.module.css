@@ -10,11 +10,9 @@
   border: 1px solid var(--rule-hair);
   border-radius: var(--radius-pill);
   overflow: hidden;
+  background: var(--field);
 }
 
-/* Lantai 44px berlaku pada kedua sumbu, bukan tinggi saja. Diukur sebelumnya,
-   kedua tombol ini 42 dan 43px lebarnya karena padding --s3 pada label dua
-   huruf tidak sampai ke lantai itu. */
 .option {
   min-height: var(--touch);
   min-width: var(--touch);
@@ -25,6 +23,8 @@
   letter-spacing: 0.06em;
   color: var(--ink-muted);
   background: transparent;
+  border: 0;
+  cursor: pointer;
   transition: color 0.14s ease-out, background-color 0.14s ease-out;
 }
 
@@ -52,4 +52,13 @@
 /* Garis pemisah antar dua pilihan, hanya ketika keduanya tidak aktif. */
 .option + .option {
   border-left: 1px solid var(--rule-hair);
+}
+
+@media (max-width: 640px) {
+  .option {
+    min-height: 34px;
+    min-width: 32px;
+    padding: 0 7px;
+    font-size: 11px;
+  }
 }

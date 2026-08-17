@@ -1,7 +1,8 @@
 'use client';
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Bot, User, Send, Trash2, X, Sparkles } from 'lucide-react';
+import { Bot, User, Send, Trash2, X, Sparkles, Clock } from 'lucide-react';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
 import { useI18n } from '@/lib/i18n';
 import styles from './LiveChat.module.css';
 
@@ -25,18 +26,33 @@ function renderMarkdown(text: string): string {
 
 export default function LiveChat() {
   const { t, lang } = useI18n();
+  const { user, token } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingStep, setLoadingStep] = useState('');
+  const [isLongWait, setIsLongWait] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const chatBodyRef = useRef<HTMLDivElement>(null);
+  const loadingTimersRef = useRef<NodeJS.Timeout[]>([]);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
+
+  const clearLoadingTimers = useCallback(() => {
+    loadingTimersRef.current.forEach(t => clearTimeout(t));
+    loadingTimersRef.current = [];
+    setIsLongWait(false);
+    setLoadingStep('');
+  }, []);
+
+  useEffect(() => {
+    return () => clearLoadingTimers();
+  }, [clearLoadingTimers]);
 
   // Tutup chat saat menekan Escape atau klik di luar jendela chat
   useEffect(() => {
@@ -114,12 +130,43 @@ export default function LiveChat() {
 
     setMessages(prev => [...prev, userMsg]);
     setInput('');
+    clearLoadingTimers();
     setLoading(true);
+    setIsLongWait(false);
+
+    // Tahapan berpikir dinamis
+    const isScreeningRelated = /(skor|risiko|skrining|hasil|tremor|parkinson|gait|jalan|tangan|kondisi|data|pemeriksaan|gejala|score|risk|screening|test|motor)/i.test(
+      text
+    );
+
+    setLoadingStep(t('bot.analyzing') || 'Menganalisis pertanyaan...');
+
+    const t1 = setTimeout(() => {
+      setLoadingStep(
+        isScreeningRelated
+          ? t('bot.identifyingData') || 'Mengidentifikasi rekam data skrining Anda...'
+          : t('bot.processingContext') || 'Memproses konteks medis...'
+      );
+    }, 1400);
+
+    const t2 = setTimeout(() => {
+      setLoadingStep(t('bot.processingResults') || 'Mengolah hasil identifikasi...');
+    }, 3200);
+
+    const t3 = setTimeout(() => {
+      setIsLongWait(true);
+      setLoadingStep(
+        t('bot.waitingLong') ||
+          'AI sedang membaca data dan mengidentifikasi, silakan tunggu sebentar...'
+      );
+    }, 10000);
+
+    loadingTimersRef.current = [t1, t2, t3];
 
     const history = [...messages, userMsg].map(({ role, parts }) => ({ role, parts }));
 
     try {
-      const data = await api.chat(history, lang);
+      const data = await api.chat(history, lang, token || undefined);
 
       const botMsg: ChatMessage = {
         role: 'model',
@@ -139,6 +186,7 @@ export default function LiveChat() {
       };
       setMessages(prev => [...prev, errorMsg]);
     } finally {
+      clearLoadingTimers();
       setLoading(false);
     }
   }
@@ -248,20 +296,49 @@ export default function LiveChat() {
             );
           })}
 
-          {/* Typing Indicator (Animasi 3 Titik) */}
+          {/* Thinking & Progressive Indicator */}
           {loading && (
             <div className={`${styles.msgRow} ${styles.msgRowBot}`}>
-              <div className={`${styles.avatarWrap} ${styles.avatarBot}`}>
-                <Bot size={16} />
+              <div className={`${styles.avatarWrap} ${styles.avatarBot} ${styles.avatarThinking}`}>
+                <Bot size={16} className={styles.botIconThinking} />
               </div>
               <div className={styles.bubbleCol}>
                 <div className={styles.bubbleHeader}>
                   <span className={styles.senderName} data-no-translate="">NeuroBot</span>
+                  <span className={styles.thinkingBadge}>
+                    <span className={styles.thinkingDotPulse} />
+                    {isLongWait ? 'Memproses Data...' : 'Menganalisis...'}
+                  </span>
                 </div>
-                <div className={`${styles.bubble} ${styles.bubbleBot} ${styles.typingBubble}`}>
-                  <span className={styles.typingDot} />
-                  <span className={styles.typingDot} />
-                  <span className={styles.typingDot} />
+
+                <div
+                  className={`${styles.bubble} ${styles.bubbleBot} ${styles.thinkingBubble} ${
+                    isLongWait ? styles.thinkingBubbleLong : ''
+                  }`}
+                >
+                  <div className={styles.thinkingStepRow}>
+                    {isLongWait ? (
+                      <Clock size={15} className={styles.thinkingIconPulse} />
+                    ) : (
+                      <Sparkles size={15} className={styles.thinkingIconSpin} />
+                    )}
+                    <span className={styles.thinkingStepText}>{loadingStep}</span>
+                  </div>
+
+                  <div className={styles.thinkingProgressRow}>
+                    <div className={styles.thinkingProgressBar}>
+                      <div
+                        className={`${styles.thinkingProgressFill} ${
+                          isLongWait ? styles.progressFillLong : ''
+                        }`}
+                      />
+                    </div>
+                    <div className={styles.typingDotsMini}>
+                      <span className={styles.typingDot} />
+                      <span className={styles.typingDot} />
+                      <span className={styles.typingDot} />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

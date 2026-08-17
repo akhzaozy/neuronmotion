@@ -34,8 +34,8 @@ function getApiKey() {
 // Nama model dibaca saat dibutuhkan, bukan sekali saat modul dimuat, agar
 // perubahan .env cukup dengan restart proses tanpa mengubah kode.
 function getModels() {
-  const primary = cleanEnv(process.env.GEMINI_MODEL) || 'gemini-3.5-flash';
-  const fallback = cleanEnv(process.env.GEMINI_MODEL_FALLBACK) || 'gemini-3-flash-preview';
+  const primary = cleanEnv(process.env.GEMINI_MODEL) || 'gemini-2.5-flash';
+  const fallback = cleanEnv(process.env.GEMINI_MODEL_FALLBACK) || 'gemini-flash-latest';
   return { primary, fallback };
 }
 
@@ -248,9 +248,47 @@ const CHAT_LANGUAGE_INSTRUCTION = {
   en: '\n5. Always answer in clear, concise English.',
 };
 
-async function callGeminiChat(model, messages, apiKey, lang = 'id') {
+function buildChatSystemPrompt(lang = 'id', patientContext = null) {
+  let instruction = CHAT_SYSTEM_INSTRUCTION + (CHAT_LANGUAGE_INSTRUCTION[lang] || CHAT_LANGUAGE_INSTRUCTION.id);
+
+  if (patientContext?.isLoggedIn) {
+    if (patientContext.hasSessions) {
+      instruction += `\n\nDATA HASIL SKRINING PENGGUNA TERAKHIR (AKTIF DI AKUN SAAT INI):
+- Nama Pengguna: ${patientContext.name}
+- Usia / Gender: ${patientContext.age ? patientContext.age + ' tahun' : 'Tidak disebutkan'} / ${patientContext.gender}
+- Skor Risiko Komposit Terakhir: ${patientContext.compositeScore} dari 100 (${patientContext.riskCategory})
+- Tanggal Pemeriksaan Terakhir: ${patientContext.dateFormatted}
+- Pola Estimasi AI: ${patientContext.conditionPattern}${patientContext.conditionConfidence ? ` (Keyakinan: ${patientContext.conditionConfidence})` : ''}
+- Hasil Pengukuran Tiap Biomarker:
+${patientContext.biomarkersList}
+- Ringkasan Klinis: ${patientContext.aiSummary || 'Pemeriksaan selesai dianalisis.'}
+- Catatan Dokter (jika ada): ${patientContext.doctorNote || 'Belum ada catatan dari dokter.'}
+
+PETUNJUK PENTING:
+1. Anda SUDAH MEMILIKI data skrining pengguna di atas.
+2. JANGAN PERNAH bertanya balik "berapa skor Anda?" atau "apa kategori risiko Anda?". Jika pengguna menanyakan tentang skor risiko, hasil skrining, atau kondisi motorik mereka, LANGSUNG BACA DAN JELASKAN data di atas (${patientContext.compositeScore}/100, kategori ${patientContext.riskCategory}, serta biomarker terkait).
+3. Panggil nama pengguna (${patientContext.name}) dengan ramah dan sopan.
+4. Jelaskan apa arti skor ${patientContext.compositeScore}/100 tersebut dengan nada empatik, edukatif, dan menenangkan, serta berikan rekomendasi langkah selanjutnya.
+5. Tegaskan bahwa hasil skrining kamera ini adalah deteksi awal penunjang dan anjurkan konsultasi ke dokter spesialis saraf bila memerlukan evaluasi medis definitif.`;
+    } else {
+      instruction += `\n\nDATA PENGGUNA:
+- Pengguna (${patientContext.name}) sudah masuk ke akun, namun BELUM pernah melakukan skrining di sistem.
+- Jika pengguna menanyakan skor atau hasil skrining mereka, beritahukan dengan ramah bahwa akun mereka belum memiliki riwayat pemeriksaan, dan sarankan untuk mencoba tombol "Mulai Skrining".`;
+    }
+  } else {
+    instruction += `\n\nDATA PENGGUNA:
+- Pengguna belum masuk ke akun (tamu).
+- Jika pengguna menanyakan hasil atau skor risiko pribadi mereka, jelaskan bahwa mereka perlu masuk ke akun terlebih dahulu atau melakukan skrining di aplikasi agar NeuroBot dapat membaca riwayat pemeriksaan mereka secara otomatis.`;
+  }
+
+  return instruction;
+}
+
+async function callGeminiChat(model, messages, apiKey, lang = 'id', patientContext = null) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 15_000);
+
+  const systemPrompt = buildChatSystemPrompt(lang, patientContext);
 
   try {
     const res = await fetch(`${API_BASE}/${model}:generateContent?key=${apiKey}`, {
@@ -259,10 +297,10 @@ async function callGeminiChat(model, messages, apiKey, lang = 'id') {
       signal: controller.signal,
       body: JSON.stringify({
         systemInstruction: {
-          parts: [{ text: CHAT_SYSTEM_INSTRUCTION + (CHAT_LANGUAGE_INSTRUCTION[lang] || CHAT_LANGUAGE_INSTRUCTION.id) }],
+          parts: [{ text: systemPrompt }],
         },
         contents: messages,
-        generationConfig: { temperature: 0.6, maxOutputTokens: 600 },
+        generationConfig: { temperature: 0.5, maxOutputTokens: 750 },
       }),
     });
 
@@ -284,7 +322,7 @@ async function callGeminiChat(model, messages, apiKey, lang = 'id') {
  * Menjawab percakapan NeuroBot. Mengembalikan { reply } bila berhasil,
  * atau { error, status } agar route dapat membalas dengan kode yang sesuai.
  */
-export async function chatWithAssistant(messages, lang = 'id') {
+export async function chatWithAssistant(messages, lang = 'id', patientContext = null) {
   const apiKey = getApiKey();
   const { primary, fallback } = getModels();
   if (!apiKey) {
@@ -312,11 +350,11 @@ export async function chatWithAssistant(messages, lang = 'id') {
   }
 
   try {
-    return { reply: await callGeminiChat(primary, sanitized, apiKey, lang) };
+    return { reply: await callGeminiChat(primary, sanitized, apiKey, lang, patientContext) };
   } catch (primaryError) {
     console.warn(`Chat Gemini primary (${primary}) gagal:`, primaryError.message);
     try {
-      return { reply: await callGeminiChat(fallback, sanitized, apiKey, lang) };
+      return { reply: await callGeminiChat(fallback, sanitized, apiKey, lang, patientContext) };
     } catch (fallbackError) {
       console.error(`Chat Gemini fallback (${fallback}) juga gagal:`, fallbackError.message);
       return {
