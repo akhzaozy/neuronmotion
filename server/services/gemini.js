@@ -332,7 +332,7 @@ PETUNJUK PENTING:
 
 async function callGeminiChat(model, messages, apiKey, lang = 'id', patientContext = null) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 35_000);
+  const timeout = setTimeout(() => controller.abort(), 45_000);
 
   const systemPrompt = buildChatSystemPrompt(lang, patientContext);
 
@@ -346,7 +346,10 @@ async function callGeminiChat(model, messages, apiKey, lang = 'id', patientConte
           parts: [{ text: systemPrompt }],
         },
         contents: messages,
-        generationConfig: { temperature: 0.4, maxOutputTokens: 2500 },
+        generationConfig: {
+          temperature: 0.4,
+          maxOutputTokens: 8192,
+        },
       }),
     });
 
@@ -356,7 +359,17 @@ async function callGeminiChat(model, messages, apiKey, lang = 'id', patientConte
     }
 
     const data = await res.json();
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    const candidate = data?.candidates?.[0];
+    const parts = candidate?.content?.parts || [];
+
+    const validParts = parts
+      .filter(p => p && typeof p.text === 'string' && !p.thought)
+      .map(p => p.text);
+
+    const text = validParts.length > 0
+      ? validParts.join('\n').trim()
+      : parts.map(p => p.text || '').join('\n').trim();
+
     if (!text) throw new Error('Respons Gemini kosong');
     return sanitizeDashes(text);
   } finally {
