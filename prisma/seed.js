@@ -140,18 +140,16 @@ async function main() {
   console.log('✅ Database dibersihkan');
 
   // 2. Seed Conditions (referensi klinis)
-  const conditions = await Promise.all(
-    Object.entries(CONDITION_PROFILES).map(([key, profile]) =>
-      prisma.condition.create({
-        data: {
-          key,
-          label: profile.label,
-          description: profile.description,
-          biomarkerThresholds: JSON.stringify(profile.biomarkerProfile),
-        },
-      })
-    )
-  );
+  const conditionsData = Object.entries(CONDITION_PROFILES).map(([key, profile]) => ({
+    key,
+    label: profile.label,
+    description: profile.description,
+    biomarkerThresholds: JSON.stringify(profile.biomarkerProfile),
+  }));
+  const conditions = [];
+  for (const data of conditionsData) {
+    conditions.push(await prisma.condition.create({ data }));
+  }
   console.log(`✅ ${conditions.length} kondisi klinis ditambahkan`);
 
   // 3. Buat akun Admin
@@ -169,14 +167,15 @@ async function main() {
     { name: 'dr. Dewi Rahayu, Sp.S', email: 'dr.dewi@neuronmotion.id', spec: 'Neurologi', license: 'SIP-2022-008' },
     { name: 'dr. Hendra Pratama, Sp.KFR', email: 'dr.hendra@neuronmotion.id', spec: 'Kedokteran Fisik & Rehabilitasi', license: 'SIP-2019-030' },
   ];
-  const doctors = await Promise.all(
-    doctorData.map(d => prisma.user.create({
+  const doctors = [];
+  for (const d of doctorData) {
+    doctors.push(await prisma.user.create({
       data: {
         email: d.email, password: doctorPassword, name: d.name,
         role: 'DOCTOR', specialization: d.spec, licenseNumber: d.license,
       },
-    }))
-  );
+    }));
+  }
   console.log(`✅ ${doctors.length} akun dokter dibuat`);
 
   // 5. Generate dan seed pasien sintetis
@@ -189,7 +188,7 @@ async function main() {
   // ── Batch insert untuk performa SQLite ────────────────────────────────────
   // Sebelumnya ~6000 operasi satu per satu (masing-masing 1 transaksi SQLite).
   // Sekarang dikumpulkan dulu di memori, lalu ditulis dalam batch per 100 di
-  // dalam satu $transaction — jauh lebih cepat karena SQLite hanya perlu flush
+  // dalam satu $transaction, jauh lebih cepat karena SQLite hanya perlu flush
   // ke disk sekali per batch, bukan sekali per baris.
 
   const BATCH_SIZE = 100;
