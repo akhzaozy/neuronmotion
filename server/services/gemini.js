@@ -290,7 +290,8 @@ PETUNJUK PENTING:
 2. JANGAN PERNAH bertanya balik "berapa skor Anda?" atau "apa kategori risiko Anda?". Jika pengguna menanyakan tentang skor risiko, hasil skrining, atau kondisi motorik mereka, LANGSUNG BACA DAN JELASKAN data di atas (${patientContext.compositeScore}/100, kategori ${patientContext.riskCategory}, serta biomarker terkait).
 3. Panggil nama pengguna (${patientContext.name}) dengan ramah dan sopan.
 4. Jelaskan apa arti skor ${patientContext.compositeScore}/100 tersebut dengan nada empatik, edukatif, dan menenangkan, serta berikan rekomendasi langkah selanjutnya.
-5. Tegaskan bahwa hasil skrining kamera ini adalah deteksi awal penunjang dan anjurkan konsultasi ke dokter spesialis saraf bila memerlukan evaluasi medis definitif.`;
+5. Tegaskan bahwa hasil skrining kamera ini adalah deteksi awal penunjang dan anjurkan konsultasi ke dokter spesialis saraf bila memerlukan evaluasi medis definitif.
+6. Sampaikan penjelasan Anda secara lengkap, tuntas, dan terstruktur rapi tanpa terpotong di tengah kalimat.`;
     } else {
       instruction += `\n\nDATA PENGGUNA:
 - Pengguna (${patientContext.name}) sudah masuk ke akun, namun BELUM pernah melakukan skrining di sistem.
@@ -307,7 +308,7 @@ PETUNJUK PENTING:
 
 async function callGeminiChat(model, messages, apiKey, lang = 'id', patientContext = null) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15_000);
+  const timeout = setTimeout(() => controller.abort(), 35_000);
 
   const systemPrompt = buildChatSystemPrompt(lang, patientContext);
 
@@ -321,7 +322,7 @@ async function callGeminiChat(model, messages, apiKey, lang = 'id', patientConte
           parts: [{ text: systemPrompt }],
         },
         contents: messages,
-        generationConfig: { temperature: 0.5, maxOutputTokens: 750 },
+        generationConfig: { temperature: 0.4, maxOutputTokens: 2500 },
       }),
     });
 
