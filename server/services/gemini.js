@@ -31,12 +31,34 @@ function getApiKey() {
   return cleanEnv(process.env.GEMINI_API_KEY);
 }
 
-// Nama model dibaca saat dibutuhkan, bukan sekali saat modul dimuat, agar
-// perubahan .env cukup dengan restart proses tanpa mengubah kode.
-function getModels() {
-  const primary = cleanEnv(process.env.GEMINI_MODEL) || 'gemini-2.5-flash';
-  const fallback = cleanEnv(process.env.GEMINI_MODEL_FALLBACK) || 'gemini-flash-latest';
-  return { primary, fallback };
+export function getModelCascade() {
+  const customModels = cleanEnv(process.env.GEMINI_MODELS);
+  if (customModels) {
+    const list = customModels.split(',').map(m => cleanEnv(m)).filter(Boolean);
+    if (list.length > 0) return [...new Set(list)];
+  }
+
+  const primary = cleanEnv(process.env.GEMINI_MODEL);
+  const fallback = cleanEnv(process.env.GEMINI_MODEL_FALLBACK);
+
+  const list = [
+    primary || 'gemini-3.7-flash',
+    'gemini-3-flash-preview',
+    'gemini-2.5-flash',
+    'gemini-3.5-flash-lite',
+    fallback || 'gemini-flash-latest',
+  ];
+
+  return [...new Set(list.filter(Boolean))];
+}
+
+export function getModels() {
+  const cascade = getModelCascade();
+  return {
+    primary: cascade[0],
+    fallback: cascade[1] || cascade[0],
+    cascade,
+  };
 }
 
 export function isGeminiConfigured() {
@@ -46,12 +68,13 @@ export function isGeminiConfigured() {
 /** Ringkasan konfigurasi untuk pemeriksaan deployment (tanpa membocorkan key). */
 export function getGeminiConfigInfo() {
   const key = getApiKey();
-  const { primary, fallback } = getModels();
+  const { primary, fallback, cascade } = getModels();
   return {
     configured: Boolean(key),
     keyLength: key.length,
     primaryModel: primary,
     fallbackModel: fallback,
+    modelCascade: cascade,
   };
 }
 
@@ -63,7 +86,7 @@ export async function verifyGeminiSetup() {
   const key = getApiKey();
   if (!key) return { ok: false, reason: 'GEMINI_API_KEY belum diisi di server' };
 
-  const { primary, fallback } = getModels();
+  const { cascade } = getModels();
 
   try {
     const res = await fetch(`${API_BASE}?key=${key}`, { signal: AbortSignal.timeout(15_000) });
@@ -76,15 +99,13 @@ export async function verifyGeminiSetup() {
       .filter(m => (m.supportedGenerationMethods || []).includes('generateContent'))
       .map(m => m.name.replace('models/', ''));
 
+    const workingModels = cascade.filter(m => available.includes(m));
+
     return {
-      ok: available.includes(primary) || available.includes(fallback),
-      primaryModel: primary,
-      primaryAvailable: available.includes(primary),
-      fallbackModel: fallback,
-      fallbackAvailable: available.includes(fallback),
-      reason: available.includes(primary) || available.includes(fallback)
-        ? undefined
-        : 'Model yang dikonfigurasi tidak tersedia untuk API key ini',
+      ok: workingModels.length > 0,
+      configuredCascade: cascade,
+      availableInAccount: workingModels,
+      reason: workingModels.length > 0 ? undefined : 'Tidak ada model dalam cascade yang tersedia untuk API key ini',
       suggestedModels: available.filter(m => m.includes('flash')).slice(0, 6),
     };
   } catch (e) {
@@ -324,7 +345,7 @@ async function callGeminiChat(model, messages, apiKey, lang = 'id', patientConte
  */
 export async function chatWithAssistant(messages, lang = 'id', patientContext = null) {
   const apiKey = getApiKey();
-  const { primary, fallback } = getModels();
+  const models = getModelCascade();
   if (!apiKey) {
     return { error: 'Layanan chat AI belum dikonfigurasi di server.', status: 503 };
   }
@@ -349,47 +370,48 @@ export async function chatWithAssistant(messages, lang = 'id', patientContext = 
     return { error: 'Pesan tidak valid.', status: 400 };
   }
 
-  try {
-    return { reply: await callGeminiChat(primary, sanitized, apiKey, lang, patientContext) };
-  } catch (primaryError) {
-    console.warn(`Chat Gemini primary (${primary}) gagal:`, primaryError.message);
+  const errors = [];
+  for (const model of models) {
     try {
-      return { reply: await callGeminiChat(fallback, sanitized, apiKey, lang, patientContext) };
-    } catch (fallbackError) {
-      console.error(`Chat Gemini fallback (${fallback}) juga gagal:`, fallbackError.message);
-      return {
-        error: 'Layanan AI sementara tidak tersedia. Silakan coba lagi nanti.',
-        status: 503,
-        // Hanya dipakai endpoint diagnostik, tidak diteruskan ke pengguna akhir
-        lastError: `${primary}: ${primaryError.message} | ${fallback}: ${fallbackError.message}`,
-      };
+      const reply = await callGeminiChat(model, sanitized, apiKey, lang, patientContext);
+      return { reply, modelUsed: model };
+    } catch (err) {
+      console.warn(`Chat Gemini (${model}) gagal:`, err.message);
+      errors.push(`${model}: ${err.message}`);
     }
   }
+
+  console.error('Semua model Gemini dalam cascade gagal:', errors.join(' | '));
+  return {
+    error: 'Layanan AI sementara tidak tersedia. Silakan coba lagi nanti.',
+    status: 503,
+    lastError: errors.join(' | '),
+  };
 }
 
 export async function generateCombinedAnalysis(input) {
   const apiKey = getApiKey();
-  const { primary, fallback } = getModels();
+  const models = getModelCascade();
   if (!apiKey) {
     return { available: false, error: 'GEMINI_API_KEY belum dikonfigurasi di server' };
   }
 
   const prompt = buildPrompt(input);
+  const errors = [];
 
-  try {
-    const { parsed, modelUsed } = await callGemini(primary, prompt, apiKey);
-    return { available: true, model: modelUsed, ...parsed };
-  } catch (primaryError) {
-    console.warn(`Gemini primary (${primary}) gagal:`, primaryError.message);
+  for (const model of models) {
     try {
-      const { parsed, modelUsed } = await callGemini(fallback, prompt, apiKey);
-      return { available: true, model: modelUsed, usedFallback: true, ...parsed };
-    } catch (fallbackError) {
-      console.error(`Gemini fallback (${fallback}) juga gagal:`, fallbackError.message);
-      return {
-        available: false,
-        error: 'Analisis AI sementara tidak tersedia. Hasil skrining tetap tersimpan dan valid.',
-      };
+      const { parsed, modelUsed } = await callGemini(model, prompt, apiKey);
+      return { available: true, model: modelUsed, ...parsed };
+    } catch (err) {
+      console.warn(`Analisis Gemini (${model}) gagal:`, err.message);
+      errors.push(`${model}: ${err.message}`);
     }
   }
+
+  console.error('Semua model Gemini untuk analisis gagal:', errors.join(' | '));
+  return {
+    available: false,
+    error: 'Analisis AI sementara tidak tersedia. Hasil skrining tetap tersimpan dan valid.',
+  };
 }
