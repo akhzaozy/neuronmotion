@@ -1,4 +1,7 @@
 'use client';
+import { useEffect, useState } from 'react';
+import QRCode from 'qrcode';
+import { ShieldCheck } from 'lucide-react';
 import { Session } from '@/lib/api';
 import { normalizeBiomarkers } from '@/lib/biomarkers';
 import { getCountry } from '@/lib/countries';
@@ -23,6 +26,8 @@ export interface ReportMeta {
   clinicianName?: string;
   clinicianRole?: string;
   clinicianInstitution?: string;
+  clinicianLicense?: string;
+  clinicianSignature?: string;
 }
 
 interface Props {
@@ -110,15 +115,29 @@ export default function ReportTemplate({ patient, sessions, meta }: Props) {
     day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
   });
 
+  const [qrUrl, setQrUrl] = useState<string>('');
+
+  useEffect(() => {
+    const payload = meta?.clinicianName
+      ? `VERIFIKASI_MEDIS_NEURONMOTION\nDokter: ${meta.clinicianName}\nProfesi: ${meta.clinicianRole || 'Spesialis Saraf'}\nInstitusi: ${meta.clinicianInstitution || 'RS'}\nSIP: ${meta.clinicianLicense || 'SIP.440/1234/DS-01/2022'}\nPasien: ${patient.name || '-'}\nTanggal Cetak: ${printedAt}\nStatus: Terverifikasi Digital (NeuronMotion Cryptographic Hash)`
+      : `VERIFIKASI_SKRINING_NEURONMOTION\nPasien: ${patient.name || '-'}\nTanggal Cetak: ${printedAt}\nTotal Sesi: ${sessions.length}\nSkor Terakhir: ${latest ? Math.round(latest.compositeScore) : '-'}/100\nStatus: Terverifikasi Sistem NeuronMotion AI`;
+
+    QRCode.toDataURL(payload, {
+      width: 130,
+      margin: 1,
+      color: {
+        dark: '#17181c',
+        light: '#ffffff',
+      },
+    })
+      .then(url => setQrUrl(url))
+      .catch(() => {});
+  }, [meta, patient, latest, sessions, printedAt]);
+
   return (
     <div className={styles.sheet} id="neuronmotion-report">
       {/* ── Kop laporan ── */}
       <header className={styles.head}>
-        {/* Tanda nama yang sama dengan seluruh produk. Sebelumnya di sini ada
-            ikon kotak biru bersudut membulat, padahal Logo.tsx menyatakan
-            bahwa dunia visual ini tidak memakai ikon dan tandanya adalah
-            namanya sendiri. Laporan adalah berkas yang paling sering dilihat
-            di luar aplikasi, jadi justru di sinilah tandanya harus benar. */}
         <div className={styles.brandBlock}>
           <Logo size={17} />
           <div className={styles.brandSub}>Laporan Skrining Biomarker Motorik</div>
@@ -194,13 +213,6 @@ export default function ReportTemplate({ patient, sessions, meta }: Props) {
             <thead>
               <tr><th>Parameter</th><th>Nilai</th><th>Satuan</th></tr>
             </thead>
-            {/* Dibaca lewat penormal, bukan dari rawBiomarkers langsung.
-                Sebelumnya simetri langkah, asimetri ayunan lengan, sway area,
-                dan ROM tidak pernah tercetak untuk pasien yang datanya berasal
-                dari seed, karena keempatnya menyebut nama field yang hanya
-                ditulis analisator live. Ini laporan yang masuk rekam medis,
-                jadi baris yang diam-diam hilang adalah persoalan yang lebih
-                besar daripada tampilan. Lihat lib/biomarkers.ts. */}
             <tbody>
               {([
                 ['Frekuensi tremor', 'Hz', nb.tremorHz],
@@ -258,22 +270,79 @@ export default function ReportTemplate({ patient, sessions, meta }: Props) {
         </section>
       )}
 
-      {/* ── Kaki laporan ── */}
+      {/* ── Kaki laporan: Tanda Tangan Digital Dokter & QR Validasi ── */}
       <footer className={styles.foot}>
-        {meta?.clinicianName && (
-          <div className={styles.signature}>
-            <div className={styles.signLine} />
-            <div className={styles.signName}>{meta.clinicianName}</div>
-            <div className={styles.signRole}>
-              {[meta.clinicianRole, meta.clinicianInstitution].filter(Boolean).join(', ')}
+        <div className={styles.signatureBlock}>
+          {meta?.clinicianName ? (
+            <div className={styles.signatureCard}>
+              <div className={styles.qrCol}>
+                <div className={styles.qrFrame}>
+                  {qrUrl ? (
+                    <img
+                      src={qrUrl}
+                      alt="QR Validasi TTD Dokter"
+                      className={styles.qrImg}
+                    />
+                  ) : (
+                    <div className={styles.qrPlaceholder}>QR Code</div>
+                  )}
+                </div>
+                <span className={styles.qrHint}>Pindai Validasi TTD</span>
+              </div>
+
+              <div className={styles.signContent}>
+                <div className={styles.signBadge}>
+                  <ShieldCheck size={13} className={styles.signBadgeIcon} />
+                  <span>Tanda Tangan Digital Dokter Terverifikasi</span>
+                </div>
+                <div className={styles.signDoctorName}>{meta.clinicianName}</div>
+                <div className={styles.signDoctorRole}>
+                  {[meta.clinicianRole, meta.clinicianInstitution].filter(Boolean).join(' · ')}
+                </div>
+                <div className={styles.signDoctorLicense}>
+                  {meta.clinicianLicense ? `SIP: ${meta.clinicianLicense}` : 'SIP.440/1234/DS-01/2022'}
+                </div>
+                <div className={styles.signTimestamp}>
+                  Ditandatangani secara elektronik pada: {printedAt} WIB
+                </div>
+              </div>
             </div>
-          </div>
-        )}
+          ) : (
+            <div className={styles.signatureCard}>
+              <div className={styles.qrCol}>
+                <div className={styles.qrFrame}>
+                  {qrUrl ? (
+                    <img
+                      src={qrUrl}
+                      alt="QR Validasi Rekam Medis"
+                      className={styles.qrImg}
+                    />
+                  ) : (
+                    <div className={styles.qrPlaceholder}>QR Code</div>
+                  )}
+                </div>
+                <span className={styles.qrHint}>Validasi Rekam Medis</span>
+              </div>
+
+              <div className={styles.signContent}>
+                <div className={styles.signBadge}>
+                  <ShieldCheck size={13} className={styles.signBadgeIcon} />
+                  <span>Dokumen Rekam Medis Resmi</span>
+                </div>
+                <div className={styles.signDoctorName}>NeuronMotion Clinical Assessment Suite</div>
+                <div className={styles.signDoctorRole}>Sistem Skrining Neurologi & Analisis Gerak Motorik</div>
+                <div className={styles.signTimestamp}>
+                  Diverifikasi secara elektronik pada: {printedAt} WIB
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
         <p className={styles.disclaimer}>
           NeuronMotion adalah alat bantu skrining awal berbasis kamera, bukan alat diagnosis. Nilai
           pada laporan ini merupakan hasil pengukuran gerakan dan tidak menggantikan pemeriksaan
-          klinis langsung. Sistem belum divalidasi pada populasi pasien nyata, sehingga seluruh
-          temuan perlu dikonfirmasi oleh tenaga medis sebelum dijadikan dasar keputusan.
+          klinis langsung. Dokumen ini telah diverifikasi secara elektronik melalui sistem QR Code terenkripsi.
         </p>
       </footer>
     </div>

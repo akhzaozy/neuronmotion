@@ -10,7 +10,7 @@
 
 .pad {
   padding: var(--s7) 0 var(--s9);
-  max-width: 860px;
+  max-width: 1180px;
   margin: 0 auto;
 }
 
@@ -50,8 +50,8 @@
 
 .title {
   margin: 0;
-  font-size: var(--t-display);
-  font-weight: 750;
+  font-size: 32px;
+  font-weight: 850;
   color: var(--ink);
   letter-spacing: -0.025em;
   line-height: 1.15;
@@ -59,9 +59,10 @@
 
 .lead {
   margin: var(--s2) 0 0;
-  font-size: var(--t-lead);
+  font-size: 16px;
   color: var(--ink-secondary);
-  line-height: 1.5;
+  line-height: 1.6;
+  max-width: 100%;
 }
 
 /* ── Kartu Hero Profil ───────────────────────────────────────────────────── */
@@ -69,38 +70,55 @@
 .profileHeroCard {
   background: var(--field);
   border: 1px solid var(--rule-hair);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-2xl);
   box-shadow: var(--shadow-card);
   padding: var(--s5) var(--s6);
   display: flex;
   align-items: center;
   gap: var(--s5);
   margin-bottom: var(--s6);
+  animation: heroFadeIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.profileHeroCard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-raised);
+}
+
+@keyframes heroFadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .avatarWrap {
   flex: none;
-  width: 64px;
-  height: 64px;
-  border-radius: var(--radius-lg);
+  width: 68px;
+  height: 68px;
+  border-radius: var(--radius-xl);
   background: var(--accent-wash);
   color: var(--accent);
   display: grid;
   place-items: center;
-  box-shadow: 0 4px 12px rgba(29, 109, 134, 0.12);
+  box-shadow: 0 4px 14px rgba(29, 109, 134, 0.16);
+  transition: transform 0.2s ease;
+}
+
+.profileHeroCard:hover .avatarWrap {
+  transform: scale(1.05);
 }
 
 .heroDetails {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   min-width: 0;
 }
 
 .heroName {
   margin: 0;
-  font-size: var(--t-head);
-  font-weight: 750;
+  font-size: 24px;
+  font-weight: 850;
   color: var(--ink);
   letter-spacing: -0.015em;
 }
@@ -109,15 +127,16 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--s3);
-  font-size: var(--t-record);
+  gap: var(--s4);
+  font-size: 14.5px;
+  font-weight: 600;
   color: var(--ink-secondary);
 }
 
 .heroMetaItem {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
 }
 
 /* ── Pesan status ────────────────────────────────────────────────────────── */
@@ -157,10 +176,16 @@
 .sectionCard {
   background: var(--field);
   border: 1px solid var(--rule-hair);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-2xl);
   box-shadow: var(--shadow-card);
-  padding: var(--s5) var(--s6);
+  padding: 26px 32px;
   margin-top: var(--s3);
+  animation: sectionSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes sectionSlideUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .sectionHead {
@@ -169,22 +194,25 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--s4);
-  margin-bottom: var(--s4);
+  margin-bottom: var(--s3);
 }
 
 .sectionTitle {
   margin: 0;
-  font-size: var(--t-head);
-  font-weight: 750;
+  font-size: 21px;
+  font-weight: 850;
   color: var(--ink);
   letter-spacing: -0.015em;
 }
 
 .note {
   margin: 0;
-  font-size: var(--t-record);
+  font-size: 15.5px;
   color: var(--ink-secondary);
-  line-height: 1.55;
+  line-height: 1.7;
+  font-weight: 500;
+  width: 100%;
+  max-width: 100%;
 }
 
 /* ── Baris Keterangan ───────────────────────────────────────────────────── */
@@ -197,10 +225,10 @@
 
 .infoRow {
   display: grid;
-  grid-template-columns: 200px minmax(0, 1fr);
+  grid-template-columns: 220px minmax(0, 1fr);
   gap: var(--s4);
   align-items: baseline;
-  padding: var(--s3) 0;
+  padding: 14px 0;
   border-bottom: 1px solid var(--rule-hair);
 }
 
@@ -210,15 +238,15 @@
 
 .infoLabel {
   margin: 0;
-  font-size: var(--t-record);
-  font-weight: 600;
+  font-size: 14.5px;
+  font-weight: 700;
   color: var(--ink-muted);
 }
 
 .infoValue {
   margin: 0;
-  font-size: var(--t-body);
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 700;
   color: var(--ink);
   overflow-wrap: anywhere;
   font-variant-numeric: tabular-nums;

@@ -1,31 +1,39 @@
-/* Portal nakes, Ruang Periksa Terang.
-   ─────────────────────────────────────────────────────────────────────────────
-   Ini permukaan data terpadat di produk ini, dan sebelumnya seluruh isinya
-   dibawa tabel dan garis rule tanpa satu pun kartu. Alasannya masuk akal di
-   dunia Basel: kepadatan data memang lebih baik dilayani garis daripada kotak.
-
-   Yang berubah bukan kepadatannya melainkan cara mengelompokkannya. Angka
-   ringkasan menjadi empat kartu, daftar pasien menjadi satu kartu berisi baris
-   berbentuk pil, dan tabel pemeriksaan masuk ke kartunya sendiri. Tabelnya
-   sendiri tidak disentuh: rapat, tabular, rata kanan. Dokter membaca ini di
-   sela praktik, dan menambah ruang di dalam tabel akan menukar informasi per
-   layar dengan kelegaan yang tidak ia minta. */
+/* ═══════════════════════════════════════════════════════════════════════════
+   DOCTOR PORTAL - ADVANCED CLINICAL TELEMETRY INTELLIGENCE SUITE
+   ══════════════════════════════════════════════════════════════════════════ */
 
 .page {
   min-height: 100vh;
   background: var(--sheet);
 }
 
-.pad {
-  padding: var(--s7) 0 var(--s9);
+.sheet {
+  width: 100%;
+  max-width: 1560px;
+  margin: 0 auto;
+  padding: 0 var(--s6);
+  box-sizing: border-box;
 }
+
+@media (max-width: 640px) {
+  .sheet {
+    padding: 0 var(--s4);
+  }
+}
+
+.pad {
+  padding: var(--s6) 0 var(--s9);
+}
+
+/* ── Hero Banner Header ─────────────────────────────────────────────────── */
 
 .heroBanner {
   position: relative;
   background: linear-gradient(
     135deg,
     var(--field) 0%,
-    color-mix(in srgb, var(--accent-wash) 45%, var(--field)) 100%
+    color-mix(in srgb, var(--accent) 5%, var(--field)) 50%,
+    color-mix(in srgb, var(--accent) 8%, var(--field)) 100%
   );
   border: 1px solid var(--rule-hair);
   border-radius: var(--radius-xl);
@@ -39,22 +47,21 @@
   position: absolute;
   top: -40px;
   right: -40px;
-  width: 240px;
-  height: 240px;
+  width: 280px;
+  height: 280px;
   border-radius: 50%;
-  background: radial-gradient(circle, var(--accent-wash) 0%, transparent 70%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 15%, transparent) 0%, transparent 70%);
   pointer-events: none;
-  opacity: 0.8;
 }
 
-/* Strip Meta & Status */
+/* Meta Strip & Status Badge */
 .metaStrip {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--s3);
-  padding-bottom: var(--s4);
+  padding-bottom: var(--s3);
   border-bottom: 1px solid var(--rule-hair);
   margin-bottom: var(--s4);
 }
@@ -70,7 +77,7 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 3px 10px;
+  padding: 3.5px 11px;
   border-radius: var(--radius-pill);
   background: var(--inset);
   border: 1px solid var(--rule-hair);
@@ -83,42 +90,7 @@
   color: var(--accent);
 }
 
-.liveSyncBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 10px;
-  border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--level-low) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--level-low) 25%, transparent);
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--level-low);
-  letter-spacing: 0.02em;
-}
-
-.livePulseDot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--level-low);
-  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-  animation: livePulse 2s infinite;
-}
-
-@keyframes livePulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-  }
-  70% {
-    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
-  }
-}
-
-/* Konten Utama Hero */
+/* Main Hero Row */
 .heroMain {
   display: flex;
   flex-wrap: wrap;
@@ -135,8 +107,8 @@
 
 .doctorAvatar {
   position: relative;
-  width: 54px;
-  height: 54px;
+  width: 52px;
+  height: 52px;
   border-radius: var(--radius-lg);
   background: linear-gradient(135deg, var(--accent), var(--accent-deep));
   color: #ffffff;
@@ -144,7 +116,7 @@
   align-items: center;
   justify-content: center;
   font-family: var(--font-display), sans-serif;
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 800;
   box-shadow: 0 8px 20px -4px rgba(2, 132, 199, 0.4);
   flex-shrink: 0;
@@ -167,15 +139,15 @@
 
 .portalBadge {
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 9.5px;
+  font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--accent);
 }
 
 .heroTitle {
-  font-size: 24px;
+  font-size: 23px;
   font-weight: 800;
   letter-spacing: -0.02em;
   color: var(--ink);
@@ -188,11 +160,11 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--s3);
-  margin-top: 3px;
+  margin-top: 2px;
 }
 
 .leadGreeting {
-  font-size: 14px;
+  font-size: 13.5px;
   color: var(--ink-secondary);
 }
 
@@ -205,7 +177,7 @@
   align-items: center;
   gap: 5px;
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 11.5px;
+  font-size: 11px;
   color: var(--ink-muted);
 }
 
@@ -213,7 +185,7 @@
   color: var(--ink-muted);
 }
 
-/* Tombol Aksi Hero */
+/* Hero Action Buttons */
 .heroActions {
   display: flex;
   align-items: center;
@@ -226,13 +198,13 @@
   align-items: center;
   gap: 8px;
   min-height: 42px;
-  padding: 0 var(--s4);
+  padding: 0 var(--s5);
   background: var(--cta-field);
   color: var(--cta-ink);
   border: 1px solid var(--cta-field);
   border-radius: var(--radius-pill);
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 13.5px;
+  font-weight: 750;
   cursor: pointer;
   box-shadow: var(--shadow-sm);
   transition: transform 0.16s ease-out, background-color 0.16s ease-out, box-shadow 0.16s ease-out;
@@ -254,13 +226,13 @@
   align-items: center;
   gap: 8px;
   min-height: 42px;
-  padding: 0 var(--s4);
+  padding: 0 var(--s5);
   background: var(--field);
   color: var(--ink-secondary);
   border: 1px solid var(--rule);
   border-radius: var(--radius-pill);
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 13.5px;
+  font-weight: 650;
   cursor: pointer;
   transition: all 0.16s ease-out;
 }
@@ -284,17 +256,15 @@
   to { transform: rotate(360deg); }
 }
 
-/* ── Ringkasan Angka Statistik Berikon ────────────────────────────────────── */
+/* ── KPI Summary Cards ─────────────────────────────────────────────────── */
 
 .stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--s4);
-  margin-top: var(--s4);
-  margin-bottom: var(--s7);
 }
 
-@media (max-width: 960px) {
+@media (max-width: 1100px) {
   .stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -307,14 +277,14 @@
 }
 
 .stat {
-  padding: var(--s4) var(--s5);
+  padding: 18px 22px;
   background: var(--field);
   border: 1px solid var(--rule-hair);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-2xl);
   box-shadow: var(--shadow-card);
   display: flex;
   align-items: center;
-  gap: var(--s4);
+  gap: 16px;
   transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
     box-shadow 0.18s ease-out,
     border-color 0.18s ease-out;
@@ -327,9 +297,9 @@
 }
 
 .statIconWrap {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-lg);
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-xl);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -365,8 +335,8 @@
 .statValue {
   display: block;
   font-family: var(--font-display), var(--font-sans), system-ui, sans-serif;
-  font-size: 28px;
-  font-weight: 800;
+  font-size: 32px;
+  font-weight: 850;
   line-height: 1.1;
   letter-spacing: -0.02em;
   color: var(--ink);
@@ -380,264 +350,587 @@
 
 .statLabel {
   display: block;
-  margin-top: 3px;
-  font-size: 12px;
-  font-weight: 600;
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 700;
   color: var(--ink-secondary);
   line-height: 1.3;
 }
 
-/* Responsivitas Layar Banner */
-@media (max-width: 768px) {
-  .heroBanner {
-    padding: var(--s4);
-  }
+/* ── Main Layout: Patient List (Left) + Detail (Right) ──────────────────── */
 
-  .metaStrip {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--s2);
-  }
-
-  .heroMain {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--s4);
-  }
-
-  .heroActions {
-    width: 100%;
-    justify-content: flex-start;
-  }
-}
-
-/* Daftar pasien duduk sebagai indeks di kolom kiri, isi pemeriksaan memimpin
-   lebarnya. Di bawah 980px indeks turun ke atas isi. */
 .layout {
   display: grid;
-  grid-template-columns: 320px minmax(0, 1fr);
-  gap: var(--s7);
-  align-items: start;
-  margin-top: var(--s8);
+  grid-template-columns: 460px minmax(0, 1fr);
+  gap: var(--s6);
+  align-items: stretch;
+  margin-top: var(--s6);
 }
 
-@media (max-width: 980px) {
+@media (max-width: 1120px) {
   .layout {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--s6);
   }
 }
 
-/* Daftar pasien adalah satu kartu. Bagian di dalamnya, yaitu penautan,
-   pencarian, dan daftarnya sendiri, tetap dipisah garis rambut, karena garis
-   rambut memang tugasnya memisahkan di dalam satu kartu. */
+/* ── Left Column: Patient Index (Fixed Balanced Height) ─────────────────── */
+
 .index {
   min-width: 0;
+  height: 760px;
   background: var(--field);
   border: 1px solid var(--rule-hair);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-2xl);
   box-shadow: var(--shadow-card);
   padding: var(--s5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+  overflow: hidden;
 }
 
 .indexHead {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: var(--s3);
   padding-bottom: var(--s3);
   border-bottom: 1px solid var(--rule-hair);
+  flex-shrink: 0;
 }
 
 .indexTitle {
-  font-size: var(--t-head);
+  font-size: 19px;
+  font-weight: 850;
+  color: var(--ink);
+  letter-spacing: -0.01em;
 }
 
-.count {
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: var(--t-record);
+.indexSubtitle {
+  display: block;
+  font-size: 13px;
   color: var(--ink-muted);
-  white-space: nowrap;
+  margin-top: 2px;
+  font-weight: 600;
 }
 
-/* Kotak penautan pasien.
-   Ditempatkan tepat di atas daftar karena panel dokter yang baru mendaftar
-   selalu kosong, sehingga tindakan pertama yang masuk akal adalah menautkan
-   pasien, bukan mencari di daftar yang belum berisi apa pun. */
+.btnToggleLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  font-size: 12.5px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btnToggleLink:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Collapsible Form Penautan Pasien */
 .linkBox {
-  padding: var(--s4) 0;
-  border-bottom: 1px solid var(--rule-hair);
+  background: var(--inset);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-lg);
+  padding: var(--s3);
+  animation: fadeInDown 0.2s ease-out;
+  flex-shrink: 0;
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.linkBoxTitle {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--ink);
 }
 
 .linkDesc {
-  margin: var(--s2) 0 var(--s3);
-  font-size: var(--t-record);
+  margin: 3px 0 var(--s2);
+  font-size: 12px;
   color: var(--ink-secondary);
 }
 
 .linkRow {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--s2);
+  gap: 8px;
 }
 
 .linkInput {
-  flex: 1 1 140px;
+  flex: 1;
   min-width: 0;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--rule-heavy);
+  background: var(--field);
   font-family: var(--font-mono), ui-monospace, monospace;
-  letter-spacing: 0.12em;
+  font-size: 13px;
+  font-weight: 750;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
+  color: var(--ink);
+  outline: none;
 }
 
-/* Huruf besar hanya berlaku untuk kode yang diketik, bukan untuk teks contoh,
-   supaya contohnya tidak terbaca seperti sedang berteriak. */
-.linkInput::placeholder {
-  text-transform: none;
-  letter-spacing: normal;
+.linkInput:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
-/* Hasil penautan dibawa label teks berbobot dengan garis kiri, bukan warna
-   sendirian. */
-.linkMsgOk,
-.linkMsgErr {
-  margin-top: var(--s3);
-  padding: var(--s2) var(--s3);
-  border-radius: var(--radius);
-  font-size: var(--t-record);
-  font-weight: 600;
-  border-left-style: solid;
+.btnSubmitLink {
+  padding: 0 16px;
+  height: 38px;
+  background: var(--cta-field);
+  color: var(--cta-ink);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btnSubmitLink:hover:not(:disabled) {
+  background: var(--accent-deep);
+}
+
+.btnSubmitLink:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .linkMsgOk {
+  margin-top: var(--s2);
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 700;
   color: var(--level-low);
-  background: var(--level-low-wash);
-  border-left-width: 2px;
-  border-left-color: var(--level-low);
+  background: color-mix(in srgb, var(--level-low) 10%, transparent);
 }
 
 .linkMsgErr {
+  margin-top: var(--s2);
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 700;
   color: var(--level-high);
-  background: var(--level-high-wash);
-  border-left-width: 6px;
-  border-left-color: var(--level-high);
+  background: color-mix(in srgb, var(--level-high) 10%, transparent);
+}
+
+/* Patient Search & Filter Toolbar */
+.patientToolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .searchBox {
-  padding: var(--s4) 0;
-  border-bottom: 1px solid var(--rule-hair);
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
 }
 
+.searchIcon {
+  position: absolute;
+  left: 13px;
+  color: var(--ink-muted);
+  pointer-events: none;
+}
+
+.patientSearchInput {
+  width: 100%;
+  height: 42px;
+  padding: 0 32px 0 38px;
+  font-size: 13.5px;
+  color: var(--ink);
+  background: var(--inset);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-pill);
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.patientSearchInput:focus {
+  background: var(--field);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2.5px color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+.searchClear {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  color: var(--ink-muted);
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.filterChipsRow {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.filterChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--inset);
+  border: 1px solid var(--rule-hair);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.filterChip:hover:not(.filterChipActive) {
+  color: var(--ink);
+  background: var(--rule-hair);
+}
+
+.filterChipActive {
+  background: var(--field);
+  color: var(--accent);
+  border-color: var(--accent);
+  font-weight: 750;
+  box-shadow: var(--shadow-sm);
+}
+
+.filterDotHigh {
+  width: 7.5px;
+  height: 7.5px;
+  border-radius: 50%;
+  background: var(--level-high);
+  display: inline-block;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--level-high) 25%, transparent);
+}
+
+.filterDotMid {
+  width: 7.5px;
+  height: 7.5px;
+  border-radius: 50%;
+  background: var(--level-mid);
+  display: inline-block;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--level-mid) 25%, transparent);
+}
+
+.filterDotLow {
+  width: 7.5px;
+  height: 7.5px;
+  border-radius: 50%;
+  background: var(--level-low);
+  display: inline-block;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--level-low) 25%, transparent);
+}
+
+/* Patient Items Scrollable List */
 .listBody {
   display: flex;
   flex-direction: column;
-  gap: var(--s1);
-  max-height: 620px;
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  /* Ruang untuk bilah gulir supaya baris tidak tertimpa olehnya. */
-  padding-right: var(--s2);
+  padding-right: 4px;
 }
 
-/* Setiap pasien adalah satu baris arsip: nama, data ringkas mono, dan tingkat
-   risiko sebagai label teks penuh. */
-.patientItem {
+.patientCard {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--s3);
+  gap: 14px;
   width: 100%;
-  min-height: var(--touch-lg);
-  padding: var(--s3);
+  padding: 13px 15px;
   text-align: left;
-  border: 0;
-  border-left: 3px solid transparent;
-  border-radius: var(--radius);
-  background: transparent;
-  transition: background-color 0.18s ease-out, border-color 0.18s ease-out,
-    transform 0.18s ease-out, padding-left 0.18s ease-out;
-  flex: none;
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-xl);
+  background: var(--field);
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
 }
 
-.patientItem > span:first-child {
-  min-width: 0;
-  flex: 1 1 auto;
-}
-
-.patientItem:hover {
+.patientCard:hover:not(.patientCardActive) {
   background: var(--inset);
+  border-color: var(--rule-heavy);
   transform: translateX(3px);
 }
 
-.active {
-  background: var(--accent-wash);
-  border-left-color: var(--accent);
-  border-left-width: 4px;
+.patientCardActive {
+  background: color-mix(in srgb, var(--accent) 9%, var(--field));
+  border-color: var(--accent);
+  box-shadow: 0 4px 16px -3px color-mix(in srgb, var(--accent) 22%, transparent);
 }
 
-.patientName {
-  display: block;
-  font-weight: 600;
+.patientAvatarPill {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-.active .patientName {
-  font-weight: 700;
+.avatarInitials {
+  font-size: 15px;
+  font-weight: 800;
 }
 
-.patientInfo {
-  display: block;
-  margin-top: var(--s1);
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: var(--t-record);
-  letter-spacing: 0.04em;
+.patientCardMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.patientCardHead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.patientCardName {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.genderChip {
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 1.5px 6px;
+  border-radius: var(--radius-pill);
+  background: var(--inset);
   color: var(--ink-muted);
 }
 
-.listEmpty {
-  padding: var(--s6) 0;
-  color: var(--ink-secondary);
+.patientCardMeta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  color: var(--ink-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* ── Isi pemeriksaan ─────────────────────────────────────────────────────── */
+.metaCity {
+  color: var(--ink-secondary);
+  font-weight: 600;
+}
+
+.patientCardEnd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.patientScoreWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.riskBadgePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 800;
+  padding: 2.5px 8px;
+  border-radius: var(--radius-pill);
+}
+
+.badgeDot_high,
+.badgeDot_mid,
+.badgeDot_low {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.badgeDot_high { background: var(--level-high); }
+.badgeDot_mid { background: var(--level-mid); }
+.badgeDot_low { background: var(--level-low); }
+
+.riskBadge_high {
+  background: color-mix(in srgb, var(--level-high) 12%, transparent);
+  color: var(--level-high);
+  border: 1px solid color-mix(in srgb, var(--level-high) 25%, transparent);
+}
+
+.riskBadge_mid {
+  background: color-mix(in srgb, var(--level-mid) 12%, transparent);
+  color: var(--level-mid);
+  border: 1px solid color-mix(in srgb, var(--level-mid) 25%, transparent);
+}
+
+.riskBadge_low {
+  background: color-mix(in srgb, var(--level-low) 12%, transparent);
+  color: var(--level-low);
+  border: 1px solid color-mix(in srgb, var(--level-low) 25%, transparent);
+}
+
+.scoreText {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 11.5px;
+  font-weight: 750;
+  color: var(--ink-muted);
+}
+
+.noScreeningTag {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-muted);
+  background: var(--inset);
+  padding: 2.5px 8px;
+  border-radius: var(--radius-pill);
+}
+
+.patientCardChevron {
+  color: var(--ink-muted);
+  transition: transform 0.15s ease;
+}
+
+.patientCardActive .patientCardChevron {
+  color: var(--accent);
+  transform: translateX(2px);
+}
+
+.emptyListNotice {
+  padding: var(--s6) var(--s3);
+  text-align: center;
+  color: var(--ink-secondary);
+  font-size: 13px;
+}
+
+/* ── Right Column: Patient Detail & Clinical Analysis ───────────────────── */
 
 .detail {
   min-width: 0;
-  animation: detailSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  display: flex;
+  flex-direction: column;
 }
 
-@keyframes detailSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.detailCard {
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-card);
+  padding: 28px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s5);
+  min-height: 760px;
+  animation: detailFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes detailFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.btnDownloadPdf {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btnDownloadPdf:hover {
+  background: var(--accent);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
 }
 
 .detailHead {
-  /* Diizinkan membungkus supaya isinya turun ke baris berikutnya di layar
-     sempit, bukan terdorong keluar layar lalu terpotong tanpa jejak oleh
-     overflow-x: hidden pada body. */
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: var(--s4);
   padding-bottom: var(--s4);
   border-bottom: 1px solid var(--rule-hair);
 }
 
-.detailTitle {
-  font-size: var(--t-title);
-  letter-spacing: -0.02em;
+.detailProfile {
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
 }
 
-.detailMeta {
-  margin-top: var(--s2);
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: var(--t-record);
-  letter-spacing: 0.04em;
+.detailAvatar {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-xl);
+  background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+  color: #fff;
+  font-size: 20px;
+  font-weight: 850;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.detailTitle {
+  font-size: 22px;
+  font-weight: 850;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+
+.detailMetaRow {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 3px;
+  font-size: 13.5px;
   color: var(--ink-muted);
 }
 
@@ -648,90 +941,623 @@
   gap: var(--s3);
 }
 
-.section {
-  margin-top: var(--s7);
+.btnUnlink {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  background: var(--field);
+  border: 1px solid var(--rule);
+  color: var(--ink-secondary);
+  font-size: 12.5px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-.sectionHead {
+.btnUnlink:hover {
+  background: color-mix(in srgb, var(--level-high) 8%, var(--field));
+  border-color: var(--level-high);
+  color: var(--level-high);
+}
+
+.riskBannerPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  border-radius: var(--radius-pill);
+  font-size: 14px;
+  font-weight: 850;
+  letter-spacing: 0.01em;
+}
+
+.riskBanner_high {
+  background: color-mix(in srgb, var(--level-high) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--level-high) 30%, transparent);
+  color: var(--level-high);
+}
+
+.riskBanner_mid {
+  background: color-mix(in srgb, var(--level-mid) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--level-mid) 30%, transparent);
+  color: var(--level-mid);
+}
+
+.riskBanner_low {
+  background: color-mix(in srgb, var(--level-low) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--level-low) 30%, transparent);
+  color: var(--level-low);
+}
+
+.riskBannerDot {
+  width: 7.5px;
+  height: 7.5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.riskBannerScore {
+  font-weight: 650;
+  opacity: 0.9;
+}
+
+.detailBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+}
+
+/* Session Picker Header */
+.sessionHeaderRow {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--s3);
-  margin-bottom: var(--s4);
 }
 
-.sectionTitle {
-  font-size: var(--t-head);
+.sessionTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sessionIcon {
+  color: var(--accent);
+}
+
+.sessionHeading {
+  font-size: 15px;
+  font-weight: 850;
+  color: var(--ink);
+}
+
+.sessionPickerWrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sessionPickerLabel {
+  font-size: 12.5px;
+  font-weight: 650;
+  color: var(--ink-muted);
 }
 
 .sessionSelect {
-  width: auto;
-  max-width: 100%;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--rule-heavy);
+  background: var(--field);
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--ink);
+  outline: none;
 }
 
-/* Klasifikasi pola. Bidang isi bergaris penuh dengan label kolom di atasnya,
-   memakai primitif .field dari globals.css. Isinya bermakna, jadi ia memang
-   layak jadi bidang tersendiri; yang tidak layak adalah garis tepi kiri,
-   sebab ketebalan garis kiri di produk ini menyandikan tingkat pengukuran. */
-.classification {
-  margin-top: var(--s5);
+/* AI Classification Hero */
+.classificationHero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s4);
+  padding: 14px 20px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 10%, var(--field)) 0%, color-mix(in srgb, #8b5cf6 8%, var(--field)) 100%);
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  border-radius: var(--radius-xl);
 }
 
-.classificationValue {
-  margin-top: var(--s2);
-  font-size: var(--t-lead);
+.classHeroLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.classIconWrap {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.classLabel {
+  font-size: 11.5px;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+}
+
+.classValue {
+  font-size: 18px;
+  font-weight: 850;
+  color: var(--ink);
+  margin-top: 2px;
+}
+
+.classConfidenceBadge {
+  font-size: 13px;
+  color: var(--ink-secondary);
+  background: var(--field);
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--rule-hair);
   font-weight: 700;
 }
 
-.classificationSub {
-  margin-top: var(--s1);
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: var(--t-record);
-  letter-spacing: 0.04em;
-  color: var(--ink-secondary);
+/* ── 4 Telemetry Biomarker Cards Grid ───────────────────────────────────── */
+
+.biomarkerGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s3);
 }
 
-.tableScroll {
-  overflow-x: auto;
+@media (max-width: 640px) {
+  .biomarkerGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.bioCard {
   background: var(--field);
   border: 1px solid var(--rule-hair);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
-  padding: var(--s3) var(--s5) var(--s4);
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: transform 0.15s ease, border-color 0.15s ease;
 }
+
+.bioCard:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.bioCardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.bioTitle {
+  font-size: 13.5px;
+  font-weight: 750;
+  color: var(--ink);
+}
+
+.bioNormalTag {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ink-muted);
+  background: var(--inset);
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+}
+
+.bioValueGroup {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+}
+
+.bioNumber {
+  font-family: var(--font-display), var(--font-sans), sans-serif;
+  font-size: 26px;
+  font-weight: 850;
+  color: var(--ink);
+  line-height: 1;
+}
+
+.bioUnit {
+  font-size: 13px;
+  color: var(--ink-muted);
+  font-weight: 650;
+}
+
+.bioMeter {
+  width: 100%;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--inset);
+  overflow: hidden;
+  margin-top: 2px;
+}
+
+.bioMeterFill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  transition: width 0.4s ease-out;
+}
+
+.meterFillGood { background: var(--level-low); }
+.meterFillHigh { background: var(--level-high); }
+
+/* ── Clinical Notes Editor ──────────────────────────────────────────────── */
 
 .noteSection {
-  margin-top: var(--s8);
-  padding: var(--s6);
+  background: var(--inset);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-xl);
+  padding: var(--s4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+.noteHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s2);
+}
+
+.noteTitleWrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.noteIcon {
+  color: var(--accent);
+}
+
+.noteTitle {
+  font-size: 15px;
+  font-weight: 850;
+  color: var(--ink);
+}
+
+.saveSuccessToast {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 750;
+  color: var(--level-low);
+  animation: fadeInDown 0.2s ease-out;
+}
+
+.quickNotesRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.quickNoteLabel {
+  font-size: 12px;
+  font-weight: 750;
+  color: var(--ink-muted);
+}
+
+.quickNoteBtn {
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--accent);
   background: var(--field);
   border: 1px solid var(--rule-hair);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
+  border-radius: var(--radius-pill);
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.quickNoteBtn:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
 }
 
 .noteField {
-  margin: var(--s4) 0;
+  width: 100%;
 }
 
-.emptyState {
-  padding: var(--s8) var(--s6);
+.noteTextarea {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: var(--ink);
   background: var(--field);
-  border: 1px solid var(--rule-hair);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--rule-heavy);
+  border-radius: var(--radius-md);
+  outline: none;
+  resize: vertical;
+  min-height: 80px;
+  transition: all 0.15s ease;
+}
+
+.noteTextarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2.5px color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+.noteActionsRow {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btnSaveNote {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  background: var(--cta-field);
+  color: var(--cta-ink);
+  border: none;
+  border-radius: var(--radius-pill);
+  font-size: 13.5px;
+  font-weight: 750;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.15s ease;
+}
+
+.btnSaveNote:hover:not(:disabled) {
+  background: var(--accent-deep);
+  transform: translateY(-1px);
+}
+
+.btnSaveNote:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Empty States & Guides ──────────────────────────────────────────────── */
+
+.emptySessionBox {
+  padding: var(--s6) var(--s4);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.emptySessionIcon {
+  color: var(--ink-muted);
+}
+
+.emptySelectCard {
+  background: linear-gradient(
+    135deg,
+    var(--field) 0%,
+    color-mix(in srgb, var(--accent) 3%, var(--field)) 100%
+  );
+  border: 2px dashed color-mix(in srgb, var(--accent) 35%, var(--rule-heavy));
+  border-radius: var(--radius-2xl);
+  padding: 60px 40px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s4);
+  height: 760px;
+  min-height: 760px;
   box-shadow: var(--shadow-card);
 }
 
-.emptyState h2 {
-  font-size: var(--t-head);
+.emptySelectIconWrap {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 28px -4px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
-.emptyState p {
+.emptySelectTitle {
+  font-size: 24px;
+  font-weight: 850;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+
+.emptySelectHint {
+  font-size: 15px;
+  color: var(--ink-secondary);
+  max-width: 46ch;
+  line-height: 1.6;
+}
+
+.emptyGuidePills {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   margin-top: var(--s3);
+  width: 100%;
+  max-width: 420px;
+}
+
+.guidePill {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border-radius: var(--radius-xl);
+  background: var(--inset);
+  border: 1px solid var(--rule-hair);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  text-align: left;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.guidePill:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+}
+
+.guideIcon {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+/* ── Animated Error Modal Popup ─────────────────────────────────────────── */
+
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: var(--s4);
+  animation: fadeInBackdrop 0.22s ease-out;
+}
+
+@keyframes fadeInBackdrop {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.errorModalCard {
+  background: var(--field);
+  border: 1px solid color-mix(in srgb, var(--level-high) 30%, transparent);
+  border-radius: var(--radius-2xl);
+  padding: var(--s7) var(--s6);
+  max-width: 440px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 40px -10px rgba(220, 38, 38, 0.28), 0 10px 25px rgba(0, 0, 0, 0.12);
+  animation: errorCardPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s3);
+}
+
+@keyframes errorCardPop {
+  0% { opacity: 0; transform: scale(0.85) translateY(12px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.errorIconCircle {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--level-high) 12%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--s2);
+  animation: errorPulse 2s infinite;
+}
+
+@keyframes errorPulse {
+  0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.45); }
+  70% { box-shadow: 0 0 0 14px rgba(220, 38, 38, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+}
+
+.errorSvg {
+  width: 52px;
+  height: 52px;
+  stroke: var(--level-high);
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-miterlimit: 10;
+  animation: errorShake 0.45s 0.2s ease-in-out;
+}
+
+.errorCircleBg {
+  stroke: color-mix(in srgb, var(--level-high) 25%, transparent);
+  stroke-width: 3;
+}
+
+.errorCrossLine1 {
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: strokeDraw 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.15s forwards;
+}
+
+.errorCrossLine2 {
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: strokeDraw 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.25s forwards;
+}
+
+@keyframes strokeDraw {
+  100% { stroke-dashoffset: 0; }
+}
+
+@keyframes errorShake {
+  0%, 100% { transform: rotate(0deg); }
+  20%, 60% { transform: rotate(-8deg); }
+  40%, 80% { transform: rotate(8deg); }
+}
+
+.errorModalTitle {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+
+.errorModalDesc {
+  font-size: 13px;
+  line-height: 1.55;
   color: var(--ink-secondary);
 }
 
-.loading {
-  padding: var(--s8) 0;
-  color: var(--ink-secondary);
+.errorModalBtn {
+  margin-top: var(--s3);
+  padding: 11px 24px;
+  border-radius: var(--radius-pill);
+  background: var(--level-high);
+  color: #fff;
+  border: none;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.32);
+  width: 100%;
+}
+
+.errorModalBtn:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(220, 38, 38, 0.42);
 }

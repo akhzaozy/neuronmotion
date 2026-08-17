@@ -1,7 +1,7 @@
 # 🧠 NeuronMotion  -  Sistem Skrining Gangguan Neurologis Berbasis Computer Vision & AI
 
 <p align="center">
-  <img src="webapp/src/app/icon.svg" alt="NeuronMotion Logo" width="80" height="80" />
+  <img src="webapp/public/logo.png" alt="NeuronMotion Logo" width="110" />
 </p>
 
 <p align="center">

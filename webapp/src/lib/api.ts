@@ -171,6 +171,7 @@ export interface UserProfile {
   specialization?: string;
   institution?: string;
   licenseNumber?: string;
+  signature?: string | null;
   country?: string;
   countryName?: string;
   region?: string;
@@ -188,6 +189,7 @@ export interface RegisterInput {
   specialization?: string;
   institution?: string;
   licenseNumber?: string;
+  signature?: string | null;
   country?: string;
   countryName?: string;
   region?: string;
@@ -263,6 +265,12 @@ export interface PatientDetail {
   email: string;
   gender?: string;
   age?: number;
+  dateOfBirth?: string | null;
+  country?: string;
+  countryName?: string;
+  region?: string;
+  state?: string;
+  city?: string;
   sessions: Session[];
   trend: Array<{ date: string; score: number; risk: string }>;
 }

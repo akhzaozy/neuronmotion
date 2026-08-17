@@ -29,11 +29,11 @@ function resolveDoctorId(req, requested) {
 
 /**
  * Menyusun sebaran wilayah pasien beserta kategori risiko terakhirnya.
- * Berguna bagi tenaga kesehatan untuk melihat di wilayah mana pasien berisiko
- * tinggi paling banyak terkumpul.
+ * Menyediakan struktur berjenjang (Negara -> Provinsi -> Kota) untuk drilldown interaktif
+ * serta daftar datar (byCountry, byState, byCity) untuk kompatibilitas.
  */
 async function buildGeoBreakdown(patientIds) {
-  if (!patientIds.length) return { byCountry: [], byState: [], byCity: [], unknownCount: 0 };
+  if (!patientIds.length) return { byCountry: [], byState: [], byCity: [], hierarchy: [], unknownCount: 0, totalPatients: 0 };
 
   const patients = await prisma.user.findMany({
     where: { id: { in: patientIds } },
@@ -46,34 +46,125 @@ async function buildGeoBreakdown(patientIds) {
     },
   });
 
-  // Satu penghitung dipakai ulang untuk ketiga tingkat wilayah
-  const tally = (keyFn) => {
-    const map = new Map();
-    let unknown = 0;
-    for (const p of patients) {
-      const key = keyFn(p);
-      if (!key) { unknown++; continue; }
-      const entry = map.get(key) || { name: key, total: 0, HIGH: 0, MEDIUM: 0, LOW: 0 };
-      entry.total++;
-      const risk = p.patientSessions[0]?.riskCategory;
-      if (risk === 'HIGH' || risk === 'MEDIUM' || risk === 'LOW') entry[risk]++;
-      map.set(key, entry);
-    }
-    return {
-      rows: Array.from(map.values()).sort((a, b) => b.total - a.total || b.HIGH - a.HIGH),
-      unknown,
-    };
-  };
+  const countryMap = new Map();
+  const stateFlatMap = new Map();
+  const cityFlatMap = new Map();
+  let unknown = 0;
 
-  const byCountry = tally(p => p.countryName);
-  const byState = tally(p => p.state);
-  const byCity = tally(p => p.city);
+  for (const p of patients) {
+    const cName = p.countryName || p.country;
+    if (!cName && !p.state && !p.city) {
+      unknown++;
+      continue;
+    }
+
+    const effectiveCountry = cName || 'Tidak Diketahui';
+    const effectiveState = p.state || 'Lainnya';
+    const effectiveCity = p.city || 'Lainnya';
+    const risk = p.patientSessions[0]?.riskCategory;
+
+    // 1. Hierarchy Grouping
+    if (!countryMap.has(effectiveCountry)) {
+      countryMap.set(effectiveCountry, {
+        name: effectiveCountry,
+        code: p.country || '',
+        region: p.region || '',
+        total: 0,
+        HIGH: 0,
+        MEDIUM: 0,
+        LOW: 0,
+        stateMap: new Map(),
+      });
+    }
+    const cEntry = countryMap.get(effectiveCountry);
+    cEntry.total++;
+    if (risk === 'HIGH' || risk === 'MEDIUM' || risk === 'LOW') cEntry[risk]++;
+
+    if (!cEntry.stateMap.has(effectiveState)) {
+      cEntry.stateMap.set(effectiveState, {
+        name: effectiveState,
+        countryName: effectiveCountry,
+        total: 0,
+        HIGH: 0,
+        MEDIUM: 0,
+        LOW: 0,
+        cityMap: new Map(),
+      });
+    }
+    const sEntry = cEntry.stateMap.get(effectiveState);
+    sEntry.total++;
+    if (risk === 'HIGH' || risk === 'MEDIUM' || risk === 'LOW') sEntry[risk]++;
+
+    if (!sEntry.cityMap.has(effectiveCity)) {
+      sEntry.cityMap.set(effectiveCity, {
+        name: effectiveCity,
+        stateName: effectiveState,
+        countryName: effectiveCountry,
+        total: 0,
+        HIGH: 0,
+        MEDIUM: 0,
+        LOW: 0,
+      });
+    }
+    const cityEntry = sEntry.cityMap.get(effectiveCity);
+    cityEntry.total++;
+    if (risk === 'HIGH' || risk === 'MEDIUM' || risk === 'LOW') cityEntry[risk]++;
+
+    // 2. Flat state map
+    if (p.state) {
+      const sf = stateFlatMap.get(p.state) || { name: p.state, countryName: effectiveCountry, total: 0, HIGH: 0, MEDIUM: 0, LOW: 0 };
+      sf.total++;
+      if (risk === 'HIGH' || risk === 'MEDIUM' || risk === 'LOW') sf[risk]++;
+      stateFlatMap.set(p.state, sf);
+    }
+
+    // 3. Flat city map
+    if (p.city) {
+      const cf = cityFlatMap.get(p.city) || { name: p.city, stateName: effectiveState, countryName: effectiveCountry, total: 0, HIGH: 0, MEDIUM: 0, LOW: 0 };
+      cf.total++;
+      if (risk === 'HIGH' || risk === 'MEDIUM' || risk === 'LOW') cf[risk]++;
+      cityFlatMap.set(p.city, cf);
+    }
+  }
+
+  const hierarchy = Array.from(countryMap.values()).map(c => ({
+    name: c.name,
+    code: c.code,
+    region: c.region,
+    total: c.total,
+    HIGH: c.HIGH,
+    MEDIUM: c.MEDIUM,
+    LOW: c.LOW,
+    states: Array.from(c.stateMap.values()).map(s => ({
+      name: s.name,
+      countryName: s.countryName,
+      total: s.total,
+      HIGH: s.HIGH,
+      MEDIUM: s.MEDIUM,
+      LOW: s.LOW,
+      cities: Array.from(s.cityMap.values()).sort((a, b) => b.total - a.total || b.HIGH - a.HIGH),
+    })).sort((a, b) => b.total - a.total || b.HIGH - a.HIGH),
+  })).sort((a, b) => b.total - a.total || b.HIGH - a.HIGH);
+
+  const byCountry = hierarchy.map(c => ({
+    name: c.name,
+    code: c.code,
+    region: c.region,
+    total: c.total,
+    HIGH: c.HIGH,
+    MEDIUM: c.MEDIUM,
+    LOW: c.LOW,
+  }));
+
+  const byState = Array.from(stateFlatMap.values()).sort((a, b) => b.total - a.total || b.HIGH - a.HIGH);
+  const byCity = Array.from(cityFlatMap.values()).sort((a, b) => b.total - a.total || b.HIGH - a.HIGH);
 
   return {
-    byCountry: byCountry.rows,
-    byState: byState.rows,
-    byCity: byCity.rows,
-    unknownCount: byCountry.unknown,
+    byCountry,
+    byState,
+    byCity,
+    hierarchy,
+    unknownCount: unknown,
     totalPatients: patients.length,
   };
 }

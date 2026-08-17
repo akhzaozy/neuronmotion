@@ -1,11 +1,31 @@
 .mark {
   display: inline-flex;
   align-items: center;
-  gap: 0.42em;
+  gap: 0.45em;
   line-height: 1;
   letter-spacing: 0.02em;
   white-space: nowrap;
   color: var(--ink);
+}
+
+.iconWrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logoImg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.textWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38em;
 }
 
 .strong {
@@ -18,14 +38,11 @@
   color: var(--ink-secondary);
 }
 
-/* Batang aksen vertikal, satu-satunya bentuk non-huruf dalam tanda ini.
-   Ujungnya dibulatkan penuh dan badannya sedikit ditebalkan, mengikuti dunia
-   ini; sebagai garis rambut bersudut tajam ia terbaca sebagai sisa dari
-   sistem dokumen sebelumnya. */
+/* Batang aksen vertikal */
 .bar {
   display: block;
-  width: 3px;
-  height: 0.88em;
+  width: 2.5px;
+  height: 0.82em;
   border-radius: var(--radius-pill);
   background: var(--accent);
 }

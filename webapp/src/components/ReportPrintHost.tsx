@@ -64,7 +64,7 @@ export default function ReportPrintHost({ open, onClose, patientName, children }
       setIsGenerating(true);
 
       // Beri sedikit jeda agar transisi animasi modal loading tampil dengan mulus
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      await new Promise((resolve) => setTimeout(resolve, 600));
 
       const element = paperRef.current;
 
@@ -73,19 +73,67 @@ export default function ReportPrintHost({ open, onClose, patientName, children }
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
+        windowWidth: 1024,
+        scrollY: 0,
+        scrollX: 0,
       });
 
-      const imgData = canvas.toDataURL('image/jpeg', 0.98);
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4',
+        compress: true,
       });
 
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const pageWidth = pdf.internal.pageSize.getWidth(); // 210 mm
+      const pageHeight = pdf.internal.pageSize.getHeight(); // 297 mm
 
-      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+      const canvasWidth = canvas.width;
+      const canvasHeight = canvas.height;
+
+      // Rasio tinggi 1 halaman A4 dalam pixel canvas
+      const pageHeightPx = Math.floor((canvasWidth * pageHeight) / pageWidth);
+
+      let renderedHeightPx = 0;
+      let pageIndex = 0;
+
+      while (renderedHeightPx < canvasHeight) {
+        const remainingHeightPx = canvasHeight - renderedHeightPx;
+        const currentChunkHeightPx = Math.min(pageHeightPx, remainingHeightPx);
+
+        // Buat kanvas potongan per halaman A4
+        const pageCanvas = document.createElement('canvas');
+        pageCanvas.width = canvasWidth;
+        pageCanvas.height = pageHeightPx;
+
+        const ctx = pageCanvas.getContext('2d');
+        if (ctx) {
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+          ctx.drawImage(
+            canvas,
+            0,
+            renderedHeightPx,
+            canvasWidth,
+            currentChunkHeightPx,
+            0,
+            0,
+            canvasWidth,
+            currentChunkHeightPx
+          );
+        }
+
+        const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.98);
+
+        if (pageIndex > 0) {
+          pdf.addPage();
+        }
+
+        pdf.addImage(pageImgData, 'JPEG', 0, 0, pageWidth, pageHeight, undefined, 'FAST');
+
+        renderedHeightPx += pageHeightPx;
+        pageIndex++;
+      }
 
       const filename = generateFilename(patientName);
       pdf.save(filename);

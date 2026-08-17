@@ -219,7 +219,7 @@ export default function LiveChat() {
           <Bot size={20} />
           <span className={styles.fabPulse} />
         </span>
-        <span className={styles.fabLabel} data-no-translate="">NeuroBot</span>
+        <span className={styles.fabLabel} data-no-translate="">Neuron Agent</span>
         {hasUnread && !isOpen && (
           <span className={styles.unreadFlag}>{t('bot.newMessage')}</span>
         )}
@@ -241,7 +241,7 @@ export default function LiveChat() {
           </div>
           <div className={styles.headerInfo}>
             <div className={styles.botName}>
-              <span data-no-translate="">NeuroBot</span>
+              <span data-no-translate="">Neuron Agent</span>
               <span className={styles.aiBadge}>AI</span>
             </div>
             <div className={styles.botStatus}>{t('bot.status')}</div>
@@ -284,7 +284,7 @@ export default function LiveChat() {
                 <div className={styles.bubbleCol}>
                   <div className={styles.bubbleHeader}>
                     <span className={styles.senderName}>
-                      {isUser ? t('bot.you') : <span data-no-translate="">NeuroBot</span>}
+                      {isUser ? t('bot.you') : <span data-no-translate="">Neuron Agent</span>}
                     </span>
                     {msg.time && <span className={styles.msgTime}>{msg.time}</span>}
                   </div>
@@ -307,7 +307,7 @@ export default function LiveChat() {
               </div>
               <div className={styles.bubbleCol}>
                 <div className={styles.bubbleHeader}>
-                  <span className={styles.senderName} data-no-translate="">NeuroBot</span>
+                  <span className={styles.senderName} data-no-translate="">Neuron Agent</span>
                   <span className={styles.thinkingBadge}>
                     <span className={styles.thinkingDotPulse} />
                     {isLongWait ? 'Memproses Data...' : 'Menganalisis...'}

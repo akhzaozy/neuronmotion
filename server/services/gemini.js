@@ -246,9 +246,9 @@ async function callGemini(model, prompt, apiKey) {
  * Menghasilkan analisis gabungan. Selalu mengembalikan objek (tidak pernah throw)
  * agar kegagalan Gemini tidak sampai menggagalkan penyimpanan sesi skrining.
  */
-// ── Asisten Percakapan (NeuroBot) ────────────────────────────────────────────
+/// ── Asisten Percakapan (Neuron Agent) ─────────────────────────────────────────
 
-const CHAT_SYSTEM_INSTRUCTION = `Anda adalah asisten kesehatan virtual NeuronMotion bernama "NeuroBot".
+const CHAT_SYSTEM_INSTRUCTION = `Anda adalah asisten kesehatan virtual NeuronMotion bernama "Neuron Agent".
 Tugas Anda adalah membantu pengguna memahami hasil skrining gangguan motorik saraf, tremor, dan Parkinson dengan ramah, jelas, dan cepat.
 
 ATURAN PENTING:
@@ -260,6 +260,12 @@ ATURAN PENTING:
 
 // Batasi riwayat yang dikirim agar permintaan tetap cepat dan efisien
 const MAX_CHAT_HISTORY = 12;
+
+/**
+ * Ditambahkan ke instruksi sistem ketika antarmuka sedang berbahasa Inggris,
+ * agar nada bicara dan batasan medis yang sama tetap berlaku dalam bahasa Inggris.
+ */
+const EN_SYSTEM_ADDENDUM = `\n\nLANGUAGE INSTRUCTION: The user is interacting in English. You MUST reply in clear, professional, and empathetic English. Follow all the guidelines above: do not give formal diagnosis, keep answers concise (2-3 short paragraphs max), and encourage professional medical consultation when appropriate.`;
 
 /**
  * Ditambahkan ke instruksi sistem ketika antarmuka sedang berbahasa Inggris,

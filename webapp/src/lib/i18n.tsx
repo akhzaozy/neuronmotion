@@ -21,16 +21,16 @@ const DICT: Record<string, { id: string; en: string }> = {
   'nav.profil': { id: 'Profil', en: 'Profile' },
   'nav.portalNakes': { id: 'Portal Nakes', en: 'Clinician Portal' },
 
-  // NeuroBot
+  // Neuron Agent
   'bot.welcome': {
-    id: 'Halo! Saya **NeuroBot**, asisten kesehatan virtual NeuronMotion.\n\nSaya siap membantu Anda memahami hasil skrining, menjawab pertanyaan seputar kesehatan motorik, dan memberikan informasi umum tentang gangguan saraf.\n\nApa yang ingin Anda tanyakan hari ini?',
-    en: 'Hello! I am **NeuroBot**, the NeuronMotion virtual health assistant.\n\nI can help you understand your screening results, answer questions about motor health, and share general information about neurological conditions.\n\nWhat would you like to ask today?',
+    id: 'Halo! Saya **Neuron Agent**, asisten kesehatan virtual NeuronMotion.\n\nSaya siap membantu Anda memahami hasil skrining, menjawab pertanyaan seputar kesehatan motorik, dan memberikan informasi umum tentang gangguan saraf.\n\nApa yang ingin Anda tanyakan hari ini?',
+    en: 'Hello! I am **Neuron Agent**, the NeuronMotion virtual health assistant.\n\nI can help you understand your screening results, answer questions about motor health, and share general information about neurological conditions.\n\nWhat would you like to ask today?',
   },
   'bot.errorPrefix': { id: 'Gagal:', en: 'Failed:' },
   'bot.error': { id: 'Terjadi kesalahan. Silakan coba lagi.', en: 'Something went wrong. Please try again.' },
-  'bot.openChat': { id: 'Buka chat dengan NeuroBot', en: 'Open chat with NeuroBot' },
+  'bot.openChat': { id: 'Buka chat dengan Neuron Agent', en: 'Open chat with Neuron Agent' },
   'bot.closeChat': { id: 'Tutup chat', en: 'Close chat' },
-  'bot.chatWith': { id: 'Chat dengan NeuroBot AI', en: 'Chat with NeuroBot AI' },
+  'bot.chatWith': { id: 'Chat dengan Neuron Agent AI', en: 'Chat with Neuron Agent AI' },
   'bot.status': { id: 'Asisten AI · Powered by Last Dance', en: 'AI Assistant · Powered by Last Dance' },
   'bot.clearHistory': { id: 'Hapus riwayat chat', en: 'Clear chat history' },
   'bot.qHeader': { id: 'Pertanyaan yang sering diajukan:', en: 'Frequently asked questions:' },
@@ -43,7 +43,7 @@ const DICT: Record<string, { id: string; en: string }> = {
      menolong siapa pun. Ia kini punya barisnya sendiri di bawah isian. */
   'bot.placeholder': { id: 'Ketik pertanyaan Anda', en: 'Type your question' },
   'bot.enterHint': { id: 'Enter kirim, Shift+Enter baris baru', en: 'Enter to send, Shift+Enter for a new line' },
-  'bot.messageLabel': { id: 'Pesan untuk NeuroBot', en: 'Message for NeuroBot' },
+  'bot.messageLabel': { id: 'Pesan untuk Neuron Agent', en: 'Message for Neuron Agent' },
   'bot.send': { id: 'Kirim pesan', en: 'Send message' },
   'bot.sendShort': { id: 'Kirim', en: 'Send' },
   // Label penutur pada tiap giliran percakapan. Ia menggantikan avatar berikon
@@ -60,8 +60,8 @@ const DICT: Record<string, { id: string; en: string }> = {
     en: 'AI is reading your data and identifying, please wait a moment...',
   },
   'bot.disclaimer': {
-    id: 'NeuroBot bukan dokter, selalu konsultasikan kondisi Anda ke tenaga medis',
-    en: 'NeuroBot is not a doctor, always consult a healthcare professional about your condition',
+    id: 'Neuron Agent bukan dokter, selalu konsultasikan kondisi Anda ke tenaga medis',
+    en: 'Neuron Agent is not a doctor, always consult a healthcare professional about your condition',
   },
 
   // Sebaran wilayah
@@ -84,6 +84,19 @@ const DICT: Record<string, { id: string; en: string }> = {
   'geo.tableView': { id: 'Tabel Data', en: 'Data Table' },
   'geo.totalRegionPatients': { id: 'Total Pasien', en: 'Total Patients' },
   'geo.ofTotal': { id: 'dari total', en: 'of total' },
+  'geo.searchPlaceholder': { id: 'Cari provinsi atau kota di Indonesia...', en: 'Search province or city in Indonesia...' },
+  'geo.allCountries': { id: 'Seluruh Indonesia', en: 'All Indonesia' },
+  'geo.drilldown': { id: 'Eksplorasi Wilayah', en: 'Region Drilldown' },
+  'geo.clickToDrill': { id: 'Klik untuk jelajahi rincian kota & kabupaten', en: 'Click to explore cities & regencies' },
+  'geo.backTo': { id: 'Kembali', en: 'Back' },
+  'geo.showingResultsFor': { id: 'Menampilkan rincian', en: 'Showing breakdown for' },
+  'geo.noSearchResults': { id: 'Tidak ada wilayah yang sesuai dengan pencarian Anda.', en: 'No regions match your search criteria.' },
+  'geo.riskRatio': { id: 'Rasio Risiko', en: 'Risk Ratio' },
+  'geo.totalMapped': { id: 'Pasien Terpetakan', en: 'Mapped Patients' },
+  'geo.activeCountries': { id: 'Provinsi Terjangkau', en: 'Covered Provinces' },
+  'geo.highRiskCount': { id: 'Kasus Risiko Tinggi', en: 'High Risk Cases' },
+  'geo.topRegions': { id: 'Wilayah Teratas', en: 'Top Regions' },
+  'geo.details': { id: 'Rincian', en: 'Details' },
 
   // Laporan cetak
   'report.previewHint': {

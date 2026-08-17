@@ -114,6 +114,8 @@ router.post('/login', async (req, res) => {
         city: user.city,
         specialization: user.specialization,
         institution: user.institution,
+        licenseNumber: user.licenseNumber,
+        signature: user.signature,
       }
     });
   } catch (error) {
@@ -140,7 +142,7 @@ router.get('/me', requireAuth, async (req, res) => {
 router.put('/profile', requireAuth, async (req, res) => {
   try {
     const {
-      name, gender, dateOfBirth, specialization, institution,
+      name, gender, dateOfBirth, specialization, institution, licenseNumber, signature,
       country, countryName, region, state, city,
     } = req.body;
     const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
@@ -155,6 +157,8 @@ router.put('/profile', requireAuth, async (req, res) => {
     if (user.role === 'DOCTOR') {
       if (specialization !== undefined) data.specialization = specialization || null;
       if (institution !== undefined) data.institution = institution || null;
+      if (licenseNumber !== undefined) data.licenseNumber = licenseNumber || null;
+      if (signature !== undefined) data.signature = signature || null;
     }
     // Lokasi dapat diperbarui oleh kedua peran
     if (country !== undefined) data.country = country || null;

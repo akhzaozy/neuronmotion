@@ -195,10 +195,12 @@
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1.05fr 0.95fr;
   gap: var(--s7);
   align-items: center;
   width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
 }
 
 @media (max-width: 900px) {
@@ -798,6 +800,9 @@
 .bandInner {
   position: relative;
   z-index: 1;
+  max-width: 1180px;
+  margin: 0 auto;
+  text-align: center;
 }
 
 /* Teks di atas bidang biru. Warnanya diturunkan dari birunya sendiri, bukan
@@ -806,15 +811,18 @@
   color: #06303d;
   font-size: clamp(1.875rem, 3.6vw, 2.75rem);
   letter-spacing: -0.02em;
-  max-width: 18ch;
+  max-width: 28ch;
+  margin: 0 auto;
+  text-align: center;
 }
 
 .bandLead {
-  margin-top: var(--s3);
+  margin: var(--s3) auto 0;
   font-size: var(--t-lead);
   line-height: 1.6;
   color: #0d4152;
-  max-width: 54ch;
+  max-width: 60ch;
+  text-align: center;
 }
 
 :global([data-theme='dark']) .bandTitle {
@@ -838,7 +846,9 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--s5);
-  margin-top: var(--s7);
+  margin: var(--s7) auto 0;
+  max-width: 1180px;
+  text-align: left;
 }
 
 @media (max-width: 860px) {
@@ -898,7 +908,8 @@
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
   gap: var(--s7);
   align-items: start;
-  margin-top: var(--s6);
+  margin: var(--s6) auto 0;
+  max-width: 1100px;
 }
 
 @media (max-width: 860px) {
@@ -964,6 +975,8 @@
   gap: var(--s8);
   align-items: center;
   padding: var(--s8);
+  max-width: 1100px;
+  margin: 0 auto;
 }
 
 @media (max-width: 860px) {
@@ -1071,16 +1084,25 @@
 .footerInner {
   border-top: 1px solid var(--rule-hair);
   padding-top: var(--s6);
+  max-width: 1100px;
+  margin: 0 auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .footerDisclaimer {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: center;
   gap: var(--s3);
   font-size: var(--t-body);
   font-weight: 600;
   color: var(--ink);
   max-width: 78ch;
+  text-align: center;
+  margin: 0 auto;
 }
 
 .footerDisclaimerIcon {
@@ -1095,4 +1117,7 @@
   line-height: 1.6;
   color: var(--ink-muted);
   max-width: 78ch;
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
 }

@@ -8,6 +8,7 @@
   z-index: 2000;
   background: var(--margin-ground);
   overflow-y: auto;
+  overflow-x: auto;
   padding: 0 0 var(--s7);
   animation: fadeInModal 0.25s ease-out both;
 }
@@ -74,7 +75,8 @@
 .paperWrap {
   margin: var(--s5) auto;
   width: 210mm;
-  max-width: calc(100% - var(--s6));
+  min-width: 210mm;
+  box-sizing: border-box;
   background: #ffffff;
   box-shadow: var(--lift);
   border-radius: 4px;

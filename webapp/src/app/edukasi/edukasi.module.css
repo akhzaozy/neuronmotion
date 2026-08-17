@@ -40,10 +40,28 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   padding: var(--s3) var(--s4);
+  animation: fadeInSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes fadeInSlide {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .row {
   border-bottom: 1px solid var(--rule-hair);
+  animation: rowEntrance 0.35s ease-out both;
+}
+
+.row:nth-child(1) { animation-delay: 0.04s; }
+.row:nth-child(2) { animation-delay: 0.08s; }
+.row:nth-child(3) { animation-delay: 0.12s; }
+.row:nth-child(4) { animation-delay: 0.16s; }
+.row:nth-child(5) { animation-delay: 0.20s; }
+
+@keyframes rowEntrance {
+  from { opacity: 0; transform: translateX(-6px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 .row:last-child {
@@ -65,11 +83,12 @@
   color: var(--ink);
   background: transparent;
   border-radius: var(--radius);
-  transition: background-color 0.18s ease-out;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .entry:hover {
-  background: var(--accent-wash);
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  transform: translateX(4px);
 }
 
 .entry:active {

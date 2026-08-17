@@ -321,9 +321,9 @@ select {
 /* Kolom isi utama. */
 .sheet {
   width: 100%;
-  max-width: 1180px;
+  max-width: 1480px;
   margin: 0 auto;
-  padding: 0 var(--s5);
+  padding: 0 var(--s6);
 }
 
 @media (max-width: 640px) {

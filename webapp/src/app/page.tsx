@@ -458,8 +458,8 @@ export default function LandingPage() {
             ref={provenanceRef}
             className={`sheet ${styles.reveal} ${provenanceShown ? styles.revealShown : ''}`}
           >
-            <div className="docHead">
-              <div className="docHead__meta">
+            <div className={`docHead ${styles.sectionHeadCenter}`}>
+              <div className="docHead__meta" style={{ justifyContent: 'center' }}>
                 <span>{t('land.provenance')}</span>
               </div>
               <h2 className={styles.sectionTitle}>{t('land.evidenceTitle')}</h2>
