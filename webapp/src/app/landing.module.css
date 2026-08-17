@@ -19,6 +19,14 @@
   overflow-x: clip;
 }
 
+.sheet {
+  width: 100%;
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 var(--s5);
+  box-sizing: border-box;
+}
+
 /* ── Kop halaman ────────────────────────────────────────────────────────────
    Bilah mengambang, bukan kop yang menempel di tepi layar. Ia melayang di atas
    ground biru pucat dengan sudut penuh, sehingga sejak piksel pertama halaman
