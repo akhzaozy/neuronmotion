@@ -91,6 +91,21 @@ const TAP_CLOSED_THRESHOLD = 0.05;
 // Jari harus terbuka > threshold ini agar bisa dihitung sebagai tap baru
 const TAP_OPEN_THRESHOLD = 0.08;
 
+// Temporal smoothing EMA filter untuk menghilangkan micro-jitter pada pembacaan sendi tubuh
+function smoothLandmarks(raw: Landmark[], prev: Landmark[] | null, alpha = 0.7): Landmark[] {
+  if (!prev || prev.length !== raw.length) return raw;
+  return raw.map((curr, i) => {
+    const p = prev[i];
+    if (!p) return curr;
+    return {
+      x: p.x * (1 - alpha) + curr.x * alpha,
+      y: p.y * (1 - alpha) + curr.y * alpha,
+      z: (p.z || 0) * (1 - alpha) + (curr.z || 0) * alpha,
+      visibility: Math.max(curr.visibility || 0, (p.visibility || 0) * 0.85),
+    };
+  });
+}
+
 export function useBiomarkerCapture() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -98,6 +113,7 @@ export function useBiomarkerCapture() {
   const modelsRef = useRef<any>(null);
   const animFrameRef = useRef<number>(0);
   const samplesRef = useRef<unknown[]>([]);
+  const prevLandmarksRef = useRef<Landmark[] | null>(null);
   const isCapturing = useRef(false);
   const startTime = useRef(0);
   const activeTestRef = useRef<TestType>(null);
@@ -221,14 +237,16 @@ export function useBiomarkerCapture() {
         'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm'
       );
 
+      // Gunakan pose_landmarker_full untuk akurasi sendi dan visibilitas lutut/kaki yang jauh lebih presisi
       const poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
         baseOptions: {
-          modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',
+          modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task',
           delegate: 'GPU',
         },
         runningMode: 'VIDEO',
         numPoses: 1,
         minPoseDetectionConfidence: 0.5,
+        minPosePresenceConfidence: 0.5,
         minTrackingConfidence: 0.5,
       });
 
@@ -240,6 +258,7 @@ export function useBiomarkerCapture() {
         runningMode: 'VIDEO',
         numHands: 1,
         minHandDetectionConfidence: 0.5,
+        minHandPresenceConfidence: 0.5,
         minTrackingConfidence: 0.5,
       });
 
@@ -267,12 +286,26 @@ export function useBiomarkerCapture() {
       );
       
       const poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
-        baseOptions: { modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task', delegate: 'CPU' },
-        runningMode: 'VIDEO', numPoses: 1,
+        baseOptions: {
+          modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task',
+          delegate: 'CPU',
+        },
+        runningMode: 'VIDEO',
+        numPoses: 1,
+        minPoseDetectionConfidence: 0.5,
+        minPosePresenceConfidence: 0.5,
+        minTrackingConfidence: 0.5,
       });
       const handLandmarker = await HandLandmarker.createFromOptions(vision, {
-        baseOptions: { modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task', delegate: 'CPU' },
-        runningMode: 'VIDEO', numHands: 1,
+        baseOptions: {
+          modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',
+          delegate: 'CPU',
+        },
+        runningMode: 'VIDEO',
+        numHands: 1,
+        minHandDetectionConfidence: 0.5,
+        minHandPresenceConfidence: 0.5,
+        minTrackingConfidence: 0.5,
       });
 
       clearTimeout(timeoutId);
@@ -428,14 +461,24 @@ export function useBiomarkerCapture() {
       if (isHandMode) {
         const result = models.handLandmarker.detectForVideo(video, performance.now());
         if (result?.landmarks?.length > 0) {
-          landmarksToDraw = result.landmarks[0]; // Ambil tangan pertama
-          if (isCapturing.current) processHandSample(landmarksToDraw as Landmark[]);
+          const raw = result.landmarks[0] as Landmark[];
+          const smoothed = smoothLandmarks(raw, prevLandmarksRef.current, 0.75);
+          prevLandmarksRef.current = smoothed;
+          landmarksToDraw = smoothed;
+          if (isCapturing.current) processHandSample(smoothed);
+        } else {
+          prevLandmarksRef.current = null;
         }
       } else {
         const result = models.poseLandmarker.detectForVideo(video, performance.now());
         if (result?.landmarks?.length > 0) {
-          landmarksToDraw = result.landmarks[0]; // Ambil orang pertama
-          if (isCapturing.current) processPoseSample(landmarksToDraw as Landmark[]);
+          const raw = result.landmarks[0] as Landmark[];
+          const smoothed = smoothLandmarks(raw, prevLandmarksRef.current, 0.65);
+          prevLandmarksRef.current = smoothed;
+          landmarksToDraw = smoothed;
+          if (isCapturing.current) processPoseSample(smoothed);
+        } else {
+          prevLandmarksRef.current = null;
         }
       }
 
@@ -521,15 +564,21 @@ export function useBiomarkerCapture() {
 
   // ── Draw Skeleton ─────────────────────────────────────────────────────────────
   function drawSkeleton(ctx: CanvasRenderingContext2D, landmarks: Landmark[], w: number, h: number, isHand: boolean) {
-    ctx.strokeStyle = isHand ? 'rgba(16,185,129,0.7)' : 'rgba(59,130,246,0.7)';
-    ctx.lineWidth = isHand ? 3 : 2;
+    const test = activeTestRef.current;
+    ctx.strokeStyle = isHand ? 'rgba(16,185,129,0.75)' : (test === 'rom' ? 'rgba(6,182,212,0.85)' : 'rgba(59,130,246,0.75)');
+    ctx.lineWidth = isHand ? 3 : (test === 'rom' ? 3.5 : 2.5);
     
     const connections = isHand ? HAND_CONNECTIONS : POSE_CONNECTIONS;
 
     connections.forEach(([a, b]) => {
       const lA = landmarks[a], lB = landmarks[b];
       if (!lA || !lB) return;
-      if (!isHand && ((lA.visibility || 0) < 0.2 || (lB.visibility || 0) < 0.2)) return;
+      if (!isHand && ((lA.visibility || 0) < 0.12 || (lB.visibility || 0) < 0.12)) return;
+      
+      const isRomKneeLine = test === 'rom' && ((a === 23 && b === 25) || (a === 25 && b === 27) || (a === 24 && b === 26) || (a === 26 && b === 28));
+      ctx.strokeStyle = isRomKneeLine ? 'rgba(16,185,129,0.95)' : (isHand ? 'rgba(16,185,129,0.75)' : 'rgba(59,130,246,0.75)');
+      ctx.lineWidth = isRomKneeLine ? 4 : (isHand ? 3 : 2);
+
       ctx.beginPath();
       ctx.moveTo((1 - lA.x) * w, lA.y * h);
       ctx.lineTo((1 - lB.x) * w, lB.y * h);
@@ -537,12 +586,15 @@ export function useBiomarkerCapture() {
     });
 
     landmarks.forEach((lm, i) => {
-      if (!isHand && (lm.visibility || 0) < 0.2) return;
-      // Beri warna khusus pada area pantauan AI (contoh: ujung jari untuk tapping)
-      const isTarget = isHand ? (i === 4 || i === 8 || i === 0) : [11,12,13,14,23,24,25,26,27,28].includes(i);
-      ctx.fillStyle = isTarget ? 'rgba(239,68,68,0.9)' : (isHand ? 'rgba(16,185,129,0.6)' : 'rgba(59,130,246,0.6)');
+      if (!isHand && (lm.visibility || 0) < 0.12) return;
+      const isTarget = isHand
+        ? (i === 4 || i === 8 || i === 0)
+        : (test === 'rom' ? [23, 24, 25, 26, 27, 28].includes(i) : [11,12,13,14,23,24,25,26,27,28].includes(i));
+      
+      const isKneePoint = test === 'rom' && (i === 25 || i === 26);
+      ctx.fillStyle = isKneePoint ? 'rgba(16,185,129,1)' : (isTarget ? 'rgba(239,68,68,0.95)' : (isHand ? 'rgba(16,185,129,0.6)' : 'rgba(59,130,246,0.6)'));
       ctx.beginPath();
-      ctx.arc((1 - lm.x) * w, lm.y * h, isTarget ? (isHand ? 6 : 5) : 3, 0, Math.PI * 2);
+      ctx.arc((1 - lm.x) * w, lm.y * h, isKneePoint ? 7 : (isTarget ? (isHand ? 6 : 5) : 3), 0, Math.PI * 2);
       ctx.fill();
     });
   }
@@ -606,7 +658,8 @@ export function useBiomarkerCapture() {
     switch (test) {
       case 'gait': {
         const lAnkle = landmarks[27], rAnkle = landmarks[28];
-        if (lAnkle && rAnkle && (lAnkle.visibility || 0) > 0.3 && (rAnkle.visibility || 0) > 0.3) {
+        const lKnee = landmarks[25], rKnee = landmarks[26];
+        if (lAnkle && rAnkle && ((lAnkle.visibility || 0) > 0.15 || (lKnee?.visibility || 0) > 0.15)) {
           // Hitung jarak 2D antara kedua pergelangan kaki
           const ankleDist = Math.hypot(lAnkle.x - rAnkle.x, lAnkle.y - rAnkle.y);
           samplesRef.current.push({ timestamp: now, distance: ankleDist });
@@ -615,9 +668,9 @@ export function useBiomarkerCapture() {
           const s = samplesRef.current as Array<{ timestamp: number; distance: number }>;
           if (s.length >= 3) {
             const a = s[s.length - 3], b = s[s.length - 2], c = s[s.length - 1];
-            const isPeak = b.distance > a.distance && b.distance > c.distance && b.distance > 0.05;
+            const isPeak = b.distance > a.distance && b.distance > c.distance && b.distance > 0.03;
             const lastPeak = gaitLastPeakTimeRef.current;
-            if (isPeak && (lastPeak === null || b.timestamp - lastPeak >= 250)) {
+            if (isPeak && (lastPeak === null || b.timestamp - lastPeak >= 200)) {
               gaitLastPeakTimeRef.current = b.timestamp;
               gaitStepCountRef.current += 1;
             }
@@ -628,12 +681,16 @@ export function useBiomarkerCapture() {
       }
       case 'armSwing': {
         const lShoulder = landmarks[11], rShoulder = landmarks[12];
-        const lWrist = landmarks[15], rWrist = landmarks[16]; // Gunakan wrist, bukan elbow untuk ayunan
-        if (lWrist && rWrist && lShoulder && rShoulder && (lWrist.visibility || 0) > 0.3 && (rWrist.visibility || 0) > 0.3) {
+        const lWrist = landmarks[15], rWrist = landmarks[16];
+        const lElbow = landmarks[13], rElbow = landmarks[14];
+
+        const lPt = (lWrist && (lWrist.visibility || 0) > 0.15) ? lWrist : lElbow;
+        const rPt = (rWrist && (rWrist.visibility || 0) > 0.15) ? rWrist : rElbow;
+
+        if (lPt && rPt && lShoulder && rShoulder && ((lShoulder.visibility || 0) > 0.15 || (rShoulder.visibility || 0) > 0.15)) {
           // Sudut deviasi lengan dari garis vertikal ke bawah (pendulum)
-          // atan2(dx, dy) dimana dy positif ke bawah, dx positif ke kanan
-          const lAngle = Math.abs(Math.atan2(lWrist.x - lShoulder.x, lWrist.y - lShoulder.y) * (180 / Math.PI));
-          const rAngle = Math.abs(Math.atan2(rWrist.x - rShoulder.x, rWrist.y - rShoulder.y) * (180 / Math.PI));
+          const lAngle = Math.abs(Math.atan2(lPt.x - lShoulder.x, lPt.y - lShoulder.y) * (180 / Math.PI));
+          const rAngle = Math.abs(Math.atan2(rPt.x - rShoulder.x, rPt.y - rShoulder.y) * (180 / Math.PI));
           
           samplesRef.current.push({ timestamp: now, leftAngle: lAngle, rightAngle: rAngle });
           
@@ -643,8 +700,12 @@ export function useBiomarkerCapture() {
         break;
       }
       case 'posture': {
-        const hip = landmarks[23], shoulder = landmarks[11];
-        if (hip && shoulder && (hip.visibility || 0) > 0.3 && (shoulder.visibility || 0) > 0.3) {
+        const hipL = landmarks[23], hipR = landmarks[24];
+        const shoulderL = landmarks[11], shoulderR = landmarks[12];
+        const hip = (hipL && (hipL.visibility || 0) > 0.15) ? hipL : hipR;
+        const shoulder = (shoulderL && (shoulderL.visibility || 0) > 0.15) ? shoulderL : shoulderR;
+
+        if (hip && shoulder) {
           samplesRef.current.push({ timestamp: now, hipX: hip.x, hipY: hip.y, shoulderX: shoulder.x, shoulderY: shoulder.y });
           if (samplesRef.current.length > 5) {
             const recent = samplesRef.current.slice(-10) as Array<{ hipX: number; hipY: number }>;
@@ -656,15 +717,27 @@ export function useBiomarkerCapture() {
         break;
       }
       case 'rom': {
-        const hip = landmarks[23], knee = landmarks[25], ankle = landmarks[27];
-        if (hip && knee && ankle && (knee.visibility || 0) > 0.3) {
+        // Deteksi lutut adaptif (kedua kaki kiri & kanan diperiksa)
+        const hipL = landmarks[23], kneeL = landmarks[25], ankleL = landmarks[27];
+        const hipR = landmarks[24], kneeR = landmarks[26], ankleR = landmarks[28];
+        const visL = ((hipL?.visibility || 0) + (kneeL?.visibility || 0) + (ankleL?.visibility || 0)) / 3;
+        const visR = ((hipR?.visibility || 0) + (kneeR?.visibility || 0) + (ankleR?.visibility || 0)) / 3;
+
+        let hip = hipL, knee = kneeL, ankle = ankleL;
+        if (visR > visL && (kneeR?.visibility || 0) > 0.12) {
+          hip = hipR; knee = kneeR; ankle = ankleR;
+        }
+
+        if (hip && knee && ankle && ((knee.visibility || 0) > 0.12 || (hip.visibility || 0) > 0.12)) {
           const v1 = { x: hip.x - knee.x, y: hip.y - knee.y };
           const v2 = { x: ankle.x - knee.x, y: ankle.y - knee.y };
           const dot = v1.x * v2.x + v1.y * v2.y;
           const mag = Math.hypot(v1.x, v1.y) * Math.hypot(v2.x, v2.y);
           const angle = mag > 0 ? Math.acos(Math.min(1, Math.max(-1, dot / mag))) * (180 / Math.PI) : 0;
-          samplesRef.current.push(angle);
-          setLiveMetrics(p => ({ ...p, romKnee: parseFloat(angle.toFixed(1)) }));
+          if (angle >= 10 && angle <= 180) {
+            samplesRef.current.push(angle);
+            setLiveMetrics(p => ({ ...p, romKnee: parseFloat(angle.toFixed(1)) }));
+          }
         }
         break;
       }

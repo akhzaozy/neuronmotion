@@ -58,6 +58,12 @@ export default function ScreeningPage() {
   const [result, setResult] = useState<ScreeningResult | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  const [lastFeedback, setLastFeedback] = useState<{
+    type: string;
+    name: string;
+    count: number;
+  } | null>(null);
+
   const currentTest = TEST_SEQUENCE[currentStep];
   const doneCount = TEST_SEQUENCE.filter(s => completedTests[s.type]).length;
   const hasWork = doneCount > 0 || !!questionnaire;
@@ -124,10 +130,17 @@ export default function ScreeningPage() {
   useEffect(() => {
     if (capturedData?.testType) {
       const type = capturedData.testType as string;
+      const spec = TEST_SEQUENCE.find(s => s.type === type);
+      const testName = spec ? t(spec.nameKey) : type;
       setCompletedTests(prev => ({ ...prev, [type]: capturedData.payload }));
       setSkippedTests(prev => prev.filter(s => s !== type));
+      setLastFeedback({
+        type,
+        name: testName,
+        count: (capturedData.sampleCount as number) || 0,
+      });
     }
-  }, [capturedData]);
+  }, [capturedData, t]);
 
   const beginTest = useCallback((type: ScreeningTest) => {
     const index = TEST_SEQUENCE.findIndex(s => s.type === type);
@@ -279,6 +292,24 @@ export default function ScreeningPage() {
                   tes selesai, di posisi mana pun pengguna berada. */}
               {cameraReady && poseReady && !isCapturing && !instructionFor && (
                 <>
+                  {lastFeedback && (
+                    <div className={styles.successBanner} role="status" aria-live="polite">
+                      <div className={styles.successIcon}>✓</div>
+                      <div className={styles.successText}>
+                        <strong>Data {lastFeedback.name} Berhasil Diterima dan Disimpan!</strong>
+                        <span>{lastFeedback.count} frame data gerakan terekam dengan kualitas sinyal optimal.</span>
+                      </div>
+                      <button
+                        type="button"
+                        className={styles.closeFeedback}
+                        onClick={() => setLastFeedback(null)}
+                        aria-label="Tutup notifikasi"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+
                   <div className={styles.controls}>
                     <button
                       type="button"
@@ -301,17 +332,47 @@ export default function ScreeningPage() {
 
                   {doneCount > 0 && (
                     <div className={styles.submitRow}>
-                      <button
-                        type="button"
-                        className="btn btn--primary btn--lg btn--block"
-                        onClick={submitScreening}
-                      >
-                        {doneCount === TEST_SEQUENCE.length
-                          ? t('scr.submitAll')
-                          : t('scr.submitPartial').replace('{n}', String(doneCount))}
-                      </button>
-                      {doneCount < TEST_SEQUENCE.length && (
-                        <p className={styles.submitHint}>{t('scr.partialHint')}</p>
+                      {doneCount < TEST_SEQUENCE.length ? (
+                        <div className={styles.incompleteCard}>
+                          <div className={styles.incompleteHeader}>
+                            <span className={styles.incompleteBadge}>
+                              {doneCount} dari {TEST_SEQUENCE.length} Tes Selesai Terekam
+                            </span>
+                          </div>
+                          <p className={styles.incompleteText}>
+                            Skor akurasi klasifikasi AI akan optimal jika seluruh 6 tes fisik (termasuk Rentang Gerak Lutut) diselesaikan. Anda dapat melengkapi tes yang tersisa atau langsung mengirimkan data yang ada.
+                          </p>
+                          <div className={styles.incompleteActions}>
+                            <button
+                              type="button"
+                              className="btn btn--primary btn--lg btn--block"
+                              onClick={() => {
+                                const nextUnfinished = TEST_SEQUENCE.findIndex(s => !completedTests[s.type]);
+                                if (nextUnfinished >= 0) {
+                                  setCurrentStep(nextUnfinished);
+                                  beginTest(TEST_SEQUENCE[nextUnfinished].type);
+                                }
+                              }}
+                            >
+                              Lengkapi Tes Berikutnya ({TEST_SEQUENCE.length - doneCount} tersisa)
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn--lg btn--block"
+                              onClick={submitScreening}
+                            >
+                              {t('scr.submitPartial').replace('{n}', String(doneCount))}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          className="btn btn--primary btn--lg btn--block"
+                          onClick={submitScreening}
+                        >
+                          ✓ {t('scr.submitAll')}
+                        </button>
                       )}
                     </div>
                   )}
@@ -328,7 +389,7 @@ export default function ScreeningPage() {
             {/* Indeks tes. Setiap baris bisa dibuka ulang, jadi rekaman yang
                 terlanjur buruk tidak lagi permanen ikut ke dalam skor. */}
             <nav className={styles.index} aria-label={t('scr.sequence')}>
-              <h2 className="label">{t('scr.sequence')}</h2>
+              <h2 className="label">{t('scr.sequence')} ({doneCount}/{TEST_SEQUENCE.length})</h2>
               <ol className={styles.indexList}>
                 {TEST_SEQUENCE.map((spec, i) => {
                   const done = !!completedTests[spec.type];
@@ -350,7 +411,7 @@ export default function ScreeningPage() {
                         <span className={styles.indexName}>{t(spec.nameKey)}</span>
                         <span className={styles.indexState}>
                           {done
-                            ? t('scr.done')
+                            ? `✓ ${t('scr.done')}`
                             : skipped
                               ? t('scr.skipped')
                               : active
@@ -375,14 +436,18 @@ export default function ScreeningPage() {
           <Dialog.Overlay className="dialogScrim" />
           <Dialog.Content className="dialogSheet">
             <Dialog.Title className={styles.dialogTitle}>
-              {rejection?.reason === 'bodyPartMissing'
-                ? t('scr.reject.bodyPart.title')
-                : t('scr.reject.tooFew.title')}
+              {rejection?.testType === 'rom'
+                ? 'Gerakan Lutut Belum Terbaca Jelas'
+                : (rejection?.reason === 'bodyPartMissing'
+                  ? t('scr.reject.bodyPart.title')
+                  : t('scr.reject.tooFew.title'))}
             </Dialog.Title>
             <Dialog.Description className={styles.dialogBody}>
-              {rejection?.reason === 'bodyPartMissing'
-                ? t(`test.${rejection.testType}.step1`)
-                : t('scr.reject.tooFew.body')}
+              {rejection?.testType === 'rom'
+                ? 'Kamera membutuhkan pandangan yang jelas pada kaki dan sendi lutut Anda. Pastikan posisi kaki terlihat jelas di kamera (dari samping atau depan) dan ulangi tes ini agar hasil akurat.'
+                : (rejection?.reason === 'bodyPartMissing'
+                  ? t(`test.${rejection.testType}.step1`)
+                  : t('scr.reject.tooFew.body'))}
             </Dialog.Description>
             <button
               type="button"

@@ -383,3 +383,103 @@
 .resultActions > :global(.btn) {
   flex: 1 1 200px;
 }
+
+/* ── Feedback Banner & Incomplete Warning ──────────────────────────────── */
+
+.successBanner {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s3) var(--s4);
+  background: var(--level-low-wash);
+  border: 1px solid var(--level-low);
+  border-radius: var(--radius-md);
+  color: var(--ink);
+  animation: slideInDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.successIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--level-low);
+  color: #fff;
+  font-weight: 800;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.successText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  font-size: var(--t-caption);
+}
+
+.successText strong {
+  font-size: var(--t-record);
+  color: var(--level-low);
+}
+
+.closeFeedback {
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--ink-muted);
+  cursor: pointer;
+  padding: 4px;
+}
+
+.incompleteCard {
+  background: var(--field);
+  border: 1px solid var(--level-mid);
+  border-radius: var(--radius-md);
+  padding: var(--s4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+.incompleteHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.incompleteBadge {
+  font-size: var(--t-caption);
+  font-weight: 700;
+  color: var(--level-mid);
+  background: var(--level-mid-wash);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+}
+
+.incompleteText {
+  font-size: var(--t-record);
+  color: var(--ink-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.incompleteActions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

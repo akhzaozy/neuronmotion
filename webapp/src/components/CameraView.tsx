@@ -203,6 +203,17 @@ export default function CameraView({
             {t('scr.recording')}
           </p>
         )}
+
+        {ready && isCapturing && (
+          <div className={styles.signalBadge}>
+            <span className={styles.signalDot} aria-hidden="true" />
+            {test.type === 'rom'
+              ? 'Lutut & Sendi Aktif'
+              : test.type === 'tremor' || test.type === 'fingerTapping'
+                ? 'Landmark Jari Aktif'
+                : 'Pelacakan Pose Aktif'}
+          </div>
+        )}
       </div>
 
       {/* Bilah metrik mentah. Tersembunyi dari pasien secara bawaan: angka
