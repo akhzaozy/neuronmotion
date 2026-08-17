@@ -71,6 +71,10 @@ const DICT: Record<string, { id: string; en: string }> = {
   'geo.highRiskTip': { id: 'Risiko tinggi', en: 'High risk' },
   'geo.mediumRiskTip': { id: 'Risiko sedang', en: 'Medium risk' },
   'geo.lowRiskTip': { id: 'Risiko rendah', en: 'Low risk' },
+  'geo.pieView': { id: 'Grafik Lingkaran', en: 'Pie Chart' },
+  'geo.tableView': { id: 'Tabel Data', en: 'Data Table' },
+  'geo.totalRegionPatients': { id: 'Total Pasien', en: 'Total Patients' },
+  'geo.ofTotal': { id: 'dari total', en: 'of total' },
 
   // Laporan cetak
   'report.previewHint': {
@@ -182,8 +186,14 @@ const DICT: Record<string, { id: string; en: string }> = {
   'dash.vsPrevious': { id: 'dibanding sesi sebelumnya', en: 'vs previous session' },
   'dash.noPrevious': { id: 'Sesi pertama Anda', en: 'Your first session' },
   'dash.notMeasured': { id: 'Tes ini belum dikerjakan', en: 'This test has not been done' },
-  'dash.selectSession': { id: 'Lihat sesi ini', en: 'View this session' },
   'dash.lowerBetter': { id: 'Makin rendah makin baik', en: 'Lower is better' },
+  'dash.legendTitle': { id: 'Keterangan Warna & Tingkat Risiko', en: 'Color Legend & Risk Levels' },
+  'dash.legendLowTitle': { id: 'Hijau (Risiko Rendah / Skor < 35)', en: 'Green (Low Risk / Score < 35)' },
+  'dash.legendLowDesc': { id: 'Hasil dalam batas variasi fisiologis normal. Tidak terdeteksi indikasi gangguan motorik saraf yang signifikan.', en: 'Results within normal physiological limits. No significant neurological motor impairment detected.' },
+  'dash.legendMidTitle': { id: 'Cokelat Keemasan (Risiko Sedang / Skor 35 - 64)', en: 'Golden Amber (Moderate Risk / Score 35 - 64)' },
+  'dash.legendMidDesc': { id: 'Terdeteksi deviasi motorik ringan hingga sedang (mis. tremor ringan, penurunan ketukan bertahap). Disarankan latihan terarah & pemantauan berkala.', en: 'Mild to moderate motor deviations detected (e.g. mild tremor, gradual tap fatigue). Targeted exercises & periodic monitoring recommended.' },
+  'dash.legendHighTitle': { id: 'Merah / Oranye Tua (Risiko Tinggi / Skor ≥ 65)', en: 'Red / Crimson (High Risk / Score ≥ 65)' },
+  'dash.legendHighDesc': { id: 'Terdeteksi biomarker motorik signifikan (mis. tremor istirahat 4-6 Hz, bradikinesia berat, atau instabilitas postur). Sangat disarankan konsultasi ke dokter spesialis saraf (neurolog).', en: 'Significant motor biomarkers detected (e.g. 4-6 Hz resting tremor, severe bradykinesia, or postural instability). Neurologist consultation strongly advised.' },
 
   // Kartu pengukuran di beranda. Diberi awalan tersendiri karena namespace
   // 'bio.' sudah dipakai pustaka edukasi untuk nama dan penjelasan tes.
@@ -569,6 +579,7 @@ const DICT: Record<string, { id: string; en: string }> = {
   'doc.searchPatient': { id: 'Cari nama pasien...', en: 'Search patient name...' },
   'doc.selectPatient': { id: 'Pilih Pasien', en: 'Select a Patient' },
   'doc.refresh': { id: 'Perbarui', en: 'Refresh' },
+  'doc.systemOnline': { id: 'Sistem Terhubung', en: 'System Connected' },
   'doc.geoTitle': { id: 'Sebaran Wilayah Pasien', en: 'Patient Geographic Distribution' },
   'doc.geoSubtitle': {
     id: 'Distribusi pasien tertaut beserta kategori risiko pada sesi terakhir mereka.',
@@ -927,6 +938,8 @@ const DICT: Record<string, { id: string; en: string }> = {
     id: 'Setiap tes dipandu satu kalimat di layar, dan hasilnya bisa dibandingkan antar sesi.',
     en: 'Each test is guided by one on-screen line, and results can be compared across sessions.',
   },
+  'land.scrollExplore': { id: 'Gulir untuk eksplorasi', en: 'Scroll to explore' },
+  'land.scrollDown': { id: 'Gulir ke bawah', en: 'Scroll down' },
 
   // Tiga langkah pada pita biru.
   'land.step1Title': { id: 'Rekam', en: 'Capture' },

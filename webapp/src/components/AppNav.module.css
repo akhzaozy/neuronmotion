@@ -14,10 +14,13 @@
   position: sticky;
   top: 0;
   z-index: 40;
-  padding: var(--s3) 0;
-  background: color-mix(in srgb, var(--sheet) 82%, transparent);
-  backdrop-filter: blur(12px);
+  padding: var(--s2) 0;
+  background: color-mix(in srgb, var(--sheet) 85%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--rule-hair);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .inner {
@@ -27,8 +30,9 @@
   padding: 0 var(--s5);
   display: flex;
   align-items: center;
-  gap: var(--s5);
+  gap: var(--s4);
   min-height: var(--touch);
+  box-sizing: border-box;
 }
 
 .brand {
@@ -36,6 +40,7 @@
   display: inline-flex;
   align-items: center;
   min-height: var(--touch);
+  text-decoration: none;
 }
 
 .links {
@@ -45,14 +50,11 @@
   margin-left: auto;
 }
 
-/* Tautan adalah pil, sama seperti .navLink di halaman depan. Huruf besar mono
-   dilepas: nama halaman adalah prosa, dan menyetelnya sebagai label arsip
-   adalah kostum teknis yang persis dikeluhkan sebagai kaku. */
 .link {
   display: inline-flex;
   align-items: center;
   min-height: var(--touch);
-  padding: 0 var(--s4);
+  padding: 0 var(--s3);
   border-radius: var(--radius-pill);
   font-size: var(--t-body);
   font-weight: 500;
@@ -67,8 +69,6 @@
   color: var(--accent);
 }
 
-/* Aktif: bidang biru bubuk terisi penuh plus bobot 700. Dua penanda non-warna
-   tetap ada, seperti pada versi bergaris bawah yang digantikannya. */
 .linkActive {
   background: var(--accent-wash);
   color: var(--accent);
@@ -79,17 +79,15 @@
   display: flex;
   align-items: center;
   gap: var(--s2);
-  padding-left: var(--s4);
+  padding-left: var(--s3);
   border-left: 1px solid var(--rule-hair);
+  flex-shrink: 0;
 }
 
-/* Penanda portal nakes. Sebelumnya label mono huruf besar bergaris kiri; kini
-   pil biru bubuk, sama seperti .panelTag di halaman depan. Ia tetap teks
-   penuh yang terbaca, bukan titik warna. */
 .roleTag {
   display: inline-flex;
   align-items: center;
-  padding: var(--s1) var(--s3);
+  padding: 3px var(--s3);
   border-radius: var(--radius-pill);
   background: var(--accent-wash);
   font-size: var(--t-record);
@@ -98,15 +96,6 @@
   white-space: nowrap;
 }
 
-@media (max-width: 560px) {
-  .roleTag {
-    display: none;
-  }
-}
-
-/* Keluar. Diredam warnanya karena ia bukan aksi yang ingin didorong, tetapi
-   tetap memenuhi lantai sentuh 44px dan tetap berupa kata, bukan ikon pintu:
-   pengguna utama produk ini lansia, dan ikon pintu keluar tidak universal. */
 .logout {
   display: inline-flex;
   align-items: center;
@@ -125,16 +114,12 @@
   color: var(--ink);
 }
 
-/* ── Layar sempit ───────────────────────────────────────────────────────────
-   Navigasi turun ke barisnya sendiri dan menggulir mendatar. Tidak ada menu
-   hamburger, karena itu ikon, dan karena menyembunyikan lima tautan di balik
-   satu tombol justru menambah beban ingatan bagi pengguna yang kita layani. */
-
-@media (max-width: 860px) {
+/* ── Layar Tablet & Laptop Kecil (<= 1040px) ──────────────────────────────── */
+@media (max-width: 1040px) {
   .inner {
     flex-wrap: wrap;
     padding: 0 var(--s4);
-    gap: var(--s3);
+    gap: var(--s2) var(--s3);
   }
 
   .actions {
@@ -147,11 +132,13 @@
     order: 3;
     width: 100%;
     margin-left: 0;
-    gap: var(--s1);
+    gap: 4px;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     border-top: 1px solid var(--rule-hair);
     padding-top: var(--s2);
+    padding-bottom: 2px;
   }
 
   .links::-webkit-scrollbar {
@@ -160,5 +147,37 @@
 
   .link {
     padding: 0 var(--s3);
+    font-size: var(--t-record);
+  }
+}
+
+/* ── Layar Ponsel (<= 560px) ─────────────────────────────────────────────── */
+@media (max-width: 560px) {
+  .nav {
+    padding: var(--s1) 0;
+  }
+
+  .inner {
+    padding: 0 var(--s3);
+    gap: var(--s1) var(--s2);
+  }
+
+  .roleTag {
+    display: none;
+  }
+
+  .actions {
+    gap: var(--s1);
+  }
+
+  .logout {
+    padding: 0 var(--s2);
+    font-size: 12px;
+  }
+
+  .link {
+    padding: 0 var(--s2);
+    font-size: 13px;
+    min-height: 38px;
   }
 }

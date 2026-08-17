@@ -228,32 +228,29 @@ async function callGemini(model, prompt, apiKey) {
 // ── Asisten Percakapan (NeuroBot) ────────────────────────────────────────────
 
 const CHAT_SYSTEM_INSTRUCTION = `Anda adalah asisten kesehatan virtual NeuronMotion bernama "NeuroBot".
-Anda membantu pengguna memahami hasil skrining gangguan motorik saraf (seperti Parkinson dan tremor).
+Tugas Anda adalah membantu pengguna memahami hasil skrining gangguan motorik saraf, tremor, dan Parkinson dengan ramah, jelas, dan cepat.
 
 ATURAN PENTING:
-1. Anda BUKAN dokter dan TIDAK BOLEH memberikan diagnosis medis. Selalu ingatkan pengguna untuk berkonsultasi dengan dokter ahli saraf.
-2. Gunakan bahasa Indonesia yang hangat, ramah, dan mudah dipahami awam.
-3. Jelaskan istilah medis dengan bahasa sederhana jika diperlukan.
-4. Fokus pada: membantu memahami skor skrining, memberikan edukasi umum tentang kesehatan motorik, dan mendorong gaya hidup sehat.
-5. Jika ditanya tentang darurat medis, segera sarankan untuk menghubungi layanan darurat atau pergi ke IGD.
-6. Jawab dengan singkat, padat, dan informatif. Maksimal 3-4 paragraf per jawaban.
-7. Anda beroperasi dalam platform NeuronMotion, sebuah sistem skrining gangguan saraf motorik berbasis kamera dan AI.`;
+1. Anda BUKAN dokter dan TIDAK BOLEH memberikan diagnosis medis formal. Ingatkan selalu untuk berkonsultasi dengan dokter spesialis saraf jika ada keluhan berlanjut.
+2. Berikan jawaban yang ramah, ringkas, padat, dan langsung menjawab inti pertanyaan (maksimal 2-3 paragraf singkat atau poin-poin jelas).
+3. Gunakan bahasa yang mudah dipahami orang awam tanpa istilah rumit yang membingungkan.
+4. Fokus pada edukasi kesehatan motorik, penjelasan skor skrining, dan tips gaya hidup sehat.`;
 
-// Batasi riwayat yang dikirim agar permintaan tidak membengkak pada percakapan panjang
-const MAX_CHAT_HISTORY = 20;
+// Batasi riwayat yang dikirim agar permintaan tetap cepat dan efisien
+const MAX_CHAT_HISTORY = 12;
 
 /**
  * Ditambahkan ke instruksi sistem ketika antarmuka sedang berbahasa Inggris,
  * supaya jawaban asisten mengikuti bahasa yang dipilih pengguna.
  */
 const CHAT_LANGUAGE_INSTRUCTION = {
-  id: '\n8. Jawab selalu dalam bahasa Indonesia.',
-  en: '\n8. Always answer in English, regardless of the language of the question.',
+  id: '\n5. Selalu jawab dalam Bahasa Indonesia yang baik dan hangat.',
+  en: '\n5. Always answer in clear, concise English.',
 };
 
 async function callGeminiChat(model, messages, apiKey, lang = 'id') {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(), 15_000);
 
   try {
     const res = await fetch(`${API_BASE}/${model}:generateContent?key=${apiKey}`, {
@@ -265,7 +262,7 @@ async function callGeminiChat(model, messages, apiKey, lang = 'id') {
           parts: [{ text: CHAT_SYSTEM_INSTRUCTION + (CHAT_LANGUAGE_INSTRUCTION[lang] || CHAT_LANGUAGE_INSTRUCTION.id) }],
         },
         contents: messages,
-        generationConfig: { temperature: 0.7, maxOutputTokens: 1024 },
+        generationConfig: { temperature: 0.6, maxOutputTokens: 600 },
       }),
     });
 

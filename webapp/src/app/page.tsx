@@ -6,6 +6,7 @@ import {
   Activity,
   BookOpen,
   Camera,
+  ChevronDown,
   Cpu,
   Footprints,
   Hand,
@@ -85,6 +86,7 @@ export default function LandingPage() {
   const [modelInfo, setModelInfo] = useState<ModelAccuracy | null>(null);
   const [stuck, setStuck] = useState(false);
 
+  const [assuranceRef, assuranceShown] = useReveal<HTMLDivElement>();
   const [specimenRef, specimenShown] = useReveal<HTMLDivElement>();
   const [stepsRef, stepsShown] = useReveal<HTMLDivElement>();
   const [provenanceRef, provenanceShown] = useReveal<HTMLDivElement>();
@@ -125,6 +127,15 @@ export default function LandingPage() {
     { icon: BookOpen, title: 'land.step3Title', text: 'land.step3Text' },
   ];
 
+  const handleScrollTo = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
+    e.preventDefault();
+    const el = document.querySelector(targetId);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.history.pushState(null, '', targetId);
+    }
+  };
+
   return (
     <div className={styles.page}>
       <a href="#main" className="skipToContent">
@@ -136,9 +147,27 @@ export default function LandingPage() {
           <Logo size={18} />
 
           <nav className={styles.mastheadNav} aria-label="Bagian halaman">
-            <a href="#diukur" className={styles.navLink}>{t('land.navMeasured')}</a>
-            <a href="#cara" className={styles.navLink}>{t('land.navHow')}</a>
-            <a href="#bukti" className={styles.navLink}>{t('land.navEvidence')}</a>
+            <a
+              href="#diukur"
+              className={styles.navLink}
+              onClick={(e) => handleScrollTo(e, '#diukur')}
+            >
+              {t('land.navMeasured')}
+            </a>
+            <a
+              href="#cara"
+              className={styles.navLink}
+              onClick={(e) => handleScrollTo(e, '#cara')}
+            >
+              {t('land.navHow')}
+            </a>
+            <a
+              href="#bukti"
+              className={styles.navLink}
+              onClick={(e) => handleScrollTo(e, '#bukti')}
+            >
+              {t('land.navEvidence')}
+            </a>
           </nav>
 
           <div className={styles.mastheadActions}>
@@ -290,13 +319,32 @@ export default function LandingPage() {
             </figure>
             </div>
           </div>
+
+          {/* Indikator Gulir ke Bawah Beranimasi */}
+          <div className={`${styles.scrollDownWrapper} ${stuck ? styles.scrollDownHidden : ''}`}>
+            <a
+              href="#jaminan"
+              className={styles.scrollDownBtn}
+              onClick={(e) => handleScrollTo(e, '#jaminan')}
+              aria-label={t('land.scrollDown')}
+            >
+              <span className={styles.scrollMouse}>
+                <span className={styles.scrollWheel} />
+              </span>
+              <span className={styles.scrollText}>{t('land.scrollExplore')}</span>
+              <ChevronDown size={14} className={styles.scrollChevron} />
+            </a>
+          </div>
         </section>
 
         {/* ── Jaminan ─────────────────────────────────────────────────────────
             Tiga pernyataan tentang cara kerja, menempati posisi yang pada
             templat rujukan diisi jumlah pasien dan jumlah kamar. */}
-        <section className={styles.assurance}>
-          <div className={`sheet ${styles.assuranceGrid}`}>
+        <section id="jaminan" className={styles.assurance}>
+          <div
+            ref={assuranceRef}
+            className={`sheet ${styles.assuranceGrid} ${styles.reveal} ${assuranceShown ? styles.revealShown : ''}`}
+          >
             {assurances.map(({ icon: Icon, title, text }) => (
               <div key={title} className={styles.assuranceItem}>
                 <span className={styles.assuranceIcon} aria-hidden="true">

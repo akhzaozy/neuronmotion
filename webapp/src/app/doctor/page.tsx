@@ -4,6 +4,18 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { api, PatientDetail } from '@/lib/api';
 import { normalizeBiomarkers } from '@/lib/biomarkers';
+import {
+  RefreshCw,
+  LogOut,
+  Stethoscope,
+  Building2,
+  ShieldCheck,
+  Users,
+  AlertTriangle,
+  Activity,
+  HeartPulse,
+  Clock,
+} from 'lucide-react';
 import DoctorNav from '@/components/DoctorNav';
 import GeoBreakdown from '@/components/GeoBreakdown';
 import { useI18n, translateServerLabel, dateLocale } from '@/lib/i18n';
@@ -179,59 +191,127 @@ export default function DoctorPortal() {
 
       <main className="sheet" id="main">
         <div className={styles.pad}>
-          <header className="docHead">
-            <div className="docHead__meta">
-              <span>{t('doc.portalTitle')}</span>
-              <span data-no-translate="">{user?.name}</span>
-              <span>{user?.specialization || t('doc.specialist')}</span>
-              {user?.institution && <span data-no-translate="">{user.institution}</span>}
-            </div>
-            <div className={styles.headRow}>
-              <div>
-                <h1>{t('doc.portalTitle')}</h1>
-                <p className={styles.lead}>
-                  {t('doc.welcome')}, <span data-no-translate="">{user?.name}</span>
-                </p>
-                {lastUpdated && (
-                  <p className={styles.stamp}>
-                    {t('doc.updatedAt')}: {lastUpdated.toLocaleTimeString(dateLocale(lang))} · {t('doc.autoEvery30')}
-                  </p>
+          <header className={styles.heroBanner}>
+            {/* Ambient Background Glow Effect */}
+            <div className={styles.bannerGlow} aria-hidden="true" />
+
+            {/* Top Meta Badges & Status Strip */}
+            <div className={styles.metaStrip}>
+              <div className={styles.metaChips}>
+                <span className={styles.metaChip}>
+                  <Stethoscope size={13} className={styles.chipIcon} />
+                  <span>{user?.specialization || t('doc.specialist')}</span>
+                </span>
+                {user?.institution && (
+                  <span className={styles.metaChip}>
+                    <Building2 size={13} className={styles.chipIcon} />
+                    <span data-no-translate="">{user.institution}</span>
+                  </span>
+                )}
+                {user?.licenseNumber && (
+                  <span className={styles.metaChip}>
+                    <ShieldCheck size={13} className={styles.chipIcon} />
+                    <span data-no-translate="">{user.licenseNumber}</span>
+                  </span>
                 )}
               </div>
-              <div className={styles.headActions}>
+            </div>
+
+            {/* Main Header Content */}
+            <div className={styles.heroMain}>
+              <div className={styles.clinicianProfile}>
+                <div className={styles.doctorAvatar}>
+                  <div className={styles.avatarGlow} />
+                  <span className={styles.avatarText}>dr.</span>
+                </div>
+
+                <div className={styles.titleGroup}>
+                  <h1 className={styles.heroTitle}>{t('doc.portalTitle')}</h1>
+                  <div className={styles.heroLeadRow}>
+                    <span className={styles.leadGreeting}>
+                      {t('doc.welcome')}, <strong data-no-translate="">{user?.name}</strong>
+                    </span>
+                    {lastUpdated && (
+                      <span className={styles.heroStamp}>
+                        <Clock size={12} className={styles.stampIcon} />
+                        <span>
+                          {t('doc.updatedAt')}: {lastUpdated.toLocaleTimeString(dateLocale(lang))} · {t('doc.autoEvery30')}
+                        </span>
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Hero Actions */}
+              <div className={styles.heroActions}>
                 <button
-                  className="btn"
+                  type="button"
+                  className={styles.btnRefresh}
                   onClick={() => refreshData(user, token, activePatientId)}
                   disabled={isRefreshing}
                   title={t('doc.refreshNow')}
                 >
-                  {isRefreshing ? t('doc.refreshing') : t('doc.refresh')}
+                  <RefreshCw size={15} className={`${styles.btnIcon} ${isRefreshing ? styles.spinning : ''}`} />
+                  <span>{isRefreshing ? t('doc.refreshing') : t('doc.refresh')}</span>
                 </button>
-                <button className="btn" onClick={() => { logout(); router.push('/login'); }}>
-                  {t('common.logout')}
+
+                <button
+                  type="button"
+                  className={styles.btnLogout}
+                  onClick={() => {
+                    logout();
+                    router.push('/login');
+                  }}
+                  title={t('common.logout')}
+                >
+                  <LogOut size={15} className={styles.btnIcon} />
+                  <span>{t('common.logout')}</span>
                 </button>
               </div>
             </div>
           </header>
 
-          {/* Ringkasan angka. Warna tidak dipakai di sini: labelnya yang
-              membedakan, dan angkanya yang memimpin. */}
+          {/* Ringkasan Angka Statistik Modern & Berikon */}
           <section className={styles.stats}>
-            <div className={styles.stat}>
-              <output className={styles.statValue}>{dashboard.totalPatients}</output>
-              <span className={`label ${styles.statLabel}`}>{t('doc.totalPatients')}</span>
+            <div className={`${styles.stat} ${styles.statPrimary}`}>
+              <div className={styles.statIconWrap}>
+                <Users size={20} />
+              </div>
+              <div className={styles.statContent}>
+                <output className={styles.statValue}>{dashboard.totalPatients}</output>
+                <span className={styles.statLabel}>{t('doc.totalPatients')}</span>
+              </div>
             </div>
-            <div className={styles.stat}>
-              <output className={styles.statValue}>{dashboard.riskBreakdown?.HIGH || 0}</output>
-              <span className={`label ${styles.statLabel}`}>{t('doc.highRisk')}</span>
+
+            <div className={`${styles.stat} ${styles.statHigh}`}>
+              <div className={styles.statIconWrap}>
+                <AlertTriangle size={20} />
+              </div>
+              <div className={styles.statContent}>
+                <output className={styles.statValue}>{dashboard.riskBreakdown?.HIGH || 0}</output>
+                <span className={styles.statLabel}>{t('doc.highRisk')}</span>
+              </div>
             </div>
-            <div className={styles.stat}>
-              <output className={styles.statValue}>{dashboard.riskBreakdown?.MEDIUM || 0}</output>
-              <span className={`label ${styles.statLabel}`}>{t('doc.mediumRisk')}</span>
+
+            <div className={`${styles.stat} ${styles.statMid}`}>
+              <div className={styles.statIconWrap}>
+                <Activity size={20} />
+              </div>
+              <div className={styles.statContent}>
+                <output className={styles.statValue}>{dashboard.riskBreakdown?.MEDIUM || 0}</output>
+                <span className={styles.statLabel}>{t('doc.mediumRisk')}</span>
+              </div>
             </div>
-            <div className={styles.stat}>
-              <output className={styles.statValue}>{dashboard.conditionBreakdown?.PARKINSON_EARLY || 0}</output>
-              <span className={`label ${styles.statLabel}`}>{t('doc.earlyParkinson')}</span>
+
+            <div className={`${styles.stat} ${styles.statParkinson}`}>
+              <div className={styles.statIconWrap}>
+                <HeartPulse size={20} />
+              </div>
+              <div className={styles.statContent}>
+                <output className={styles.statValue}>{dashboard.conditionBreakdown?.PARKINSON_EARLY || 0}</output>
+                <span className={styles.statLabel}>{t('doc.earlyParkinson')}</span>
+              </div>
             </div>
           </section>
 

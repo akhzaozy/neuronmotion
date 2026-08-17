@@ -96,32 +96,93 @@ function ScoreRing({ score, label }: { score: number; label: string }) {
    dikerjakan seseorang. Jumlah batangnya karena itu tidak pernah dikarang
    untuk memenuhi lebar panel.
    ══════════════════════════════════════════════════════════════════════════ */
+function RiskColorLegend() {
+  const { t } = useI18n();
+
+  const categories = [
+    {
+      level: 'low' as const,
+      badgeKey: 'dash.legendLowTitle',
+      descKey: 'dash.legendLowDesc',
+      range: '< 35',
+    },
+    {
+      level: 'mid' as const,
+      badgeKey: 'dash.legendMidTitle',
+      descKey: 'dash.legendMidDesc',
+      range: '35 - 64',
+    },
+    {
+      level: 'high' as const,
+      badgeKey: 'dash.legendHighTitle',
+      descKey: 'dash.legendHighDesc',
+      range: '≥ 65',
+    },
+  ];
+
+  return (
+    <div className={styles.legendWrap} aria-label={t('dash.legendTitle')}>
+      <div className={styles.legendHead}>{t('dash.legendTitle')}</div>
+      <ul className={styles.legendList}>
+        {categories.map(c => (
+          <li key={c.level} className={styles.legendItem}>
+            <div className={`${styles.legendBadge} ${styles[`legendBadge_${c.level}`]}`}>
+              <span className={styles.legendBadgeDot} />
+              <span>{c.range}</span>
+            </div>
+            <div className={styles.legendBody}>
+              <strong className={styles.legendLabel}>{t(c.badgeKey)}</strong>
+              <span className={styles.legendDesc}>{t(c.descKey)}</span>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function SessionBars({ points, label }: { points: TimelinePoint[]; label: string }) {
+  const { lang } = useI18n();
   if (points.length < 2) return null;
   const shown = points.slice(-14);
 
   return (
-    <figure className={styles.bars}>
-      <figcaption className={styles.barsHead}>
+    <div className={styles.bars}>
+      <div className={styles.barsHead}>
         <span className={styles.barsTitle}>{label}</span>
-      </figcaption>
+        <span className={styles.miniLabel}>{shown.length} sesi</span>
+      </div>
       <div
         className={styles.barsRow}
         role="img"
         aria-label={`${label}: ${shown.map(p => Math.round(p.score)).join(', ')}`}
       >
-        {shown.map((p, i) => (
-          <div key={i} className={styles.barSlot}>
-            <div
-              className={`${styles.bar} ${styles[`bar_${levelOf(p.score)}`]}`}
-              /* Lantai 6% supaya sesi berskor sangat rendah tetap punya
-                 batang yang terlihat, bukan garis yang hilang sama sekali. */
-              style={{ height: `${Math.max(6, p.score)}%` }}
-            />
-          </div>
-        ))}
+        {shown.map((p, i) => {
+          const roundedScore = Math.round(p.score);
+          const dateStr = p.date
+            ? new Date(p.date).toLocaleDateString(lang === 'en' ? 'en-US' : 'id-ID', {
+                day: 'numeric',
+                month: 'short',
+              })
+            : `#${i + 1}`;
+          return (
+            <div key={i} className={styles.barSlot} title={`${dateStr}: ${roundedScore}`}>
+              <div className={styles.barTooltip}>
+                {dateStr}: {roundedScore}
+              </div>
+              <div
+                className={`${styles.bar} ${styles[`bar_${levelOf(p.score)}`]}`}
+                /* Lantai 8% supaya sesi berskor sangat rendah tetap punya
+                   batang yang terlihat, bukan garis yang hilang sama sekali. */
+                style={{ height: `${Math.max(8, p.score)}%` }}
+              />
+            </div>
+          );
+        })}
       </div>
-    </figure>
+
+      <RiskColorLegend />
+    </div>
   );
 }
 

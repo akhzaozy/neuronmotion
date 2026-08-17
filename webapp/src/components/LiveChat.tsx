@@ -1,5 +1,6 @@
 'use client';
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { Bot, User, Send, Trash2, X, Sparkles } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useI18n } from '@/lib/i18n';
 import styles from './LiveChat.module.css';
@@ -8,6 +9,7 @@ interface ChatMessage {
   role: 'user' | 'model';
   parts: Array<{ text: string }>;
   id: string;
+  time?: string;
 }
 
 function welcomeMessage(text: string): ChatMessage {
@@ -36,8 +38,7 @@ export default function LiveChat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
-  // Sapaan pembuka ikut berganti saat bahasa diubah, selama percakapan belum
-  // dimulai. Bila pengguna sudah bertanya, isi percakapan dibiarkan apa adanya.
+  // Sapaan pembuka ikut berganti saat bahasa diubah, selama percakapan belum dimulai.
   useEffect(() => {
     setMessages(prev => (prev.length <= 1 ? [welcomeMessage(t('bot.welcome'))] : prev));
   }, [t]);
@@ -46,7 +47,7 @@ export default function LiveChat() {
     if (isOpen) {
       scrollToBottom();
       setHasUnread(false);
-      setTimeout(() => inputRef.current?.focus(), 100);
+      setTimeout(() => inputRef.current?.focus(), 120);
     }
   }, [isOpen, scrollToBottom]);
 
@@ -55,51 +56,47 @@ export default function LiveChat() {
     else if (messages.length > 1) setHasUnread(true);
   }, [messages, isOpen, scrollToBottom]);
 
-  /* Tinggi isian mengikuti isinya.
-     ─────────────────────────────────────────────────────────────────────────
-     Tanpa ini, isian terkunci pada rows dan pertanyaan panjang menggulir di
-     dalam kotak setinggi dua baris, sehingga pengguna hanya pernah melihat
-     dua baris terakhir dari kalimat yang sedang ia susun sendiri. Itu terasa
-     terutama bagi pengguna yang mengetik pelan.
-
-     Tinggi direset ke 'auto' lebih dulu supaya kotak juga menyusut kembali
-     ketika teksnya dihapus, bukan hanya membesar. Batas atasnya disamakan
-     dengan max-height di berkas modulnya; melewati itu barulah ia menggulir. */
+  // Tinggi textarea dinamis mengikuti konten
   useEffect(() => {
     const el = inputRef.current;
     if (!el) return;
     el.style.height = 'auto';
-    el.style.height = `${Math.min(el.scrollHeight, 132)}px`;
+    el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
   }, [input, isOpen]);
 
   async function sendMessage() {
     const text = input.trim();
     if (!text || loading) return;
 
+    const timeStr = new Date().toLocaleTimeString(lang === 'en' ? 'en-US' : 'id-ID', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
     const userMsg: ChatMessage = {
       role: 'user',
       parts: [{ text }],
       id: `user-${Date.now()}`,
+      time: timeStr,
     };
 
     setMessages(prev => [...prev, userMsg]);
     setInput('');
     setLoading(true);
 
-    // Build conversation history for API (exclude welcome id, exclude our ids)
     const history = [...messages, userMsg].map(({ role, parts }) => ({ role, parts }));
 
     try {
-      // Lewat api.ts agar mengarah ke backend Express (NEXT_PUBLIC_API_URL),
-      // sama seperti seluruh pemanggilan API lain. Sebelumnya memakai URL
-      // relatif '/api/chat', yang di produksi diteruskan nginx ke Express
-      // sebagai POST /chat dan berakhir 404.
       const data = await api.chat(history, lang);
 
       const botMsg: ChatMessage = {
         role: 'model',
         parts: [{ text: data.reply }],
         id: `model-${Date.now()}`,
+        time: new Date().toLocaleTimeString(lang === 'en' ? 'en-US' : 'id-ID', {
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
       };
       setMessages(prev => [...prev, botMsg]);
     } catch (err: unknown) {
@@ -127,8 +124,7 @@ export default function LiveChat() {
 
   return (
     <>
-      {/* Tombol pembuka. Isinya kata, bukan ikon gelembung percakapan, dan
-          keadaan belum terbaca juga dinyatakan kata. */}
+      {/* Floating Action Button */}
       <button
         id="livechat-toggle-btn"
         className={`${styles.fab} ${isOpen ? styles.fabOpen : ''}`}
@@ -136,13 +132,17 @@ export default function LiveChat() {
         aria-label={isOpen ? t('bot.closeChat') : t('bot.openChat')}
         title={isOpen ? t('bot.closeChat') : t('bot.chatWith')}
       >
+        <span className={styles.fabIcon}>
+          <Bot size={20} />
+          <span className={styles.fabPulse} />
+        </span>
         <span className={styles.fabLabel} data-no-translate="">NeuroBot</span>
         {hasUnread && !isOpen && (
           <span className={styles.unreadFlag}>{t('bot.newMessage')}</span>
         )}
       </button>
 
-      {/* Chat window */}
+      {/* Chat Window Dialog */}
       <div
         id="livechat-window"
         className={`${styles.chatWindow} ${isOpen ? styles.chatWindowOpen : ''}`}
@@ -150,120 +150,151 @@ export default function LiveChat() {
         aria-label={t('bot.chatWith')}
         aria-hidden={!isOpen}
       >
-        {/* Kop lembar percakapan. Kendalinya kata bergaris bawah, bukan tombol
-            kotak berikon, dan tetap memenuhi lantai sasaran sentuh. */}
+        {/* Kop Chat Header */}
         <div className={styles.chatHeader}>
+          <div className={styles.botAvatar}>
+            <Bot size={22} className={styles.botAvatarIcon} />
+            <span className={styles.onlineDot} title="Online" />
+          </div>
           <div className={styles.headerInfo}>
-            <div className={styles.botName} data-no-translate="">NeuroBot</div>
+            <div className={styles.botName}>
+              <span data-no-translate="">NeuroBot</span>
+              <span className={styles.aiBadge}>AI</span>
+            </div>
             <div className={styles.botStatus}>{t('bot.status')}</div>
           </div>
           <div className={styles.headerActions}>
             <button
               id="livechat-clear-btn"
-              className={styles.headerBtn}
+              className={styles.headerIconBtn}
               onClick={clearChat}
               title={t('bot.clearHistory')}
               aria-label={t('bot.clearHistory')}
             >
-              {t('common.delete')}
+              <Trash2 size={16} />
             </button>
             <button
               id="livechat-close-btn"
-              className={styles.headerBtn}
+              className={styles.headerIconBtn}
               onClick={() => setIsOpen(false)}
               title={t('bot.closeChat')}
               aria-label={t('bot.closeChat')}
             >
-              {t('common.close')}
+              <X size={18} />
             </button>
           </div>
         </div>
 
-        {/* Giliran percakapan. Siapa yang berbicara dibawa label mono di atas
-            isinya, bukan sisi kiri kanan dan warna gelembung. */}
+        {/* Badan Percakapan Selang-Seling (Kiri & Kanan) */}
         <div className={styles.chatBody} ref={chatBodyRef}>
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`${styles.bubble} ${msg.role === 'user' ? styles.bubbleUser : ''}`}
-            >
-              <span className={styles.bubbleWho}>
-                {msg.role === 'user' ? t('bot.you') : <span data-no-translate="">NeuroBot</span>}
-              </span>
-              {/* Pesan pengguna adalah kalimat yang ia ketik sendiri, jadi
-                  dibiarkan apa adanya. Balasan bot sudah dihasilkan dalam
-                  bahasa yang dipilih, sehingga juga tidak perlu diterjemahkan. */}
+          {messages.map((msg) => {
+            const isUser = msg.role === 'user';
+            return (
               <div
-                className={styles.bubbleContent}
-                data-no-translate=""
-                dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.parts[0].text) }}
-              />
-            </div>
-          ))}
+                key={msg.id}
+                className={`${styles.msgRow} ${isUser ? styles.msgRowUser : styles.msgRowBot}`}
+              >
+                <div className={`${styles.avatarWrap} ${isUser ? styles.avatarUser : styles.avatarBot}`}>
+                  {isUser ? <User size={16} /> : <Bot size={16} />}
+                </div>
 
+                <div className={styles.bubbleCol}>
+                  <div className={styles.bubbleHeader}>
+                    <span className={styles.senderName}>
+                      {isUser ? t('bot.you') : <span data-no-translate="">NeuroBot</span>}
+                    </span>
+                    {msg.time && <span className={styles.msgTime}>{msg.time}</span>}
+                  </div>
+
+                  <div
+                    className={`${styles.bubble} ${isUser ? styles.bubbleUser : styles.bubbleBot}`}
+                    data-no-translate=""
+                    dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.parts[0].text) }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Typing Indicator (Animasi 3 Titik) */}
           {loading && (
-            <div className={styles.bubble}>
-              <span className={styles.bubbleWho} data-no-translate="">NeuroBot</span>
-              <p className={styles.typing} role="status" aria-live="polite">
-                {t('common.loading')}
-              </p>
+            <div className={`${styles.msgRow} ${styles.msgRowBot}`}>
+              <div className={`${styles.avatarWrap} ${styles.avatarBot}`}>
+                <Bot size={16} />
+              </div>
+              <div className={styles.bubbleCol}>
+                <div className={styles.bubbleHeader}>
+                  <span className={styles.senderName} data-no-translate="">NeuroBot</span>
+                </div>
+                <div className={`${styles.bubble} ${styles.bubbleBot} ${styles.typingBubble}`}>
+                  <span className={styles.typingDot} />
+                  <span className={styles.typingDot} />
+                  <span className={styles.typingDot} />
+                </div>
+              </div>
             </div>
           )}
 
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Quick Prompts */}
+        {/* Quick Suggestion Chips */}
         {messages.length <= 1 && (
           <div className={styles.quickPrompts}>
-            {[t('bot.q1'), t('bot.q2'), t('bot.q3')].map(q => (
-              <button
-                key={q}
-                className={styles.quickPromptBtn}
-                onClick={() => {
-                  setInput(q);
-                  setTimeout(() => inputRef.current?.focus(), 50);
-                }}
-              >
-                {q}
-              </button>
-            ))}
+            <div className={styles.quickPromptsTitle}>
+              <Sparkles size={13} className={styles.sparkleIcon} />
+              <span>{t('bot.qHeader') || 'Pertanyaan yang sering diajukan:'}</span>
+            </div>
+            <div className={styles.chipsScroll}>
+              {[t('bot.q1'), t('bot.q2'), t('bot.q3')].map((q, idx) => (
+                <button
+                  key={idx}
+                  className={styles.quickPromptBtn}
+                  onClick={() => {
+                    setInput(q);
+                    setTimeout(() => inputRef.current?.focus(), 50);
+                  }}
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
-        {/* Penyusun pesan.
-            ─────────────────────────────────────────────────────────────────
-            Isian mengambil satu baris penuh, dan petunjuk beserta tombol
-            kirim turun ke baris di bawahnya. Sebelumnya ketiganya berdesakan
-            dalam satu baris: di panel selebar 380px, tombol "Kirim pesan"
-            memakan sekitar sepertiga lebarnya, menyisakan kotak yang terlalu
-            sempit bahkan untuk teks contohnya sendiri. */}
+        {/* Area Input Pesan */}
         <div className={styles.chatInputArea}>
-          <textarea
-            id="livechat-input"
-            ref={inputRef}
-            className={styles.chatInput}
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={t('bot.placeholder')}
-            rows={2}
-            disabled={loading}
-            aria-label={t('bot.messageLabel')}
-          />
-          <div className={styles.chatInputRow}>
-            <span className={styles.enterHint}>{t('bot.enterHint')}</span>
+          <div className={styles.inputWrap}>
+            <textarea
+              id="livechat-input"
+              ref={inputRef}
+              className={styles.chatInput}
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={t('bot.placeholder')}
+              rows={1}
+              disabled={loading}
+              aria-label={t('bot.messageLabel')}
+            />
             <button
               id="livechat-send-btn"
               className={`${styles.sendBtn} ${(!input.trim() || loading) ? styles.sendBtnDisabled : ''}`}
               onClick={sendMessage}
               disabled={!input.trim() || loading}
               aria-label={t('bot.send')}
+              title={t('bot.send')}
             >
-              {loading ? t('common.loading') : t('bot.sendShort')}
+              <Send size={16} />
             </button>
           </div>
+
+          <div className={styles.chatInputFooter}>
+            <span className={styles.enterHint}>{t('bot.enterHint')}</span>
+          </div>
         </div>
+
+        {/* Catatan Kaki / Disclaimer */}
         <div className={styles.disclaimer}>
           {t('bot.disclaimer')}
         </div>

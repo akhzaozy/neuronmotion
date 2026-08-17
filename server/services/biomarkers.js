@@ -60,29 +60,56 @@ export function analyzeTremor({ samples, bodyPart = 'WRIST_RIGHT' }) {
   let category, interpretation, score, updrsEstimate;
 
   if (amplitude < ref.normalAmplitudeMax) {
-    category = 'NORMAL'; score = 0; updrsEstimate = 0;
-    interpretation = `Tidak ada tremor signifikan (amplitudo ${(amplitude * 1000).toFixed(1)}mm).`;
-  } else if (dominantFrequencyHz >= ref.parkinsonsFreqMin && dominantFrequencyHz <= ref.parkinsonsFreqMax) {
-    category = 'PARKINSON_TREMOR'; score = 85; updrsEstimate = 3;
-    interpretation = `⚠️ Tremor istirahat ${dominantFrequencyHz.toFixed(1)} Hz di ${bodyPart}, pola khas Parkinson (4-6 Hz). Konsultasi spesialis saraf segera.`;
-  } else if (dominantFrequencyHz > ref.essentialTremorMin && dominantFrequencyHz <= ref.essentialTremorMax) {
-    category = 'ESSENTIAL_TREMOR'; score = 55; updrsEstimate = 2;
-    interpretation = `Tremor frekuensi tinggi ${dominantFrequencyHz.toFixed(1)} Hz, kemungkinan Essential Tremor (bukan Parkinson).`;
-  } else if (amplitude > ref.pathologicalAmplitude) {
-    category = 'PATHOLOGICAL'; score = 60; updrsEstimate = 2;
-    interpretation = `Tremor amplitudo tinggi (${(amplitude * 1000).toFixed(1)}mm), perlu evaluasi lebih lanjut.`;
-  } else if (amplitude > ref.borderlineAmplitudeMax) {
-    category = 'BORDERLINE'; score = 25; updrsEstimate = 1;
-    interpretation = `Getaran ringan terdeteksi. Pantau berkala.`;
+    category = 'NORMAL';
+    // Gerakan mikro fisiologis normal: skor 0 - 14 proporsional
+    score = parseFloat(Math.min(14, (amplitude / ref.normalAmplitudeMax) * 12).toFixed(1));
+    updrsEstimate = 0;
+    interpretation = `Tidak ada tremor signifikan (amplitudo ${(amplitude * 1000).toFixed(1)} mm, variasi fisiologis normal).`;
   } else {
-    category = 'MINIMAL'; score = 10; updrsEstimate = 0;
-    interpretation = `Getaran sangat minimal, masih dalam batas normal.`;
+    // Amplitudo patologis / di atas batas fisiologis
+    const ampRatio = Math.min(1.0, (amplitude - ref.normalAmplitudeMax) / 0.035); // 0..1 untuk rentang 0.005..0.040
+
+    if (dominantFrequencyHz >= ref.parkinsonsFreqMin && dominantFrequencyHz <= ref.parkinsonsFreqMax) {
+      category = 'PARKINSON_TREMOR';
+      // Skor kontinu 48.0 - 92.0 bergantung pada amplitudo terukur
+      score = parseFloat((48 + ampRatio * 44).toFixed(1));
+      updrsEstimate = score >= 75 ? 3 : score >= 55 ? 2 : 1;
+      interpretation = `⚠️ Tremor istirahat ${dominantFrequencyHz.toFixed(1)} Hz di ${bodyPart}, pola khas Parkinson (4-6 Hz) dengan amplitudo ${(amplitude * 1000).toFixed(1)} mm. Konsultasi spesialis saraf segera.`;
+    } else if (dominantFrequencyHz > ref.essentialTremorMin && dominantFrequencyHz <= ref.essentialTremorMax) {
+      category = 'ESSENTIAL_TREMOR';
+      // Skor kontinu 32.0 - 68.0 bergantung pada amplitudo terukur
+      score = parseFloat((32 + ampRatio * 36).toFixed(1));
+      updrsEstimate = score >= 55 ? 2 : 1;
+      interpretation = `Tremor frekuensi ${dominantFrequencyHz.toFixed(1)} Hz dengan amplitudo ${(amplitude * 1000).toFixed(1)} mm, karakteristik Essential Tremor (bukan pola khas Parkinson).`;
+    } else if (amplitude > ref.pathologicalAmplitude) {
+      category = 'PATHOLOGICAL';
+      // Skor kontinu 40.0 - 78.0
+      score = parseFloat((40 + ampRatio * 38).toFixed(1));
+      updrsEstimate = score >= 60 ? 2 : 1;
+      interpretation = `Tremor amplitudo tinggi (${(amplitude * 1000).toFixed(1)} mm, frekuensi ${dominantFrequencyHz.toFixed(1)} Hz), perlu evaluasi lebih lanjut.`;
+    } else if (amplitude > ref.borderlineAmplitudeMax) {
+      category = 'BORDERLINE';
+      score = parseFloat((18 + ampRatio * 22).toFixed(1));
+      updrsEstimate = 1;
+      interpretation = `Getaran ringan terdeteksi (${(amplitude * 1000).toFixed(1)} mm). Pantau berkala.`;
+    } else {
+      category = 'MINIMAL';
+      score = parseFloat((10 + ampRatio * 15).toFixed(1));
+      updrsEstimate = 0;
+      interpretation = `Getaran sangat minimal (${(amplitude * 1000).toFixed(1)} mm), masih dalam batas toleransi.`;
+    }
   }
 
   return {
-    bodyPart, dominantFrequencyHz: parseFloat(dominantFrequencyHz.toFixed(2)),
-    amplitude: parseFloat(amplitude.toFixed(4)), amplitudeMillimeter: parseFloat((amplitude * 1000).toFixed(2)),
-    category, interpretation, score, updrsEstimate, sampleCount: samples.length,
+    bodyPart,
+    dominantFrequencyHz: parseFloat(dominantFrequencyHz.toFixed(2)),
+    amplitude: parseFloat(amplitude.toFixed(4)),
+    amplitudeMillimeter: parseFloat((amplitude * 1000).toFixed(2)),
+    category,
+    interpretation,
+    score,
+    updrsEstimate,
+    sampleCount: samples.length,
   };
 }
 
@@ -90,7 +117,7 @@ export function analyzeTremor({ samples, bodyPart = 'WRIST_RIGHT' }) {
  * Analisis Finger Tapping (enhanced accuracy)
  * - Menggunakan moving average smoothing untuk eliminasi noise kamera
  * - Minimum 150ms antar tap (mencegah double-count)
- * - Threshold jarak 0.06 untuk validasi "jari benar-benar tertutup"
+ * - Threshold jarak 0.09 untuk validasi "jari benar-benar tertutup"
  */
 export function analyzeFingerTapping({ taps }) {
   if (!taps || taps.length < 5)
@@ -142,7 +169,6 @@ export function analyzeFingerTapping({ taps }) {
     const third = Math.ceil(validTaps.length / 3);
     const firstThird = validTaps.slice(0, third);
     const lastThird  = validTaps.slice(-third);
-    // Amplitude = 1 - distance_at_closure (semakin kecil jarak = semakin besar amplitudo ketukan)
     const ampOf = arr => arr.reduce((s, t) => s + (1 - t.distance), 0) / arr.length;
     const ampFirst = ampOf(firstThird);
     const ampLast  = ampOf(lastThird);
@@ -153,42 +179,54 @@ export function analyzeFingerTapping({ taps }) {
   let category, interpretation, score, updrsEstimate;
 
   if (tapRatePerSecond >= ref.normalMin && decrementPercent < ref.decrementNormal) {
-    category = 'NORMAL'; score = 0; updrsEstimate = 0;
-    interpretation = `Kecepatan tapping normal (${tapRatePerSecond.toFixed(1)} ketuk/det), tidak ada tanda bradikinesia.`;
-  } else if (tapRatePerSecond < ref.severeBradykinesia) {
-    category = 'SEVERE_BRADYKINESIA'; score = 90; updrsEstimate = 4;
-    interpretation = `Bradikinesia berat: ${tapRatePerSecond.toFixed(1)} ketuk/det (normal ≥3.5). Evaluasi neurologis segera diperlukan.`;
-  } else if (tapRatePerSecond < ref.mildBradykinesia) {
-    category = 'MODERATE_BRADYKINESIA'; score = 65; updrsEstimate = 3;
-    interpretation = `Bradikinesia sedang: ${tapRatePerSecond.toFixed(1)} ketuk/det. Kemungkinan gangguan motorik signifikan.`;
-  } else if (tapRatePerSecond < ref.normalMin) {
-    category = 'MILD_BRADYKINESIA'; score = 35; updrsEstimate = 2;
-    interpretation = `Bradikinesia ringan: ${tapRatePerSecond.toFixed(1)} ketuk/det. Pantau dan evaluasi.`;
-  } else if (decrementPercent > ref.decrementSignif) {
-    category = 'SIGNIFICANT_DECREMENT'; score = 60; updrsEstimate = 3;
-    interpretation = `Kecepatan awal baik namun turun ${decrementPercent.toFixed(0)}%, tanda akinesia/fatigue motorik khas Parkinson.`;
-  } else if (decrementPercent > ref.decrementMild) {
-    category = 'MILD_DECREMENT'; score = 35; updrsEstimate = 1;
-    interpretation = `Penurunan amplitudo sedang (${decrementPercent.toFixed(0)}%). Perlu pemantauan.`;
+    category = 'NORMAL';
+    score = parseFloat(Math.max(0, Math.min(14, (decrementPercent / 10) * 10)).toFixed(1));
+    updrsEstimate = 0;
+    interpretation = `Kecepatan tapping normal (${tapRatePerSecond.toFixed(1)} ketuk/detik, decrement ${decrementPercent.toFixed(0)}%), tidak ada tanda bradikinesia.`;
   } else {
-    category = 'BORDERLINE'; score = 15; updrsEstimate = 1;
-    interpretation = `Sedikit di bawah normal, pantau berkala.`;
+    // Scoring kontinu berbasis laju ketukan dan decrement
+    const rateDeficit = Math.max(0, (ref.normalMin - tapRatePerSecond) / (ref.normalMin - 0.8)); // 0..1
+    const decDeficit = Math.min(1.0, Math.max(0, (decrementPercent - ref.decrementNormal) / 40)); // 0..1
+    const rawScore = 15 + (rateDeficit * 55) + (decDeficit * 25);
+    score = parseFloat(Math.min(95, Math.max(12, rawScore)).toFixed(1));
+
+    if (tapRatePerSecond < ref.severeBradykinesia || score >= 75) {
+      category = 'SEVERE_BRADYKINESIA';
+      updrsEstimate = 4;
+      interpretation = `Bradikinesia berat: ${tapRatePerSecond.toFixed(1)} ketuk/detik (normal ≥${ref.normalMin}), decrement ${decrementPercent.toFixed(0)}%. Evaluasi neurologis segera diperlukan.`;
+    } else if (tapRatePerSecond < ref.mildBradykinesia || score >= 50) {
+      category = 'MODERATE_BRADYKINESIA';
+      updrsEstimate = 3;
+      interpretation = `Bradikinesia sedang: ${tapRatePerSecond.toFixed(1)} ketuk/detik, decrement ${decrementPercent.toFixed(0)}%. Terdapat indikasi gangguan motorik signifikan.`;
+    } else if (decrementPercent > ref.decrementSignif) {
+      category = 'SIGNIFICANT_DECREMENT';
+      updrsEstimate = 3;
+      interpretation = `Kecepatan awal memadai (${tapRatePerSecond.toFixed(1)} ketuk/detik) namun amplitudo menurun drastis (${decrementPercent.toFixed(0)}%), tanda fatigue motorik khas Parkinson.`;
+    } else if (tapRatePerSecond < ref.normalMin) {
+      category = 'MILD_BRADYKINESIA';
+      updrsEstimate = 2;
+      interpretation = `Bradikinesia ringan: ${tapRatePerSecond.toFixed(1)} ketuk/detik (normal ≥${ref.normalMin}). Pantau dan evaluasi berkala.`;
+    } else {
+      category = 'MILD_DECREMENT';
+      updrsEstimate = 1;
+      interpretation = `Penurunan amplitudo ringan (${decrementPercent.toFixed(0)}%). Pantau berkala.`;
+    }
   }
 
   return {
-    tapCount, tapRatePerSecond: parseFloat(tapRatePerSecond.toFixed(2)),
+    tapCount,
+    tapRatePerSecond: parseFloat(tapRatePerSecond.toFixed(2)),
     decrementPercent: parseFloat(decrementPercent.toFixed(1)),
     durationSec: parseFloat(durationSec.toFixed(2)),
-    category, interpretation, score, updrsEstimate,
+    category,
+    interpretation,
+    score,
+    updrsEstimate,
   };
 }
 
-
 /**
  * Analisis Gait (Pola Jalan)
- * - Menggunakan moving average pada jarak antar ankle
- * - Mencari local maxima (peak) sebagai representasi langkah
- * - Menghitung simetri berdasarkan rata-rata panjang langkah ganjil vs genap
  */
 export function analyzeGait({ steps, age }) {
   if (!steps || steps.length < 10)
@@ -207,14 +245,12 @@ export function analyzeGait({ steps, age }) {
   const peaks = [];
   for (let i = 1; i < smoothed.length - 1; i++) {
     if (smoothed[i].distance > smoothed[i - 1].distance && smoothed[i].distance > smoothed[i + 1].distance) {
-      // Threshold: jarak minimal agar dihitung langkah
       if (smoothed[i].distance > 0.05) {
         peaks.push(smoothed[i]);
       }
     }
   }
 
-  // Jika terlalu sedikit langkah
   if (peaks.length < 2) {
     return { error: 'Langkah tidak terdeteksi jelas. Pastikan berjalan lurus ke arah kamera.' };
   }
@@ -236,23 +272,37 @@ export function analyzeGait({ steps, age }) {
   let category, interpretation, score, updrsEstimate;
 
   if (strideSymmetryIndex >= ref.normalSymmetryMin && cadencePerMin >= ref.normalCadenceMin) {
-    category = 'NORMAL'; score = 0; updrsEstimate = 0;
+    category = 'NORMAL';
+    score = parseFloat(Math.max(0, Math.min(14, (1 - strideSymmetryIndex) * 120)).toFixed(1));
+    updrsEstimate = 0;
     interpretation = `Pola jalan normal: simetri ${(strideSymmetryIndex * 100).toFixed(0)}%, kadense ${cadencePerMin.toFixed(0)} langkah/menit.`;
-  } else if (strideSymmetryIndex < ref.severeAsymmetry) {
-    category = 'SEVERE_ASYMMETRY'; score = 88; updrsEstimate = 4;
-    interpretation = `⚠️ Asimetri gait berat (${(strideSymmetryIndex * 100).toFixed(0)}%). Risiko tinggi, rujukan segera.`;
-  } else if (strideSymmetryIndex < ref.moderateAsymmetry) {
-    category = 'MODERATE_ASYMMETRY'; score = 60; updrsEstimate = 3;
-    interpretation = `Asimetri gait moderat (${(strideSymmetryIndex * 100).toFixed(0)}%).`;
-  } else if (strideSymmetryIndex < ref.mildAsymmetry) {
-    category = 'MILD_ASYMMETRY'; score = 35; updrsEstimate = 2;
-    interpretation = `Asimetri gait ringan (${(strideSymmetryIndex * 100).toFixed(0)}%).`;
-  } else if (cadencePerMin < ref.slowCadence) {
-    category = 'SLOW_GAIT'; score = 40; updrsEstimate = 2;
-    interpretation = `Gait lambat: ${cadencePerMin.toFixed(0)} langkah/menit (normal ≥${ref.normalCadenceMin}).`;
   } else {
-    category = 'BORDERLINE'; score = 15; updrsEstimate = 1;
-    interpretation = `Gait sedikit tidak optimal. Pantau.`;
+    const asymDeficit = Math.min(1.0, Math.max(0, (ref.normalSymmetryMin - strideSymmetryIndex) / 0.35));
+    const cadDeficit = cadencePerMin < ref.normalCadenceMin ? Math.min(1.0, Math.max(0, (ref.normalCadenceMin - cadencePerMin) / 35)) : 0;
+    const rawScore = 15 + (asymDeficit * 60) + (cadDeficit * 20);
+    score = parseFloat(Math.min(95, Math.max(12, rawScore)).toFixed(1));
+
+    if (strideSymmetryIndex < ref.severeAsymmetry || score >= 75) {
+      category = 'SEVERE_ASYMMETRY';
+      updrsEstimate = 4;
+      interpretation = `⚠️ Asimetri gait berat (${(strideSymmetryIndex * 100).toFixed(0)}%, kadense ${cadencePerMin.toFixed(0)} l/m). Risiko tinggi gangguan mobilitas.`;
+    } else if (strideSymmetryIndex < ref.moderateAsymmetry || score >= 50) {
+      category = 'MODERATE_ASYMMETRY';
+      updrsEstimate = 3;
+      interpretation = `Asimetri gait moderat (${(strideSymmetryIndex * 100).toFixed(0)}%). Disarankan evaluasi fisioterapi.`;
+    } else if (strideSymmetryIndex < ref.mildAsymmetry) {
+      category = 'MILD_ASYMMETRY';
+      updrsEstimate = 2;
+      interpretation = `Asimetri gait ringan (${(strideSymmetryIndex * 100).toFixed(0)}%). Pantau berkala.`;
+    } else if (cadencePerMin < ref.slowCadence) {
+      category = 'SLOW_GAIT';
+      updrsEstimate = 2;
+      interpretation = `Gait lambat: ${cadencePerMin.toFixed(0)} langkah/menit (normal ≥${ref.normalCadenceMin}).`;
+    } else {
+      category = 'BORDERLINE';
+      updrsEstimate = 1;
+      interpretation = `Gait sedikit di bawah optimal (simetri ${(strideSymmetryIndex * 100).toFixed(0)}%).`;
+    }
   }
 
   return {
@@ -262,14 +312,15 @@ export function analyzeGait({ steps, age }) {
     stepCount: peaks.length,
     referenceCadenceMin: ref.normalCadenceMin,
     ageAdjusted: !!age,
-    category, interpretation, score, updrsEstimate,
+    category,
+    interpretation,
+    score,
+    updrsEstimate,
   };
 }
 
 /**
  * Analisis Arm Swing
- * - Menggunakan moving average untuk memuluskan data sudut (mengatasi noise kamera)
- * - Menghitung amplitudo dari deviasi sudut lengan secara trigonometri
  */
 export function analyzeArmSwing({ frames }) {
   if (!frames || frames.length < 10)
@@ -299,27 +350,45 @@ export function analyzeArmSwing({ frames }) {
   let category, interpretation, score, updrsEstimate;
 
   if (asymmetryPercent < ref.normalAsymmetryMax && leftAmp >= ref.normalAmplitudeMin && rightAmp >= ref.normalAmplitudeMin) {
-    category = 'NORMAL'; score = 0; updrsEstimate = 0;
-    interpretation = `Ayunan tangan simetris dan normal (asimetri ${asymmetryPercent.toFixed(0)}%).`;
-  } else if (asymmetryPercent > ref.significantAsymmetry) {
-    category = 'SIGNIFICANT_ASYMMETRY'; score = 78; updrsEstimate = 3;
-    interpretation = `⚠️ Asimetri ayunan tangan signifikan (${asymmetryPercent.toFixed(0)}%), tangan ${weakerSide} berkurang. Khas pada Parkinson unilateral.`;
-  } else if (asymmetryPercent > ref.mildAsymmetry) {
-    category = 'MILD_ASYMMETRY'; score = 40; updrsEstimate = 2;
-    interpretation = `Asimetri ayunan tangan sedang (${asymmetryPercent.toFixed(0)}%), tangan ${weakerSide} lebih terbatas.`;
-  } else if (leftAmp < ref.reducedAmplitude || rightAmp < ref.reducedAmplitude) {
-    category = 'BILATERAL_REDUCTION'; score = 55; updrsEstimate = 2;
-    interpretation = `Ayunan tangan bilateral berkurang, indikasi rigiditas.`;
+    category = 'NORMAL';
+    score = parseFloat(Math.max(0, Math.min(14, (asymmetryPercent / ref.normalAsymmetryMax) * 12)).toFixed(1));
+    updrsEstimate = 0;
+    interpretation = `Ayunan tangan simetris dan normal (asimetri ${asymmetryPercent.toFixed(0)}%, L: ${leftAmp.toFixed(0)}°, R: ${rightAmp.toFixed(0)}°).`;
   } else {
-    category = 'BORDERLINE'; score = 15; updrsEstimate = 1;
-    interpretation = `Ayunan tangan sedikit asimetris, pantau berkala.`;
+    const asymDeficit = Math.min(1.0, Math.max(0, (asymmetryPercent - ref.normalAsymmetryMax) / 45));
+    const minAmp = Math.min(leftAmp, rightAmp);
+    const ampDeficit = minAmp < ref.reducedAmplitude ? Math.min(1.0, Math.max(0, (ref.reducedAmplitude - minAmp) / 12)) : 0;
+    const rawScore = 15 + (asymDeficit * 58) + (ampDeficit * 22);
+    score = parseFloat(Math.min(95, Math.max(12, rawScore)).toFixed(1));
+
+    if (asymmetryPercent > ref.significantAsymmetry || score >= 70) {
+      category = 'SIGNIFICANT_ASYMMETRY';
+      updrsEstimate = 3;
+      interpretation = `⚠️ Asimetri ayunan tangan signifikan (${asymmetryPercent.toFixed(0)}%), tangan ${weakerSide} berkurang. Khas pada Parkinson unilateral.`;
+    } else if (asymmetryPercent > ref.mildAsymmetry || score >= 45) {
+      category = 'MILD_ASYMMETRY';
+      updrsEstimate = 2;
+      interpretation = `Asimetri ayunan tangan sedang (${asymmetryPercent.toFixed(0)}%), tangan ${weakerSide} lebih terbatas.`;
+    } else if (leftAmp < ref.reducedAmplitude && rightAmp < ref.reducedAmplitude) {
+      category = 'BILATERAL_REDUCTION';
+      updrsEstimate = 2;
+      interpretation = `Ayunan tangan bilateral berkurang (L: ${leftAmp.toFixed(0)}°, R: ${rightAmp.toFixed(0)}°), indikasi rigiditas motorik.`;
+    } else {
+      category = 'BORDERLINE';
+      updrsEstimate = 1;
+      interpretation = `Ayunan tangan sedikit asimetris (${asymmetryPercent.toFixed(0)}%). Pantau berkala.`;
+    }
   }
 
   return {
     leftAmplitudeDeg: parseFloat(leftAmp.toFixed(1)),
     rightAmplitudeDeg: parseFloat(rightAmp.toFixed(1)),
     asymmetryPercent: parseFloat(asymmetryPercent.toFixed(1)),
-    weakerSide, category, interpretation, score, updrsEstimate,
+    weakerSide,
+    category,
+    interpretation,
+    score,
+    updrsEstimate,
   };
 }
 
@@ -340,23 +409,36 @@ export function analyzeROM({ joint, angles, age }) {
 
   let category, interpretation, score;
   if (rom >= ref.normal) {
-    category = 'NORMAL'; score = 0;
+    category = 'NORMAL';
+    score = 0;
     interpretation = `ROM ${jName} normal (${rom.toFixed(0)}°, referensi ≥${ref.normal}°).`;
-  } else if (rom >= ref.reduced) {
-    category = 'MILDLY_REDUCED'; score = 30;
-    interpretation = `ROM ${jName} sedikit terbatas (${rom.toFixed(0)}°). Latihan peregangan dianjurkan.`;
-  } else if (rom >= ref.severe) {
-    category = 'MODERATELY_REDUCED'; score = 60;
-    interpretation = `ROM ${jName} terbatas sedang (${rom.toFixed(0)}°). Evaluasi fisioterapi dianjurkan.`;
   } else {
-    category = 'SEVERELY_REDUCED'; score = 85;
-    interpretation = `⚠️ ROM ${jName} terbatas berat (${rom.toFixed(0)}°). Rujukan rehabilitasi diperlukan.`;
+    const deficit = Math.max(0, ref.normal - rom);
+    const maxDeficit = Math.max(10, ref.normal - ref.severe);
+    score = parseFloat(Math.min(90, Math.max(10, (deficit / maxDeficit) * 65 + 15)).toFixed(1));
+
+    if (rom < ref.severe || score >= 75) {
+      category = 'SEVERELY_REDUCED';
+      interpretation = `⚠️ ROM ${jName} terbatas berat (${rom.toFixed(0)}°, referensi ≥${ref.normal}°). Rujukan rehabilitasi diperlukan.`;
+    } else if (rom < ref.reduced || score >= 45) {
+      category = 'MODERATELY_REDUCED';
+      interpretation = `ROM ${jName} terbatas sedang (${rom.toFixed(0)}°). Evaluasi fisioterapi dianjurkan.`;
+    } else {
+      category = 'MILDLY_REDUCED';
+      interpretation = `ROM ${jName} sedikit terbatas (${rom.toFixed(0)}°). Latihan peregangan dianjurkan.`;
+    }
   }
 
   return {
-    joint: jKey, maxAngleDeg: parseFloat(maxAngle.toFixed(1)),
-    minAngleDeg: parseFloat(minAngle.toFixed(1)), romDeg: parseFloat(rom.toFixed(1)),
-    referenceNormal: ref.normal, ageAdjusted: !!age, category, interpretation, score,
+    joint: jKey,
+    maxAngleDeg: parseFloat(maxAngle.toFixed(1)),
+    minAngleDeg: parseFloat(minAngle.toFixed(1)),
+    romDeg: parseFloat(rom.toFixed(1)),
+    referenceNormal: ref.normal,
+    ageAdjusted: !!age,
+    category,
+    interpretation,
+    score,
   };
 }
 
@@ -379,24 +461,40 @@ export function analyzePosturalStability({ frames }) {
   let category, interpretation, score, updrsEstimate;
 
   if (swayLength <= ref.normalSwayLength && swayArea <= ref.normalSwayArea) {
-    category = 'STABLE'; score = 0; updrsEstimate = 0;
+    category = 'STABLE';
+    score = parseFloat(Math.min(14, (swayArea / ref.normalSwayArea) * 12).toFixed(1));
+    updrsEstimate = 0;
     interpretation = `Postur stabil (sway area ${(swayArea * 10000).toFixed(2)} cm²).`;
-  } else if (swayArea > ref.severeSwayArea || swayLength > ref.severeSwayLength) {
-    category = 'SEVERELY_UNSTABLE'; score = 85; updrsEstimate = 4;
-    interpretation = `⚠️ Ketidakstabilan postur berat (sway area ${(swayArea * 10000).toFixed(2)} cm²). Risiko jatuh tinggi, rujukan segera.`;
-  } else if (swayArea > ref.mildSwayArea || swayLength > ref.mildSwayLength) {
-    category = 'MODERATELY_UNSTABLE'; score = 50; updrsEstimate = 2;
-    interpretation = `Postur tidak stabil sedang (sway area ${(swayArea * 10000).toFixed(2)} cm²). Latihan keseimbangan dianjurkan.`;
   } else {
-    category = 'MILDLY_UNSTABLE'; score = 25; updrsEstimate = 1;
-    interpretation = `Postur sedikit tidak stabil. Pantau dan latih keseimbangan.`;
+    const areaDeficit = Math.min(1.0, Math.max(0, (swayArea - ref.normalSwayArea) / (ref.severeSwayArea - ref.normalSwayArea)));
+    const lenDeficit = Math.min(1.0, Math.max(0, (swayLength - ref.normalSwayLength) / (ref.severeSwayLength - ref.normalSwayLength)));
+    const rawScore = 15 + (areaDeficit * 55) + (lenDeficit * 25);
+    score = parseFloat(Math.min(95, Math.max(12, rawScore)).toFixed(1));
+
+    if (swayArea > ref.severeSwayArea || swayLength > ref.severeSwayLength || score >= 75) {
+      category = 'SEVERELY_UNSTABLE';
+      updrsEstimate = 4;
+      interpretation = `⚠️ Ketidakstabilan postur berat (sway area ${(swayArea * 10000).toFixed(2)} cm²). Risiko jatuh tinggi, rujukan segera.`;
+    } else if (swayArea > ref.mildSwayArea || score >= 45) {
+      category = 'MODERATELY_UNSTABLE';
+      updrsEstimate = 2;
+      interpretation = `Postur tidak stabil sedang (sway area ${(swayArea * 10000).toFixed(2)} cm²). Latihan keseimbangan dianjurkan.`;
+    } else {
+      category = 'MILDLY_UNSTABLE';
+      updrsEstimate = 1;
+      interpretation = `Postur sedikit tidak stabil (${(swayArea * 10000).toFixed(2)} cm²). Pantau dan latih keseimbangan.`;
+    }
   }
 
   return {
     swayLengthNorm: parseFloat(swayLength.toFixed(4)),
     swayAreaNorm: parseFloat(swayArea.toFixed(6)),
     swayAreaCm2: parseFloat((swayArea * 10000).toFixed(3)),
-    frameCount: frames.length, category, interpretation, score, updrsEstimate,
+    frameCount: frames.length,
+    category,
+    interpretation,
+    score,
+    updrsEstimate,
   };
 }
 

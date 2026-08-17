@@ -372,18 +372,27 @@ export class BiomarkerKNNClassifier {
   }
 
   /**
-   * Ekstrak raw feature array
+   * Ekstrak raw feature array dengan penanganan multi-format field
    */
   extractRawFeatures(bm) {
+    const tremorFreq = bm.tremor?.dominantFrequencyHz ?? bm.tremor?.freq ?? 0;
+    const tremorAmp = bm.tremor?.amplitude ?? 0;
+    const tapRate = bm.fingerTapping?.tapRatePerSecond ?? bm.fingerTapping?.tapRate ?? 0;
+    const tapDec = bm.fingerTapping?.decrementPercent ?? bm.fingerTapping?.decrement ?? 0;
+    const gaitSym = bm.gait?.symmetryIndex ?? bm.gait?.strideSymmetryIndex ?? (typeof bm.gait?.symmetryPercent === 'number' ? bm.gait.symmetryPercent / 100 : 1);
+    const gaitCad = bm.gait?.cadencePerMin ?? bm.gait?.cadence ?? 100;
+    const armAsym = bm.armSwing?.asymmetryPercent ?? bm.armSwing?.asymmetry ?? 0;
+    const swayArea = bm.posturalStability?.swayArea ?? bm.posturalStability?.swayAreaNorm ?? (typeof bm.posturalStability?.swayAreaCm2 === 'number' ? bm.posturalStability.swayAreaCm2 / 10000 : 0);
+
     return [
-      bm.tremor?.dominantFrequencyHz || 0,
-      bm.tremor?.amplitude || 0,
-      bm.fingerTapping?.tapRatePerSecond || 0,
-      bm.fingerTapping?.decrementPercent || 0,
-      bm.gait?.symmetryIndex || 1,
-      bm.gait?.cadencePerMin || 100,
-      bm.armSwing?.asymmetryPercent || 0,
-      bm.posturalStability?.swayArea || 0,
+      tremorFreq,
+      tremorAmp,
+      tapRate,
+      tapDec,
+      gaitSym,
+      gaitCad,
+      armAsym,
+      swayArea,
     ];
   }
 

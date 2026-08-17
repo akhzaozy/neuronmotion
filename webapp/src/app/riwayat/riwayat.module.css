@@ -154,6 +154,11 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   padding: var(--s2) var(--s5);
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+
+.deltaList:hover {
+  box-shadow: var(--shadow-raised);
 }
 
 .deltaItem {
@@ -161,8 +166,15 @@
   grid-template-columns: minmax(0, 1fr) auto;
   gap: var(--s4);
   align-items: baseline;
-  padding: var(--s3) 0;
+  padding: var(--s3) var(--s2);
   border-bottom: 1px solid var(--rule-hair);
+  border-radius: var(--radius);
+  transition: background-color 0.15s ease-out, padding-left 0.15s ease-out;
+}
+
+.deltaItem:hover {
+  background: var(--inset);
+  padding-left: var(--s3);
 }
 
 .deltaItem:last-child {

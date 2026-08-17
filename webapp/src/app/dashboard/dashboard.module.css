@@ -147,6 +147,15 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   padding: var(--s5);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.22s ease-out;
+}
+
+.bioCard:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--lift);
+  border-color: var(--rule-heavy);
 }
 
 .bioHead {
@@ -437,6 +446,9 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   padding: var(--s5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
 }
 
 .bars {
@@ -444,7 +456,10 @@
 }
 
 .barsHead {
-  margin-bottom: var(--s4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--s3);
 }
 
 .barsTitle {
@@ -456,27 +471,75 @@
 .barsRow {
   display: flex;
   align-items: flex-end;
-  gap: var(--s2);
+  justify-content: flex-start;
+  gap: var(--s3);
   height: 120px;
+  padding: var(--s2) 0;
+  border-bottom: 1px dashed var(--rule-hair);
 }
 
 .barSlot {
   flex: 1 1 0;
+  max-width: 34px;
   display: flex;
-  align-items: flex-end;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
   height: 100%;
-  min-width: 0;
+  min-width: 14px;
+  position: relative;
+  cursor: pointer;
 }
 
 .bar {
   width: 100%;
   border-radius: var(--radius-pill);
-  transition: height 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: bottom;
+  transition: height 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s ease-out, filter 0.18s ease-out;
+  animation: barGrow 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* Warna batang mengikuti tingkat risiko sesi itu, bukan satu warna merek
-   untuk semuanya, supaya sesi yang memburuk terlihat tanpa harus membaca
-   angkanya satu per satu. */
+@keyframes barGrow {
+  from {
+    transform: scaleY(0);
+    opacity: 0.3;
+  }
+  to {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+.barSlot:hover .bar {
+  transform: scaleY(1.06);
+  filter: brightness(1.12);
+}
+
+.barTooltip {
+  position: absolute;
+  top: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: var(--sheet);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease-out, transform 0.15s ease-out;
+  z-index: 10;
+  box-shadow: var(--shadow-sm);
+}
+
+.barSlot:hover .barTooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-2px);
+}
+
+/* Warna batang mengikuti tingkat risiko sesi itu */
 .bar_low {
   background: var(--level-low);
 }
@@ -487,6 +550,96 @@
 
 .bar_high {
   background: var(--level-high);
+}
+
+/* ── Keterangan Warna & Kriteria Risiko ────────────────────────────────── */
+
+.legendWrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  padding-top: var(--s3);
+  border-top: 1px solid var(--rule-hair);
+}
+
+.legendHead {
+  font-size: var(--t-record);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.legendList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.legendItem {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s3);
+  padding: var(--s2) var(--s3);
+  border-radius: var(--radius);
+  background: var(--inset);
+  transition: background-color 0.15s ease-out;
+}
+
+.legendBadge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-top: 1px;
+}
+
+.legendBadgeDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.legendBadge_low {
+  color: var(--level-low);
+  background: var(--level-low-wash);
+}
+
+.legendBadge_mid {
+  color: var(--level-mid);
+  background: var(--level-mid-wash);
+}
+
+.legendBadge_high {
+  color: var(--level-high);
+  background: var(--level-high-wash);
+}
+
+.legendBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.legendLabel {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 2px;
+}
+
+.legendDesc {
+  display: block;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--ink-secondary);
 }
 
 /* ── Keadaan kosong ─────────────────────────────────────────────────────── */

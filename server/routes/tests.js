@@ -134,12 +134,14 @@ router.post('/full-screening', requireAuth, async (req, res) => {
     // mendapat catatan riwayat yang terdengar seperti kasus berat.
 
     // Jalankan K-NN ML Prediction
-    let mlPrediction = null;
-    try {
-      const classifier = getClassifier();
-      mlPrediction = classifier.classify(testResults);
-    } catch (e) {
-      console.warn("K-NN Warning:", e);
+    let mlPrediction = composite.mlClassification;
+    if (!mlPrediction || mlPrediction.error) {
+      try {
+        const classifier = getClassifier();
+        mlPrediction = classifier.classify(testResults);
+      } catch (e) {
+        console.warn("K-NN Warning:", e);
+      }
     }
 
     // Skor gejala subjektif dari kuesioner pra-skrining (jika diisi)

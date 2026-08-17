@@ -1,9 +1,10 @@
-/* NeuroBot.
-   Bukan gelembung mengambang berikon, melainkan lembar percakapan bertepi
-   garis yang menempel di sudut kanan bawah. Tombol pembukanya adalah baris
-   teks bidang tinta, dan seluruh kendalinya membawa kata, bukan tanda. */
+/* ═══════════════════════════════════════════════════════════════════════════
+   NEUROBOT AI CHAT WIDGET
+   Tampilan modern, chat bubble selang-seling (Kiri: Bot, Kanan: User),
+   avatar robotik + pulsator status, serta responsif penuh di laptop & ponsel.
+   ══════════════════════════════════════════════════════════════════════════ */
 
-/* ── Tombol pembuka ─────────────────────────────────────────────────────── */
+/* ── Floating Action Button (FAB) ────────────────────────────────────────── */
 
 .fab {
   position: fixed;
@@ -13,40 +14,72 @@
   display: inline-flex;
   align-items: center;
   gap: var(--s2);
-  min-height: var(--touch);
-  padding: var(--s3) var(--s5);
+  min-height: 48px;
+  padding: 0 var(--s4);
   background: var(--cta-field);
   color: var(--cta-ink);
   border: 1px solid var(--cta-field);
   border-radius: var(--radius-pill);
-  box-shadow: var(--shadow-raised);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   font-size: var(--t-body);
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.25;
-  transition: background-color 0.14s ease-out, border-color 0.14s ease-out,
-    color 0.14s ease-out;
+  cursor: pointer;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.18s ease-out, background-color 0.18s ease-out;
 }
 
 .fab:hover {
   background: var(--accent-deep);
   border-color: var(--accent-deep);
   color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
 }
 
-[data-theme='dark'] .fab:hover {
-  color: var(--sheet);
+.fab:active {
+  transform: scale(0.96);
 }
 
-/* Saat jendela terbuka, tombol menjadi kendali tutup yang netral. */
+.fabIcon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fabPulse {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 0 2px var(--cta-field);
+  animation: pulseBeacon 2s infinite;
+}
+
+@keyframes pulseBeacon {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
 .fabOpen {
-  background: transparent;
-  border-color: var(--rule);
+  background: var(--field);
+  border-color: var(--rule-heavy);
   color: var(--ink);
 }
 
 .fabOpen:hover {
   background: var(--inset);
-  border-color: var(--rule-heavy);
   color: var(--ink);
 }
 
@@ -54,64 +87,91 @@
   white-space: nowrap;
 }
 
-/* Pesan yang belum dibaca dinyatakan kata, bukan titik warna. */
 .unreadFlag {
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: var(--t-record);
-  font-weight: 500;
-  letter-spacing: 0.06em;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  padding-left: var(--s2);
-  border-left: 2px solid var(--accent);
+  padding: 2px 6px;
+  border-radius: var(--radius-pill);
+  background: #ef4444;
+  color: #ffffff;
 }
 
-/* ── Lembar percakapan ──────────────────────────────────────────────────── */
+/* ── Jendela Chat Dialog ─────────────────────────────────────────────────── */
 
 .chatWindow {
   position: fixed;
-  bottom: calc(var(--touch) + var(--s5) * 2);
+  bottom: calc(48px + var(--s5) + 12px);
   right: var(--s5);
   z-index: 999;
-  /* Dilebarkan dari 380px. Penyusun pesan kini punya isian selebar panel, dan
-     pada 380px kalimat pertanyaan yang wajar masih membungkus tiga baris. */
-  width: 400px;
-  max-width: calc(100vw - var(--s6));
-  /* Ditinggikan dari 560px untuk mengganti ruang yang diambil penyusun pesan,
-     sehingga giliran percakapan tidak kehilangan tinggi bacanya. */
-  height: 600px;
-  max-height: calc(100vh - var(--s9) * 2);
+  width: 420px;
+  max-width: calc(100vw - var(--s5) * 2);
+  height: 620px;
+  max-height: calc(100dvh - 110px);
   display: flex;
   flex-direction: column;
   background: var(--field);
   border: 1px solid var(--rule-hair);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--lift);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
   overflow: hidden;
   opacity: 0;
+  transform: translateY(12px) scale(0.97);
   pointer-events: none;
-  /* Tanpa visibility, isi jendela yang tertutup tetap dapat dicapai dengan
-     tombol Tab meski tidak terlihat, sehingga fokus keyboard seolah hilang.
-     Ditunda agar peralihan menutup tetap terlihat sampai selesai. */
   visibility: hidden;
-  transition: opacity 0.14s ease-out, visibility 0s linear 0.14s;
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0s linear 0.2s;
 }
 
 .chatWindowOpen {
   opacity: 1;
+  transform: translateY(0) scale(1);
   pointer-events: auto;
   visibility: visible;
-  transition: opacity 0.14s ease-out, visibility 0s;
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0s;
 }
 
-/* ── Kop ────────────────────────────────────────────────────────────────── */
+/* ── Header Kop Chat ─────────────────────────────────────────────────────── */
 
 .chatHeader {
   display: flex;
   align-items: center;
   gap: var(--s3);
   padding: var(--s3) var(--s4);
+  background: color-mix(in srgb, var(--sheet) 88%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--rule-hair);
   flex-shrink: 0;
+}
+
+.botAvatar {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-pill);
+  background: var(--accent-wash);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.onlineDot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #10b981;
+  border: 2px solid var(--field);
 }
 
 .headerInfo {
@@ -120,38 +180,61 @@
 }
 
 .botName {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--t-body);
   font-weight: 700;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.aiBadge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: #ffffff;
+  letter-spacing: 0.04em;
 }
 
 .botStatus {
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: var(--t-record);
-  letter-spacing: 0.04em;
+  font-size: 11.5px;
   color: var(--ink-muted);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .headerActions {
   display: flex;
-  gap: var(--s2);
+  align-items: center;
+  gap: var(--s1);
   flex-shrink: 0;
 }
 
-/* Kendali kop adalah kata pendek, tetap memenuhi lantai sasaran sentuh. */
-.headerBtn {
-  min-height: var(--touch);
-  padding: 0 var(--s2);
-  font-size: var(--t-record);
-  font-weight: 600;
+.headerIconBtn {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-pill);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--ink-secondary);
-  text-decoration: underline;
-  text-underline-offset: 0.25em;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease-out, color 0.15s ease-out;
 }
 
-.headerBtn:hover {
-  color: var(--accent);
+.headerIconBtn:hover {
+  background: var(--inset);
+  color: var(--ink);
 }
 
-/* ── Badan percakapan ───────────────────────────────────────────────────── */
+/* ── Badan Percakapan (Chat Body) ────────────────────────────────────────── */
 
 .chatBody {
   flex: 1;
@@ -163,134 +246,248 @@
   scroll-behavior: smooth;
 }
 
-.bubble {
-  display: block;
-  padding-left: var(--s3);
-  border-left: 2px solid var(--rule-hair);
-}
-
-/* Siapa yang berbicara dibawa label mono di atas isinya, bukan sisi kiri
-   kanan dan warna gelembung. */
-.bubbleWho {
-  display: block;
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: var(--t-record);
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ink-muted);
-  margin-bottom: var(--s1);
-}
-
-.bubbleUser {
-  border-left-color: var(--accent);
-}
-
-.bubbleContent {
-  font-size: var(--t-body);
-  line-height: 1.55;
-  word-break: break-word;
-}
-
-.typing {
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: var(--t-record);
-  letter-spacing: 0.06em;
-  color: var(--ink-muted);
-}
-
-/* ── Pertanyaan pintasan ────────────────────────────────────────────────── */
-
-.quickPrompts {
+/* Row pesan */
+.msgRow {
   display: flex;
-  flex-direction: column;
-  padding: 0 var(--s4) var(--s3);
-  border-top: 1px solid var(--rule-hair);
+  align-items: flex-end;
+  gap: var(--s2);
+  width: 100%;
+  animation: fadeInMsg 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeInMsg {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Pesan Bot: KIRI */
+.msgRowBot {
+  justify-content: flex-start;
+}
+
+/* Pesan User: KANAN */
+.msgRowUser {
+  justify-content: flex-end;
+  flex-direction: row-reverse;
+}
+
+.avatarWrap {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-pill);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  margin-bottom: 2px;
 }
 
-.quickPromptBtn {
-  min-height: var(--touch);
-  padding: var(--s2) 0;
-  text-align: left;
-  font-size: var(--t-record);
-  font-weight: 600;
-  color: var(--ink-secondary);
-  border-bottom: 1px solid var(--rule-hair);
-  transition: color 0.14s ease-out;
-}
-
-.quickPromptBtn:hover {
+.avatarBot {
+  background: var(--accent-wash);
   color: var(--accent);
 }
 
-/* ── Isian ──────────────────────────────────────────────────────────────── */
+.avatarUser {
+  background: var(--inset);
+  color: var(--ink-secondary);
+}
 
-/* Penyusun pesan. Isian satu baris penuh, petunjuk dan tombol kirim di
-   bawahnya. Susunan menyamping yang lama menyisakan lebar isian yang tidak
-   cukup bahkan untuk teks contohnya sendiri. */
-.chatInputArea {
+.bubbleCol {
   display: flex;
   flex-direction: column;
+  max-width: 82%;
+}
+
+.msgRowUser .bubbleCol {
+  align-items: flex-end;
+}
+
+.msgRowBot .bubbleCol {
+  align-items: flex-start;
+}
+
+.bubbleHeader {
+  display: flex;
+  align-items: center;
   gap: var(--s2);
-  padding: var(--s3) var(--s4);
+  margin-bottom: 4px;
+  padding: 0 4px;
+}
+
+.senderName {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.msgTime {
+  font-size: 10px;
+  color: var(--ink-muted);
+}
+
+/* ── Gelembung Chat (Bubbles) ────────────────────────────────────────────── */
+
+.bubble {
+  padding: 10px 14px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  word-break: break-word;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Gelembung Bot (Kiri): Halus, modern, border lembut */
+.bubbleBot {
+  background: var(--field);
+  color: var(--ink);
+  border: 1px solid var(--rule-hair);
+  border-radius: 4px 18px 18px 18px;
+}
+
+/* Gelembung User (Kanan): Aksen tegas, teks kontras */
+.bubbleUser {
+  background: var(--cta-field);
+  color: var(--cta-ink);
+  border-radius: 18px 4px 18px 18px;
+}
+
+[data-theme='dark'] .bubbleUser {
+  color: var(--sheet);
+}
+
+/* ── Indikator Mengetik (Typing Pulse Dots) ──────────────────────────────── */
+
+.typingBubble {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 12px 16px;
+  min-height: 38px;
+}
+
+.typingDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: inline-block;
+  animation: bounceDot 1.4s infinite ease-in-out both;
+}
+
+.typingDot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+.typingDot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes bounceDot {
+  0%, 80%, 100% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  40% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+
+/* ── Quick Prompt Chips ──────────────────────────────────────────────────── */
+
+.quickPrompts {
+  padding: var(--s2) var(--s4) var(--s3);
   border-top: 1px solid var(--rule-hair);
+  background: var(--inset);
   flex-shrink: 0;
 }
 
-.chatInputRow {
+.quickPromptsTitle {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--s3);
-}
-
-/* Petunjuk tombol Enter. Ia keterangan cara pakai, jadi diredam dan kecil,
-   tetapi tetap di lantai 14px yang dipegang produk ini. */
-.enterHint {
-  font-size: var(--t-record);
-  line-height: 1.35;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
   color: var(--ink-muted);
-  min-width: 0;
+  margin-bottom: var(--s2);
 }
 
-.chatInput {
+.sparkleIcon {
+  color: var(--accent);
+}
+
+.chipsScroll {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.quickPromptBtn {
   display: block;
-  width: 100%;
-  /* Dua baris teks beserta paddingnya. Lantai sentuh 44px terlalu pendek di
-     sini: pada 16px dengan tinggi baris 1,5, satu baris saja sudah menuntut
-     50px, sehingga kotak 44px memotong barisnya sendiri. */
-  min-height: 76px;
-  max-height: 132px;
-  resize: none;
-  /* Tingginya diatur useEffect di LiveChat.tsx mengikuti isi. Gulir hanya
-     muncul setelah menyentuh max-height, jadi kotak yang belum penuh tidak
-     lagi menampilkan bilah gulir yang tidak berguna. */
-  overflow-y: auto;
-  padding: var(--s3);
-  background: var(--field);
-  color: var(--ink);
-  border: 1px solid var(--rule);
+  text-align: left;
+  padding: 7px 12px;
   border-radius: var(--radius);
-  font-size: var(--t-body);
-  line-height: 1.5;
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 0.15s ease-out;
+}
+
+.quickPromptBtn:hover {
+  background: var(--accent-wash);
+  border-color: var(--accent-soft);
+  color: var(--accent);
+  transform: translateX(2px);
+}
+
+/* ── Area Input Chat ─────────────────────────────────────────────────────── */
+
+.chatInputArea {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--s3) var(--s4) var(--s2);
+  border-top: 1px solid var(--rule-hair);
+  background: var(--field);
+  flex-shrink: 0;
+}
+
+.inputWrap {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--s2);
+  background: var(--inset);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  padding: 6px var(--s2) 6px var(--s3);
   transition: border-color 0.18s ease-out, box-shadow 0.18s ease-out;
 }
 
-/* Fokus memakai cincin biru lembut, sama seperti .input di globals.css. */
-.chatInput:focus {
+.inputWrap:focus-within {
   border-color: var(--accent);
-  box-shadow: 0 0 0 4px var(--accent-wash);
-  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-wash);
 }
 
-.chatInput:hover {
-  border-color: var(--rule-heavy);
-}
-
-.chatInput:focus {
-  border-color: var(--accent);
-  box-shadow: inset 0 -2px 0 var(--accent);
+.chatInput {
+  flex: 1;
+  min-height: 24px;
+  max-height: 110px;
+  resize: none;
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  font-size: 13.5px;
+  line-height: 1.45;
+  padding: 2px 0;
   outline: none;
 }
 
@@ -298,60 +495,80 @@
   color: var(--ink-muted);
 }
 
-.chatInput:disabled {
-  opacity: 0.45;
-}
-
 .sendBtn {
-  flex-shrink: 0;
-  min-height: var(--touch);
-  padding: var(--s3) var(--s4);
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-pill);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: var(--cta-field);
   color: var(--cta-ink);
-  border: 1px solid var(--cta-field);
-  border-radius: var(--radius-pill);
-  font-size: var(--t-record);
-  font-weight: 600;
-  transition: background-color 0.14s ease-out, border-color 0.14s ease-out;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 0.15s ease-out, transform 0.15s ease-out;
 }
 
 .sendBtn:hover:not(.sendBtnDisabled) {
   background: var(--accent-deep);
-  border-color: var(--accent-deep);
-  color: #fff;
-}
-
-[data-theme='dark'] .sendBtn:hover:not(.sendBtnDisabled) {
-  color: var(--sheet);
+  transform: scale(1.05);
 }
 
 .sendBtnDisabled {
-  opacity: 0.45;
+  opacity: 0.35;
   cursor: not-allowed;
 }
 
-/* ── Catatan kaki ───────────────────────────────────────────────────────── */
+.chatInputFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2px;
+}
+
+.enterHint {
+  font-size: 10.5px;
+  color: var(--ink-muted);
+}
+
+/* ── Catatan Kaki ────────────────────────────────────────────────────────── */
 
 .disclaimer {
-  padding: var(--s2) var(--s4) var(--s3);
-  border-top: 1px solid var(--rule-hair);
+  padding: 6px var(--s4) 8px;
   background: var(--inset);
-  font-size: var(--t-record);
-  color: var(--ink-secondary);
+  border-top: 1px solid var(--rule-hair);
+  font-size: 10.5px;
+  line-height: 1.35;
+  color: var(--ink-muted);
+  text-align: center;
   flex-shrink: 0;
 }
 
+/* ── Layar Responsif Ponsel ──────────────────────────────────────────────── */
+
 @media (max-width: 640px) {
   .chatWindow {
-    right: var(--s4);
-    left: var(--s4);
+    right: 12px;
+    left: 12px;
     width: auto;
-    bottom: calc(var(--touch) + var(--s4) * 2);
-    max-height: calc(100dvh - var(--s9));
+    max-width: 100vw;
+    bottom: 76px;
+    height: min(650px, calc(100dvh - 96px));
+    border-radius: var(--radius-lg);
   }
 
   .fab {
-    bottom: var(--s4);
-    right: var(--s4);
+    bottom: 16px;
+    right: 16px;
+    padding: 0 var(--s3);
+  }
+
+  .bubbleCol {
+    max-width: 88%;
+  }
+
+  .bubble {
+    font-size: 13px;
   }
 }

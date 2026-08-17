@@ -170,6 +170,7 @@ export interface UserProfile {
   dateOfBirth?: string;
   specialization?: string;
   institution?: string;
+  licenseNumber?: string;
   country?: string;
   countryName?: string;
   region?: string;

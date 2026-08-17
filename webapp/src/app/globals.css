@@ -222,8 +222,8 @@
 }
 
 html {
-  /* Sasaran sentuh dan ukuran huruf mengikuti setelan sistem pengguna. */
   -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
 }
 
 html,
@@ -491,21 +491,22 @@ select {
   border-color: var(--accent);
   color: var(--accent);
   box-shadow: var(--shadow-card);
+  transform: translateY(-1px);
 }
 
 .btn:active {
-  transform: translateY(1px);
+  transform: scale(0.97) translateY(1px);
   box-shadow: 0 1px 2px rgba(18, 49, 61, 0.04);
 }
 
-/* Aksi utama: bidang biru merek penuh. Dalam dunia sebelumnya aksi utama
-   adalah bidang tinta, karena di lembar cetak yang paling penting adalah yang
-   paling gelap. Di sini yang paling penting adalah yang paling berwarna. */
+/* Aksi utama: bidang biru merek penuh. */
 .btn--primary {
   background: var(--accent);
   border-color: var(--accent);
   color: #ffffff;
   box-shadow: 0 1px 2px rgba(18, 49, 61, 0.08), 0 8px 20px rgba(29, 109, 134, 0.24);
+  position: relative;
+  overflow: hidden;
 }
 
 .btn--primary:hover {
@@ -513,6 +514,11 @@ select {
   border-color: var(--accent-deep);
   color: #ffffff;
   box-shadow: 0 2px 4px rgba(18, 49, 61, 0.1), 0 14px 30px rgba(29, 109, 134, 0.3);
+  transform: translateY(-2px);
+}
+
+.btn--primary:active {
+  transform: scale(0.97) translateY(0);
 }
 
 [data-theme='dark'] .btn--primary,
@@ -698,6 +704,15 @@ textarea.input {
 .dataTable td {
   padding: var(--s4);
   border-bottom: 1px solid var(--rule-hair);
+  transition: background-color 0.16s ease-out;
+}
+
+.dataTable tbody tr {
+  transition: background-color 0.16s ease-out;
+}
+
+.dataTable tbody tr:hover {
+  background: color-mix(in srgb, var(--accent-wash) 40%, transparent);
 }
 
 .dataTable tbody tr:last-child td,
@@ -722,10 +737,16 @@ textarea.input {
   background: rgba(18, 49, 61, 0.5);
   backdrop-filter: blur(3px);
   z-index: 60;
+  animation: fadeInScrim 0.24s ease-out both;
 }
 
 [data-theme='dark'] .dialogScrim {
   background: rgba(0, 0, 0, 0.66);
+}
+
+@keyframes fadeInScrim {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .dialogSheet {
@@ -742,6 +763,18 @@ textarea.input {
   border-radius: var(--radius-xl);
   box-shadow: var(--lift);
   padding: var(--s7);
+  animation: dialogScaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes dialogScaleIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -46%) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
 }
 
 @media (max-width: 640px) {
@@ -756,14 +789,23 @@ textarea.input {
     border: 0;
     border-radius: 0;
     padding: var(--s6) var(--s4) var(--s8);
+    animation: dialogSlideUpMobile 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes dialogSlideUpMobile {
+    from {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    GERAK
-   Satu gerakan yang diotori: isi masuk dengan naik pendek dan ease-out
-   eksponensial, dari keadaan yang sudah terlihat. Tidak ada yang bergantung
-   pada animasi untuk bisa dibaca.
    ══════════════════════════════════════════════════════════════════════════ */
 
 @keyframes riseIn {
@@ -779,6 +821,26 @@ textarea.input {
 
 .riseIn {
   animation: riseIn 0.48s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes floatGentle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
 }
 
 /* Hormati setelan sistem. Penting secara khusus di sini: produk ini diskrining
