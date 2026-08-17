@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import Logo from '@/components/Logo';
@@ -226,7 +226,14 @@ export default function RegisterPage() {
               className="btn btn--primary btn--lg btn--block"
               disabled={loading || passwordTooShort}
             >
-              {loading ? t('common.loading') : t('auth.registerNow')}
+              {loading ? (
+                <>
+                  <Loader2 size={18} className={styles.spinner} aria-hidden="true" />
+                  <span>{t('common.loading')}</span>
+                </>
+              ) : (
+                t('auth.registerNow')
+              )}
             </button>
           </form>
 

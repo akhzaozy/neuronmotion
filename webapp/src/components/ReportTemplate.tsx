@@ -1,6 +1,7 @@
 'use client';
 import { Session } from '@/lib/api';
 import { normalizeBiomarkers } from '@/lib/biomarkers';
+import { getCountry } from '@/lib/countries';
 import Logo from './Logo';
 import styles from './ReportTemplate.module.css';
 
@@ -10,8 +11,10 @@ export interface ReportPatient {
   gender?: string;
   dateOfBirth?: string;
   age?: number | null;
+  region?: string;
   city?: string;
   state?: string;
+  country?: string;
   countryName?: string;
 }
 
@@ -93,7 +96,16 @@ export default function ReportTemplate({ patient, sessions, meta }: Props) {
   const latest = sessions[0];
   const nb = normalizeBiomarkers(latest);
   const age = patient.age ?? calcAge(patient.dateOfBirth);
-  const location = [patient.city, patient.state, patient.countryName].filter(Boolean).join(', ');
+  const resolvedCountry = patient.countryName || (patient.country ? getCountry(patient.country)?.name : undefined);
+  const locationParts = [
+    patient.city,
+    patient.state,
+    patient.region,
+    resolvedCountry,
+  ]
+    .filter((p): p is string => Boolean(p && typeof p === 'string' && p.trim()))
+    .filter((v, i, a) => a.indexOf(v) === i);
+  const location = locationParts.length > 0 ? locationParts.join(', ') : '-';
   const printedAt = new Date().toLocaleString('id-ID', {
     day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
   });

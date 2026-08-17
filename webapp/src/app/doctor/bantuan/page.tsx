@@ -4,6 +4,7 @@ import Link from 'next/link';
 import * as Accordion from '@radix-ui/react-accordion';
 import { useAuth } from '@/lib/auth';
 import DoctorNav from '@/components/DoctorNav';
+import LoadingScreen from '@/components/LoadingScreen';
 import styles from '../../bantuan/bantuan.module.css';
 
 const PORTAL_STEPS = [
@@ -56,7 +57,21 @@ export default function DoctorBantuanPage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
 
-  if (!isLoading && (!user || user.role !== 'DOCTOR')) {
+  if (isLoading) {
+    return (
+      <div className={styles.page}>
+        <DoctorNav />
+        <main className="sheet">
+          <LoadingScreen
+            title="Memuat Panduan Nakes..."
+            subtitle="Menyiapkan materi alur kerja dan integrasi rekam medis..."
+          />
+        </main>
+      </div>
+    );
+  }
+
+  if (!user || user.role !== 'DOCTOR') {
     router.push('/login');
     return null;
   }

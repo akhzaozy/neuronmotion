@@ -33,6 +33,7 @@ const DICT: Record<string, { id: string; en: string }> = {
   'bot.chatWith': { id: 'Chat dengan NeuroBot AI', en: 'Chat with NeuroBot AI' },
   'bot.status': { id: 'Asisten AI · Powered by Last Dance', en: 'AI Assistant · Powered by Last Dance' },
   'bot.clearHistory': { id: 'Hapus riwayat chat', en: 'Clear chat history' },
+  'bot.qHeader': { id: 'Pertanyaan yang sering diajukan:', en: 'Frequently asked questions:' },
   'bot.q1': { id: 'Apa arti skor risiko saya?', en: 'What does my risk score mean?' },
   'bot.q2': { id: 'Apa itu tremor Parkinson?', en: 'What is a Parkinsonian tremor?' },
   'bot.q3': { id: 'Kapan saya harus ke dokter?', en: 'When should I see a doctor?' },
@@ -78,10 +79,17 @@ const DICT: Record<string, { id: string; en: string }> = {
 
   // Laporan cetak
   'report.previewHint': {
-    id: 'Pratinjau laporan. Simpan sebagai PDF melalui dialog cetak.',
-    en: 'Report preview. Save as PDF from the print dialog.',
+    id: 'Pratinjau laporan skrining resmi.',
+    en: 'Official screening report preview.',
   },
-  'report.print': { id: 'Cetak / Simpan PDF', en: 'Print / Save PDF' },
+  'report.print': { id: 'Cetak Dokumen', en: 'Print Document' },
+  'report.downloadDirect': { id: 'Unduh PDF', en: 'Download PDF' },
+  'report.preparingPdf': { id: 'Sistem sedang menyiapkan PDF...', en: 'System is preparing PDF...' },
+  'report.preparingHint': {
+    id: 'Mohon tunggu sebentar, dokumen sedang dirender ke format PDF beresolusi tinggi...',
+    en: 'Please wait a moment, rendering document to high-resolution PDF...',
+  },
+  'report.downloadSuccess': { id: 'PDF berhasil diunduh', en: 'PDF downloaded successfully' },
 
   'auth.namePlaceholder': { id: 'Contoh: Budi Santoso', en: 'e.g. Alex Johnson' },
   'auth.emailPlaceholder': { id: 'Contoh: budi@email.com', en: 'e.g. alex@email.com' },

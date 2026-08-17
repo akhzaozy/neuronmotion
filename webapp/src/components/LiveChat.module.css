@@ -401,21 +401,24 @@
 
 /* ── Quick Prompt Chips ──────────────────────────────────────────────────── */
 
+/* ── Quick Prompt Chips ──────────────────────────────────────────────────── */
+
 .quickPrompts {
-  padding: var(--s2) var(--s4) var(--s3);
+  padding: 8px var(--s3);
   border-top: 1px solid var(--rule-hair);
-  background: var(--inset);
+  background: color-mix(in srgb, var(--sheet) 85%, transparent);
   flex-shrink: 0;
 }
 
 .quickPromptsTitle {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   font-size: 11px;
   font-weight: 600;
-  color: var(--ink-muted);
-  margin-bottom: var(--s2);
+  color: var(--ink-secondary);
+  margin-bottom: 6px;
+  padding-left: 2px;
 }
 
 .sparkleIcon {
@@ -424,21 +427,31 @@
 
 .chipsScroll {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 2px 0 4px;
+}
+
+.chipsScroll::-webkit-scrollbar {
+  display: none;
 }
 
 .quickPromptBtn {
-  display: block;
-  text-align: left;
-  padding: 7px 12px;
-  border-radius: var(--radius);
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
   background: var(--field);
   border: 1px solid var(--rule-hair);
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 500;
   color: var(--ink);
   cursor: pointer;
+  box-shadow: 0 1px 3px rgba(18, 49, 61, 0.04);
   transition: all 0.15s ease-out;
 }
 
@@ -446,7 +459,8 @@
   background: var(--accent-wash);
   border-color: var(--accent-soft);
   color: var(--accent);
-  transform: translateX(2px);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(29, 109, 134, 0.12);
 }
 
 /* ── Area Input Chat ─────────────────────────────────────────────────────── */
@@ -463,32 +477,41 @@
 
 .inputWrap {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: var(--s2);
   background: var(--inset);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius-lg);
-  padding: 6px var(--s2) 6px var(--s3);
-  transition: border-color 0.18s ease-out, box-shadow 0.18s ease-out;
+  border: 1.5px solid var(--rule);
+  border-radius: var(--radius-pill);
+  padding: 4px 6px 4px 14px;
+  transition: border-color 0.18s ease-out, box-shadow 0.18s ease-out, background-color 0.18s ease-out;
 }
 
 .inputWrap:focus-within {
   border-color: var(--accent);
+  background: var(--field);
   box-shadow: 0 0 0 3px var(--accent-wash);
 }
 
 .chatInput {
   flex: 1;
   min-height: 24px;
-  max-height: 110px;
+  max-height: 100px;
   resize: none;
-  border: none;
+  border: none !important;
   background: transparent;
   color: var(--ink);
   font-size: 13.5px;
   line-height: 1.45;
-  padding: 2px 0;
-  outline: none;
+  padding: 4px 0;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.chatInput:focus,
+.chatInput:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
 }
 
 .chatInput::placeholder {
@@ -524,7 +547,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 2px;
+  padding: 0 4px;
 }
 
 .enterHint {
@@ -535,8 +558,8 @@
 /* ── Catatan Kaki ────────────────────────────────────────────────────────── */
 
 .disclaimer {
-  padding: 6px var(--s4) 8px;
-  background: var(--inset);
+  padding: 7px var(--s3) 9px;
+  background: var(--margin-ground);
   border-top: 1px solid var(--rule-hair);
   font-size: 10.5px;
   line-height: 1.35;

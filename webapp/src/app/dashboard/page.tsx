@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Activity, Footprints, Hand, MoveHorizontal, PersonStanding, RotateCw } from 'lucide-react';
@@ -9,6 +9,7 @@ import { normalizeBiomarkers } from '@/lib/biomarkers';
 import AppNav from '@/components/AppNav';
 import LiveChat from '@/components/LiveChat';
 import LoadFailure from '@/components/LoadFailure';
+import LoadingScreen from '@/components/LoadingScreen';
 import { useI18n, translateServerLabel, dateLocale } from '@/lib/i18n';
 import styles from './dashboard.module.css';
 
@@ -22,25 +23,29 @@ interface Summary {
   latestScore?: number;
   averageScore?: number;
   totalSessions?: number;
-  trendDirection?: string;
+  trendDirection?: 'IMPROVING' | 'WORSENING' | 'STABLE';
   trendDelta?: number;
   timeline?: TimelinePoint[];
 }
 
-function greeting(lang: string) {
+function levelOf(score: number): 'low' | 'mid' | 'high' {
+  if (score >= 65) return 'high';
+  if (score >= 35) return 'mid';
+  return 'low';
+}
+
+function greeting(lang: string): string {
   const h = new Date().getHours();
   if (lang === 'en') {
-    if (h < 11) return 'Good morning';
+    if (h < 12) return 'Good morning';
     if (h < 18) return 'Good afternoon';
     return 'Good evening';
   }
   if (h < 11) return 'Selamat pagi';
   if (h < 15) return 'Selamat siang';
-  if (h < 19) return 'Selamat sore';
+  if (h < 18) return 'Selamat sore';
   return 'Selamat malam';
 }
-
-const levelOf = (score: number) => (score >= 65 ? 'high' : score >= 35 ? 'mid' : 'low');
 
 /* ═══════════════════════════════════════════════════════════════════════════
    CINCIN SKOR
@@ -54,11 +59,74 @@ const levelOf = (score: number) => (score >= 65 ? 'high' : score >= 35 ? 'mid' :
    warna tingkat, dan label teks penuh di bawahnya. Pengguna yang tidak
    membedakan warna tetap membaca tingkatnya dari busur dan dari labelnya.
    ══════════════════════════════════════════════════════════════════════════ */
+function AnimatedNumber({
+  value,
+  duration = 1300,
+  decimals = 0,
+}: {
+  value: number;
+  duration?: number;
+  decimals?: number;
+}) {
+  const spanRef = useRef<HTMLSpanElement | null>(null);
+
+  useEffect(() => {
+    let startTimestamp: number | null = null;
+    let animFrame: number;
+    const startVal = 0;
+    const targetVal = value;
+
+    if (spanRef.current) {
+      spanRef.current.textContent =
+        decimals > 0 ? startVal.toFixed(decimals) : String(Math.round(startVal));
+    }
+
+    const step = (timestamp: number) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const elapsed = Math.min((timestamp - startTimestamp) / duration, 1);
+      // Kurva cubic ease-out super mulus
+      const ease = 1 - Math.pow(1 - elapsed, 3);
+      const current = startVal + (targetVal - startVal) * ease;
+
+      if (spanRef.current) {
+        spanRef.current.textContent =
+          decimals > 0 ? current.toFixed(decimals) : String(Math.round(current));
+      }
+
+      if (elapsed < 1) {
+        animFrame = requestAnimationFrame(step);
+      } else {
+        if (spanRef.current) {
+          spanRef.current.textContent =
+            decimals > 0 ? targetVal.toFixed(decimals) : String(Math.round(targetVal));
+        }
+      }
+    };
+
+    animFrame = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(animFrame);
+  }, [value, duration, decimals]);
+
+  return <span ref={spanRef}>{decimals > 0 ? value.toFixed(decimals) : Math.round(value)}</span>;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CINCIN SKOR (PIECHART / DONUT GAUGE) - 100% GPU ACCELERATED
+   ══════════════════════════════════════════════════════════════════════════ */
 function ScoreRing({ score, label }: { score: number; label: string }) {
   const r = 78;
-  const circumference = 2 * Math.PI * r;
+  const circumference = 2 * Math.PI * r; // ~490.08845
   const clamped = Math.max(0, Math.min(100, score));
-  const dash = (clamped / 100) * circumference;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      setMounted(true);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
+  const targetOffset = circumference * (1 - clamped / 100);
 
   return (
     <div className={styles.ringWrap}>
@@ -72,15 +140,17 @@ function ScoreRing({ score, label }: { score: number; label: string }) {
           stroke="currentColor"
           strokeWidth="16"
           strokeLinecap="round"
-          strokeDasharray={`${dash} ${circumference - dash}`}
-          /* Busur dimulai dari puncak, bukan dari sisi kanan, karena arah baca
-             sebuah takaran selalu bermula di atas. */
+          strokeDasharray={circumference}
+          strokeDashoffset={mounted ? targetOffset : circumference}
+          /* Busur dimulai dari puncak (-90 deg) */
           transform="rotate(-90 100 100)"
           className={styles.ringArc}
         />
       </svg>
       <div className={styles.ringCenter}>
-        <span className={styles.ringValue}>{Math.round(score)}</span>
+        <span className={styles.ringValue}>
+          <AnimatedNumber value={score} duration={1300} />
+        </span>
         <span className={styles.ringUnit}>{label}</span>
       </div>
     </div>
@@ -292,9 +362,10 @@ export default function DashboardPage() {
       <div className={styles.page}>
         <AppNav />
         <main className="sheet">
-          <p className={styles.loading} role="status" aria-live="polite">
-            {t('dash.loading')}
-          </p>
+          <LoadingScreen
+            title={t('dash.loading')}
+            subtitle="Menyiapkan ringkasan klinis dan data biomarker terbaru..."
+          />
         </main>
       </div>
     );
@@ -409,7 +480,7 @@ export default function DashboardPage() {
                               <h3 className={styles.bioLabel}>{t(b.labelKey)}</h3>
                             </div>
                             <p className={styles.bioValue}>
-                              {value.toFixed(b.digits)}
+                              <AnimatedNumber value={value} duration={1100} decimals={b.digits} />
                               <span className={styles.bioUnit}>{t(b.unitKey)}</span>
                             </p>
                             {/* Perubahan dibawa kata dan tanda, bukan panah
@@ -556,15 +627,21 @@ export default function DashboardPage() {
                     <dl className={styles.miniStats}>
                       <div className={styles.miniStat}>
                         <dt className={styles.miniLabel}>{t('dash.statAverage')}</dt>
-                        <dd className={styles.miniValue}>{Math.round(stats.average)}</dd>
+                        <dd className={styles.miniValue}>
+                          <AnimatedNumber value={stats.average} duration={1100} />
+                        </dd>
                       </div>
                       <div className={styles.miniStat}>
                         <dt className={styles.miniLabel}>{t('dash.statLowest')}</dt>
-                        <dd className={styles.miniValue}>{Math.round(stats.lowest)}</dd>
+                        <dd className={styles.miniValue}>
+                          <AnimatedNumber value={stats.lowest} duration={1100} />
+                        </dd>
                       </div>
                       <div className={styles.miniStat}>
                         <dt className={styles.miniLabel}>{t('dash.statHighest')}</dt>
-                        <dd className={styles.miniValue}>{Math.round(stats.highest)}</dd>
+                        <dd className={styles.miniValue}>
+                          <AnimatedNumber value={stats.highest} duration={1100} />
+                        </dd>
                       </div>
                     </dl>
                   )}

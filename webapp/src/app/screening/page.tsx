@@ -11,6 +11,7 @@ import CameraView from '@/components/CameraView';
 import AppNav from '@/components/AppNav';
 import ScreeningInstruction from '@/components/ScreeningInstruction';
 import PreScreeningQuestionnaire, { QuestionnaireAnswers } from '@/components/PreScreeningQuestionnaire';
+import LoadingScreen from '@/components/LoadingScreen';
 import styles from './screening.module.css';
 
 /**
@@ -182,7 +183,17 @@ export default function ScreeningPage() {
     return 'low' as const;
   }, [result]);
 
-  if (authLoading || !user) return null;
+  if (authLoading) {
+    return (
+      <LoadingScreen
+        fullScreen
+        title="Menyiapkan Skrining..."
+        subtitle="Memeriksa otentikasi dan modul MediaPipe..."
+      />
+    );
+  }
+
+  if (!user) return null;
 
   /* ── Fase kuesioner ───────────────────────────────────────────────────── */
   if (phase === 'questionnaire' && !result) {
@@ -388,12 +399,11 @@ export default function ScreeningPage() {
       </Dialog.Root>
 
       {isSubmitting && (
-        <div className={styles.submitting} role="status" aria-live="polite">
-          <div className={styles.submittingInner}>
-            <h2>{t('scr.analysing')}</h2>
-            <p>{t('scr.analysingBody')}</p>
-          </div>
-        </div>
+        <LoadingScreen
+          fullScreen
+          title={t('scr.analysing')}
+          subtitle={t('scr.analysingBody')}
+        />
       )}
 
       {/* ── Hasil ─────────────────────────────────────────────────────────── */}

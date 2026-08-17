@@ -1,7 +1,7 @@
 'use client';
 import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { UserProfile, SESSION_EXPIRED_EVENT } from '@/lib/api';
+import { UserProfile, SESSION_EXPIRED_EVENT, api } from '@/lib/api';
 
 interface AuthContextType {
   user: UserProfile | null;
@@ -26,8 +26,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const savedToken = localStorage.getItem('gs_token');
     const savedUser = localStorage.getItem('gs_user');
     if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
+      try {
+        setToken(savedToken);
+        const parsed = JSON.parse(savedUser);
+        setUser(parsed);
+        // Segarkan data profil dari server untuk memastikan kelengkapan field wilayah
+        api.getMe(savedToken).then((fresh) => {
+          if (fresh) {
+            setUser(fresh);
+            localStorage.setItem('gs_user', JSON.stringify(fresh));
+          }
+        }).catch(() => {});
+      } catch {
+        // ignore parse error
+      }
     }
     setIsLoading(false);
   }, []);

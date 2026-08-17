@@ -3,13 +3,26 @@ import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
-import { api, Session } from '@/lib/api';
+import { api, Session, UserProfile } from '@/lib/api';
 import { normalizeBiomarkers } from '@/lib/biomarkers';
 import AppNav from '@/components/AppNav';
 import ReportTemplate from '@/components/ReportTemplate';
 import ReportPrintHost from '@/components/ReportPrintHost';
 import LoadFailure from '@/components/LoadFailure';
+import LoadingScreen from '@/components/LoadingScreen';
 import * as Dialog from '@radix-ui/react-dialog';
+import {
+  Download,
+  FileSpreadsheet,
+  Share2,
+  Copy,
+  Check,
+  RefreshCw,
+  ShieldCheck,
+  History,
+  User,
+  Layers,
+} from 'lucide-react';
 import { useI18n, translateServerLabel, dateLocale, type Lang } from '@/lib/i18n';
 import styles from './riwayat.module.css';
 
@@ -144,11 +157,13 @@ export default function RiwayatPage() {
   const router = useRouter();
   const { user, token, isLoading } = useAuth();
   const { t, lang } = useI18n();
+  const [profile, setProfile] = useState<UserProfile | null>(user);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [compareA, setCompareA] = useState<number | null>(null);
   const [compareB, setCompareB] = useState<number | null>(null);
   const [printing, setPrinting] = useState(false);
+  const [isExportingCsv, setIsExportingCsv] = useState(false);
   const [detail, setDetail] = useState<Session | null>(null);
   const [shareCode, setShareCode] = useState<string | null>(null);
   const [codeCopied, setCodeCopied] = useState(false);
@@ -156,6 +171,22 @@ export default function RiwayatPage() {
   // tidak boleh tampil sebagai riwayat yang memang kosong.
   const [failed, setFailed] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => {
+    if (user) setProfile(user);
+  }, [user]);
+
+  useEffect(() => {
+    if (!token) return;
+    api.getMe(token).then(p => {
+      if (p) {
+        setProfile(p);
+        localStorage.setItem('gs_user', JSON.stringify(p));
+      }
+    }).catch(() => {});
+  }, [token]);
+
+  const activeUser = profile || user;
 
   useEffect(() => {
     if (isLoading) return;
@@ -199,8 +230,7 @@ export default function RiwayatPage() {
       setCodeCopied(true);
       setTimeout(() => setCodeCopied(false), 2000);
     } catch {
-      // Penyalinan otomatis bisa ditolak peramban. Kodenya tetap terlihat dan
-      // dapat disorot manual, jadi kegagalan ini tidak perlu mengganggu.
+      // Penyalinan otomatis bisa ditolak peramban
     }
   };
 
@@ -214,68 +244,87 @@ export default function RiwayatPage() {
     }
   };
 
-  const exportCSV = () => {
-    // Seluruh kolom diikutsertakan agar berkas dapat langsung diolah ulang,
-    // tidak sekadar menampilkan ringkasan seperti versi sebelumnya.
-    const num = (v: unknown) => (v === undefined || v === null ? '' : String(v));
-    const header = lang === 'en'
-      ? [
-        'Session ID', 'Date', 'Composite Score', 'Risk Category',
-        'Questionnaire Symptom Score', 'Closest Pattern (ML)', 'ML Confidence (%)',
-        'Tremor Frequency (Hz)', 'Tremor Amplitude (mm)',
-        'Finger Tapping (taps/sec)', 'Tapping Decrement (%)',
-        'Step Symmetry (%)', 'Cadence (steps/min)',
-        'Arm Swing Asymmetry (%)', 'Sway Area (cm2)', 'Knee ROM (degrees)',
-        'AI Summary', 'AI Confidence', 'AI Suggestions', 'System Recommendations', 'Clinician Note',
-      ]
-      : [
-        'ID Sesi', 'Tanggal', 'Skor Komposit', 'Kategori Risiko',
-        'Skor Gejala Kuesioner', 'Pola Terdekat (ML)', 'Keyakinan ML (%)',
-        'Tremor Frekuensi (Hz)', 'Tremor Amplitudo (mm)',
-        'Finger Tapping (ketuk/detik)', 'Dekremen Tapping (%)',
-        'Simetri Langkah (%)', 'Kadense (langkah/menit)',
-        'Asimetri Ayunan Lengan (%)', 'Sway Area (cm2)', 'ROM Lutut (derajat)',
-        'Ringkasan AI', 'Keyakinan AI', 'Saran AI', 'Rekomendasi Sistem', 'Catatan Nakes',
-      ];
-    const rows = [
-      header,
-      ...sessions.map(s => {
-        const b = s.rawBiomarkers || {};
-        const nb = normalizeBiomarkers(s);
-        const t = (s.tremorResult || {}) as Record<string, unknown>;
-        return [
-          String(s.id),
-          formatDate(s.timestamp, lang),
-          String(Math.round(s.compositeScore)),
-          riskLabel(s.riskCategory, lang),
-          num(s.questionnaireScore !== null && s.questionnaireScore !== undefined ? Math.round(s.questionnaireScore) : ''),
-          translateServerLabel(s.mlPrediction?.predictedLabel, lang),
-          num(s.mlPrediction?.confidence),
-          num(b.tremor?.dominantFrequencyHz),
-          num(t.amplitudeMillimeter),
-          num(b.fingerTapping?.tapRatePerSecond),
-          num((s.fingerTappingResult as Record<string, unknown> | undefined)?.decrementPercent),
-          num(nb.symmetryPercent),
-          num(nb.cadence),
-          num(nb.armAsymmetryPercent),
-          num(nb.swayAreaCm2),
-          num(nb.romDeg),
-          (s.aiAnalysis?.ringkasan || '').replace(/\n/g, ' '),
-          s.aiAnalysis?.tingkatKeyakinan || '',
-          (s.aiAnalysis?.saranTindakLanjut || []).join(' | ').replace(/\n/g, ' '),
-          (s.recommendations || []).join(' | ').replace(/\n/g, ' '),
-          (s.doctorNote || '').replace(/\n/g, ' '),
+  const exportCSV = async () => {
+    if (isExportingCsv || sessions.length === 0) return;
+    try {
+      setIsExportingCsv(true);
+      await new Promise(r => setTimeout(r, 750));
+
+      // Seluruh kolom diikutsertakan agar berkas dapat langsung diolah ulang
+      const num = (v: unknown) => (v === undefined || v === null ? '' : String(v));
+      const header = lang === 'en'
+        ? [
+          'Session ID', 'Date', 'Composite Score', 'Risk Category',
+          'Questionnaire Symptom Score', 'Closest Pattern (ML)', 'ML Confidence (%)',
+          'Tremor Frequency (Hz)', 'Tremor Amplitude (mm)',
+          'Finger Tapping (taps/sec)', 'Tapping Decrement (%)',
+          'Step Symmetry (%)', 'Cadence (steps/min)',
+          'Arm Swing Asymmetry (%)', 'Sway Area (cm2)', 'Knee ROM (degrees)',
+          'AI Summary', 'AI Confidence', 'AI Suggestions', 'System Recommendations', 'Clinician Note',
+        ]
+        : [
+          'ID Sesi', 'Tanggal', 'Skor Komposit', 'Kategori Risiko',
+          'Skor Gejala Kuesioner', 'Pola Terdekat (ML)', 'Keyakinan ML (%)',
+          'Tremor Frekuensi (Hz)', 'Tremor Amplitudo (mm)',
+          'Finger Tapping (ketuk/detik)', 'Dekremen Tapping (%)',
+          'Simetri Langkah (%)', 'Kadense (langkah/menit)',
+          'Asimetri Ayunan Lengan (%)', 'Sway Area (cm2)', 'ROM Lutut (derajat)',
+          'Ringkasan AI', 'Keyakinan AI', 'Saran AI', 'Rekomendasi Sistem', 'Catatan Nakes',
         ];
-      }),
-    ];
-    const csv = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
-    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `riwayat-neuronmotion-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+      const rows = [
+        header,
+        ...sessions.map(s => {
+          const b = s.rawBiomarkers || {};
+          const nb = normalizeBiomarkers(s);
+          const t = (s.tremorResult || {}) as Record<string, unknown>;
+          return [
+            String(s.id),
+            formatDate(s.timestamp, lang),
+            String(Math.round(s.compositeScore)),
+            riskLabel(s.riskCategory, lang),
+            num(s.questionnaireScore !== null && s.questionnaireScore !== undefined ? Math.round(s.questionnaireScore) : ''),
+            translateServerLabel(s.mlPrediction?.predictedLabel, lang),
+            num(s.mlPrediction?.confidence),
+            num(b.tremor?.dominantFrequencyHz),
+            num(t.amplitudeMillimeter),
+            num(b.fingerTapping?.tapRatePerSecond),
+            num((s.fingerTappingResult as Record<string, unknown> | undefined)?.decrementPercent),
+            num(nb.symmetryPercent),
+            num(nb.cadence),
+            num(nb.armAsymmetryPercent),
+            num(nb.swayAreaCm2),
+            num(nb.romDeg),
+            (s.aiAnalysis?.ringkasan || '').replace(/\n/g, ' '),
+            s.aiAnalysis?.tingkatKeyakinan || '',
+            (s.aiAnalysis?.saranTindakLanjut || []).join(' | ').replace(/\n/g, ' '),
+            (s.recommendations || []).join(' | ').replace(/\n/g, ' '),
+            (s.doctorNote || '').replace(/\n/g, ' '),
+          ];
+        }),
+      ];
+      const csv = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const cleanName = (activeUser?.name || 'pasien')
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+      const now = new Date();
+      const day = String(now.getDate()).padStart(2, '0');
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const year = now.getFullYear();
+      a.download = `${cleanName || 'pasien'}-riwayat-${day}-${month}-${year}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Gagal mengekspor CSV:', err);
+    } finally {
+      setIsExportingCsv(false);
+    }
   };
 
   if (isLoading || loading) {
@@ -283,7 +332,10 @@ export default function RiwayatPage() {
       <div className={styles.page}>
         <AppNav />
         <main className="sheet">
-          <p className={styles.loading} role="status" aria-live="polite">{t('hist.loading')}</p>
+          <LoadingScreen
+            title={t('hist.loading')}
+            subtitle="Memuat riwayat sesi pemeriksaan dan data komparasi biomarker..."
+          />
         </main>
       </div>
     );
@@ -324,44 +376,96 @@ export default function RiwayatPage() {
 
       <main className="sheet" id="main">
         <div className={styles.pad}>
-          <header className="docHead">
-            <div className="docHead__meta">
-              <span>{t('hist.title')}</span>
-              <span data-no-translate="">{user?.name}</span>
-              <span>{sessions.length} {t('prof.sessions')}</span>
+          <header className={styles.pageHeader}>
+            <div className={styles.pageHeaderInfo}>
+              <div className={styles.metaPillGroup}>
+                <span className={styles.metaChip}>
+                  <History size={13} aria-hidden="true" />
+                  {t('hist.title')}
+                </span>
+                <span className={styles.metaChip} data-no-translate="">
+                  <User size={13} aria-hidden="true" />
+                  {user?.name}
+                </span>
+                <span className={styles.metaChip}>
+                  <Layers size={13} aria-hidden="true" />
+                  {sessions.length} {t('prof.sessions')}
+                </span>
+              </div>
+              <h1>{t('hist.title')}</h1>
+              <p className={styles.lead}>{t('hist.subtitle')}</p>
             </div>
-            <h1>{t('hist.title')}</h1>
-            <p className={styles.lead}>{t('hist.subtitle')}</p>
             {sessions.length > 0 && (
               <div className={styles.exportRow}>
-                <button className="btn" onClick={() => setPrinting(true)}>{t('hist.downloadPdf')}</button>
-                <button className="btn" onClick={exportCSV}>{t('hist.exportCsv')}</button>
+                <button
+                  type="button"
+                  className={`btn btn--primary ${styles.btnExport}`}
+                  onClick={() => setPrinting(true)}
+                >
+                  <Download size={16} aria-hidden="true" />
+                  {t('hist.downloadPdf')}
+                </button>
+                <button
+                  type="button"
+                  className={`btn ${styles.btnExport}`}
+                  onClick={exportCSV}
+                >
+                  <FileSpreadsheet size={16} aria-hidden="true" />
+                  {t('hist.exportCsv')}
+                </button>
               </div>
             )}
           </header>
 
-          {/* Kode berbagi. Tanpa ini pasien tidak punya cara memberi akses kepada
-              tenaga kesehatan, dan panel dokter yang baru mendaftar selalu kosong. */}
-          <section className={styles.section}>
-            <div className={styles.sectionHead}>
-              <h2 className={styles.sectionTitle}>{t('share.title')}</h2>
+          {/* Kartu Bagikan ke Tenaga Kesehatan */}
+          <section className={styles.shareCard}>
+            <div className={styles.shareCardHead}>
+              <div className={styles.shareIconBadge} aria-hidden="true">
+                <Share2 size={22} strokeWidth={2} />
+              </div>
+              <div>
+                <h2 className={styles.shareCardTitle}>{t('share.title')}</h2>
+                <p className={styles.shareCardDesc}>{t('share.desc')}</p>
+              </div>
             </div>
-            <p className={styles.note}>{t('share.desc')}</p>
-            <div className={styles.shareRow}>
-              <code className={styles.shareCode} data-no-translate="">
-                {shareCode || '········'}
-              </code>
-              <button className="btn" onClick={copyShareCode} disabled={!shareCode}>
-                {t('share.copy')}
-              </button>
-              <button className="btn" onClick={resetShareCode} disabled={!shareCode}>
-                {t('share.reset')}
-              </button>
-              {codeCopied && <span className={styles.shareOk} role="status">{t('share.copied')}</span>}
+
+            <div className={styles.shareCardBody}>
+              <div className={styles.shareCodeWrap}>
+                <span className={styles.shareCodeLabel}>Kode Akses Dokter</span>
+                <code className={styles.shareCode} data-no-translate="">
+                  {shareCode || '········'}
+                </code>
+              </div>
+              <div className={styles.shareActions}>
+                <button
+                  type="button"
+                  className={`btn ${codeCopied ? styles.btnCopied : ''}`}
+                  onClick={copyShareCode}
+                  disabled={!shareCode}
+                >
+                  {codeCopied ? (
+                    <Check size={16} className={styles.checkIcon} aria-hidden="true" />
+                  ) : (
+                    <Copy size={16} aria-hidden="true" />
+                  )}
+                  {codeCopied ? t('share.copied') : t('share.copy')}
+                </button>
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={resetShareCode}
+                  disabled={!shareCode}
+                >
+                  <RefreshCw size={15} aria-hidden="true" />
+                  {t('share.reset')}
+                </button>
+              </div>
             </div>
-            <p className={styles.shareHint}>
-              {shareCode ? t('share.resetHint') : t('share.loading')}
-            </p>
+
+            <div className={styles.shareFooter}>
+              <ShieldCheck size={16} className={styles.shieldIcon} aria-hidden="true" />
+              <span>{shareCode ? t('share.resetHint') : t('share.loading')}</span>
+            </div>
           </section>
 
           {sessions.length === 0 ? (
@@ -627,22 +731,47 @@ export default function RiwayatPage() {
       </Dialog.Root>
 
       {/* Laporan cetak memakai template khusus, bukan menyalin tampilan halaman */}
-      <div data-report-host="">
-        <ReportPrintHost open={printing} onClose={() => setPrinting(false)}>
-          <ReportTemplate
-            patient={{
-              name: user?.name,
-              email: user?.email,
-              gender: user?.gender,
-              dateOfBirth: user?.dateOfBirth,
-              city: user?.city,
-              state: user?.state,
-              countryName: user?.countryName,
-            }}
-            sessions={sessions}
-          />
-        </ReportPrintHost>
-      </div>
+      <ReportPrintHost
+        open={printing}
+        onClose={() => setPrinting(false)}
+        patientName={activeUser?.name}
+      >
+        <ReportTemplate
+          patient={{
+            name: activeUser?.name,
+            email: activeUser?.email,
+            gender: activeUser?.gender,
+            dateOfBirth: activeUser?.dateOfBirth,
+            region: activeUser?.region,
+            city: activeUser?.city,
+            state: activeUser?.state,
+            country: activeUser?.country,
+            countryName: activeUser?.countryName,
+          }}
+          sessions={sessions}
+        />
+      </ReportPrintHost>
+
+      {/* Modal Animasi Ekspor CSV */}
+      {isExportingCsv && (
+        <div className={styles.exportOverlay} role="status" aria-live="polite">
+          <div className={styles.exportCard}>
+            <div className={styles.exportIconArea}>
+              <div className={styles.exportSpinner} />
+              <FileSpreadsheet size={32} className={styles.exportIcon} />
+            </div>
+            <div>
+              <h3 className={styles.exportTitle}>Menyiapkan Berkas CSV...</h3>
+              <p className={styles.exportSubtitle}>
+                Menyusun seluruh data riwayat sesi dan biomarker ke format spreadsheet...
+              </p>
+            </div>
+            <div className={styles.progressBar}>
+              <div className={styles.progressShimmer} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

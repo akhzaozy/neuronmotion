@@ -1,6 +1,7 @@
-/* Lembar bantuan.
-   Modus baca: prosa dibatasi ukuran ukur yang nyaman, bagian dipisah garis
-   rambut dan garis kepala, bukan tumpukan kartu. */
+/* ═══════════════════════════════════════════════════════════════════════════
+   PUSAT BANTUAN & PANDUAN PENGGUNA
+   Tampilan terstruktur, bersih, modern, dan informatif.
+   ══════════════════════════════════════════════════════════════════════════ */
 
 .page {
   min-height: 100vh;
@@ -9,215 +10,393 @@
 
 .pad {
   padding: var(--s7) 0 var(--s9);
-  max-width: 900px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+/* ── Header Halaman ──────────────────────────────────────────────────────── */
+
+.header {
+  margin-bottom: var(--s7);
+  padding-bottom: var(--s5);
+  border-bottom: 1px solid var(--rule-hair);
+}
+
+.metaPillGroup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2);
+  margin-bottom: var(--s3);
+}
+
+.metaChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-pill);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-secondary);
+  box-shadow: 0 1px 3px rgba(18, 49, 61, 0.04);
+}
+
+.title {
+  font-size: clamp(1.75rem, 3.5vw, 2.375rem);
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.025em;
+  line-height: 1.2;
 }
 
 .lead {
-  margin-top: var(--s3);
+  margin-top: var(--s2);
   font-size: var(--t-lead);
+  color: var(--ink-secondary);
+  max-width: 68ch;
+  line-height: 1.5;
+}
+
+/* ── Disclaimer Medis & Gejala Darurat ───────────────────────────────────── */
+
+.disclaimerCard {
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  padding: var(--s5) var(--s6);
+  margin-bottom: var(--s7);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+}
+
+.disclaimerHead {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.disclaimerBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--accent-wash);
+  color: var(--accent);
+  border-radius: var(--radius-pill);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.disclaimerTitle {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.disclaimerText {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
   color: var(--ink-secondary);
 }
 
-/* ── Batas kemampuan alat ───────────────────────────────────────────────────
-   Garis kiri tebal di atas ground inset. Tidak bisa ditutup, tidak bersyarat,
-   dan duduk sebelum isi supaya terbaca lebih dulu. */
-
-/* Tampilannya datang dari .note di globals.css. Yang tersisa di sini hanya
-   jarak, sebab itu memang urusan halaman ini. */
-.disclaimer {
-  margin-bottom: var(--s7);
-}
-
-.disclaimerLabel {
-  margin-bottom: var(--s2);
-}
-
-/* Gejala darurat memakai bahasa tingkat tinggi: label garis kiri 6px dan
-   warna tingkat tinggi, bukan warna saja. */
-.emergency {
-  margin-top: var(--s4);
-  padding: var(--s3) var(--s4);
-  max-width: 78ch;
+.emergencyBox {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s3);
+  padding: var(--s4);
   background: var(--level-high-wash);
-  border-left: 6px solid var(--level-high);
+  border-left: 4px solid var(--level-high);
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
   color: var(--level-high);
-  font-weight: 700;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  font-weight: 600;
 }
 
-/* ── Bagian ─────────────────────────────────────────────────────────────── */
+.emergencyIcon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--level-high);
+}
+
+/* ── Bagian Panduan ──────────────────────────────────────────────────────── */
 
 .section {
   margin-top: var(--s8);
 }
 
 .sectionHead {
-  font-size: var(--t-head);
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
   margin-bottom: var(--s5);
 }
 
-/* ── Panduan langkah ────────────────────────────────────────────────────── */
+.sectionIcon {
+  color: var(--accent);
+}
 
-.steps {
-  list-style: none;
+.sectionTitle {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 750;
+  color: var(--ink);
+  letter-spacing: -0.015em;
+}
+
+/* ── Grid 5 Langkah ──────────────────────────────────────────────────────── */
+
+.stepsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--s4);
+}
+
+.stepCard {
   background: var(--field);
   border: 1px solid var(--rule-hair);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   box-shadow: var(--shadow-card);
-  padding: var(--s2) var(--s5);
+  padding: var(--s5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.2s ease-out;
 }
 
-.step {
-  display: grid;
-  grid-template-columns: 56px minmax(0, 1fr);
-  gap: var(--s4);
-  padding: var(--s4) 0;
-  border-top: 1px solid var(--rule-hair);
+.stepCard:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-raised);
+  border-color: var(--accent-soft);
 }
 
-.step:first-child {
-  border-top: 0;
+.stepTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
-/* Nomor langkah adalah data, jadi mono dan tabular. Ia menggantikan bulatan
-   berikon yang dipakai sebelumnya. */
 .stepNum {
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: var(--t-lead);
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
+  font-size: 1.25rem;
+  font-weight: 800;
   color: var(--accent);
-  line-height: 1.3;
+  background: var(--accent-wash);
+  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+  font-variant-numeric: tabular-nums;
 }
 
-.stepText {
-  min-width: 0;
+.stepIconWrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--inset);
+  color: var(--ink-secondary);
+  display: grid;
+  place-items: center;
 }
 
 .stepTitle {
-  font-size: var(--t-lead);
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 750;
+  color: var(--ink);
+  line-height: 1.35;
 }
 
 .stepDesc {
-  margin-top: var(--s2);
-  max-width: 68ch;
+  margin: 0;
+  font-size: 0.875rem;
   color: var(--ink-secondary);
+  line-height: 1.55;
+  flex-grow: 1;
 }
 
-@media (max-width: 560px) {
-  .step {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--s2);
-  }
-}
+/* ── FAQ Accordion ───────────────────────────────────────────────────────── */
 
-/* ── Pertanyaan yang sering diajukan ────────────────────────────────────── */
-
-.faq {
-  display: block;
+.faqList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
 }
 
 .faqItem {
-  border-top: 1px solid var(--rule-hair);
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 1px 4px rgba(18, 49, 61, 0.03);
+  overflow: hidden;
+  transition: border-color 0.18s ease-out, box-shadow 0.18s ease-out;
 }
 
-.faqItem:last-child {
-  border-bottom: 1px solid var(--rule-hair);
+.faqItem:hover {
+  border-color: var(--rule);
+}
+
+.faqItem[data-state='open'] {
+  border-color: var(--accent-soft);
+  box-shadow: var(--shadow-card);
 }
 
 .faqHeader {
   margin: 0;
-  font-size: var(--t-body);
-  font-weight: 400;
-  line-height: inherit;
-  letter-spacing: normal;
 }
 
 .faqTrigger {
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--s4);
-  width: 100%;
-  min-height: var(--touch-lg);
-  padding: var(--s3) var(--s2);
-  text-align: left;
-  color: var(--ink);
+  padding: var(--s4) var(--s5);
   background: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  color: var(--ink);
   transition: background-color 0.14s ease-out;
 }
 
 .faqTrigger:hover {
-  background: var(--field);
+  background: var(--inset);
 }
 
 .faqQuestion {
-  font-size: var(--t-body);
-  font-weight: 600;
-  max-width: 68ch;
+  font-size: 1rem;
+  font-weight: 650;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.faqChevron {
+  flex-shrink: 0;
+  color: var(--ink-muted);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), color 0.18s ease-out;
+}
+
+.faqTrigger[data-state='open'] .faqChevron {
+  transform: rotate(180deg);
+  color: var(--accent);
 }
 
 .faqTrigger[data-state='open'] .faqQuestion {
-  font-weight: 700;
-}
-
-.faqState {
-  flex-shrink: 0;
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: var(--t-record);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ink-muted);
-}
-
-.faqStateOpen {
-  display: none;
-}
-
-.faqTrigger[data-state='open'] .faqStateClosed {
-  display: none;
-}
-
-.faqTrigger[data-state='open'] .faqStateOpen {
-  display: inline;
+  color: var(--accent);
 }
 
 .faqContent {
   overflow: hidden;
+  animation: slideDownFaq 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.faqContent[data-state='closed'] {
+  animation: slideUpFaq 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideDownFaq {
+  from { height: 0; opacity: 0; }
+  to { height: var(--radix-accordion-content-height); opacity: 1; }
+}
+
+@keyframes slideUpFaq {
+  from { height: var(--radix-accordion-content-height); opacity: 1; }
+  to { height: 0; opacity: 0; }
 }
 
 .faqAnswer {
-  padding: 0 var(--s2) var(--s5);
-  max-width: 68ch;
+  margin: 0;
+  padding: 0 var(--s5) var(--s4);
+  font-size: 0.9375rem;
+  line-height: 1.6;
   color: var(--ink-secondary);
-}
-
-/* ── Kontak ─────────────────────────────────────────────────────────────── */
-
-.contactList {
   border-top: 1px solid var(--rule-hair);
+  padding-top: var(--s3);
 }
 
-.contactRow {
+/* ── Kontak & Dukungan ───────────────────────────────────────────────────── */
+
+.contactGrid {
   display: grid;
-  grid-template-columns: 220px minmax(0, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: var(--s4);
-  align-items: baseline;
-  padding: var(--s3) var(--s2);
-  border-bottom: 1px solid var(--rule-hair);
+}
+
+.contactCard {
+  background: var(--field);
+  border: 1px solid var(--rule-hair);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  padding: var(--s5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+
+.contactCard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-raised);
+}
+
+.contactCardHead {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.contactIconWrap {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius);
+  background: var(--accent-wash);
+  color: var(--accent);
+  display: grid;
+  place-items: center;
 }
 
 .contactLabel {
-  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
 }
 
 .contactValue {
-  font-weight: 600;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--ink);
+  text-decoration: none;
   overflow-wrap: anywhere;
 }
 
-@media (max-width: 560px) {
-  .contactRow {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--s1);
-  }
+a.contactValue:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.statusLive {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--level-low);
+}
+
+.statusBeacon {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--level-low);
+  box-shadow: 0 0 0 2px var(--level-low-wash);
 }

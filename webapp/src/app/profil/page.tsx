@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth';
 import { api, UserProfile } from '@/lib/api';
 import AppNav from '@/components/AppNav';
 import LocationFields, { LocationValue } from '@/components/LocationFields';
+import LoadingScreen from '@/components/LoadingScreen';
 import { useI18n, dateLocale, type Lang } from '@/lib/i18n';
 import styles from './profil.module.css';
 
@@ -118,7 +119,7 @@ export default function ProfilPage() {
       setConfirmAction(null);
       setMessage(`${t('prof.histDeleted')} (${res.deletedCount} ${t('prof.sessions')}).`);
     } catch (e: any) {
-      setError(e.message || t('prof.histDeleteFailed'));
+      setError(e.message || t('prof.delHistFailed'));
       setConfirmAction(null);
     } finally {
       setBusy(false);
@@ -126,14 +127,13 @@ export default function ProfilPage() {
   };
 
   const doDeleteAccount = async () => {
-    setBusy(true); setError('');
+    setBusy(true); setError(''); setMessage('');
     try {
       await api.deleteAccount(token!);
       logout();
-      router.push('/');
+      router.push('/login');
     } catch (e: any) {
-      setError(e.message || t('prof.accDeleteFailed'));
-      setConfirmAction(null);
+      setError(e.message || t('prof.delAccFailed'));
       setBusy(false);
     }
   };
@@ -143,9 +143,10 @@ export default function ProfilPage() {
       <div className={styles.page}>
         <AppNav />
         <main className="sheet">
-          <p className={styles.loading} role="status" aria-live="polite">
-            {t('prof.loading')}
-          </p>
+          <LoadingScreen
+            title={t('prof.loading')}
+            subtitle="Menghubungkan dan memuat data akun pribadi Anda..."
+          />
         </main>
       </div>
     );

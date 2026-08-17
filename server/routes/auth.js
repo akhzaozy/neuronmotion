@@ -107,6 +107,11 @@ router.post('/login', async (req, res) => {
         role: user.role,
         gender: user.gender,
         dateOfBirth: user.dateOfBirth,
+        country: user.country,
+        countryName: user.countryName,
+        region: user.region,
+        state: user.state,
+        city: user.city,
         specialization: user.specialization,
         institution: user.institution,
       }

@@ -4,6 +4,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import DoctorNav from '@/components/DoctorNav';
+import LoadingScreen from '@/components/LoadingScreen';
 import { useI18n } from '@/lib/i18n';
 import styles from './doctorEdukasi.module.css';
 
@@ -179,7 +180,21 @@ export default function DoctorEdukasiPage() {
   const [reading, setReading] = useState<Article | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
 
-  if (!isLoading && (!user || user.role !== 'DOCTOR')) {
+  if (isLoading) {
+    return (
+      <div className={styles.page}>
+        <DoctorNav />
+        <main className="sheet">
+          <LoadingScreen
+            title="Memuat Edukasi Klinis..."
+            subtitle="Menyiapkan artikel metodologi dan materi edukasi pasien..."
+          />
+        </main>
+      </div>
+    );
+  }
+
+  if (!user || user.role !== 'DOCTOR') {
     router.push('/login');
     return null;
   }

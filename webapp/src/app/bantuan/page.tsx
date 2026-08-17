@@ -1,66 +1,101 @@
 'use client';
 import * as Accordion from '@radix-ui/react-accordion';
+import {
+  UserCheck,
+  Maximize2,
+  Camera,
+  Activity,
+  TrendingUp,
+  HelpCircle,
+  ChevronDown,
+  Mail,
+  Sparkles,
+  ShieldAlert,
+  AlertTriangle,
+  BookOpen,
+  HeartPulse,
+  Layers,
+} from 'lucide-react';
 import AppNav from '@/components/AppNav';
 import styles from './bantuan.module.css';
 
 const STEPS = [
   {
+    icon: UserCheck,
     title: 'Daftar dan lengkapi profil',
-    desc: 'Buat akun sebagai pasien, lalu isi tanggal lahir dan jenis kelamin. Data usia dipakai untuk membandingkan hasil Anda dengan rentang normal kelompok usia yang sesuai.',
+    desc: 'Buat akun sebagai pasien, lalu isi tanggal lahir, jenis kelamin, dan wilayah. Data usia dipakai untuk membandingkan hasil Anda dengan rentang normal kelompok usia yang sesuai.',
   },
   {
+    icon: Maximize2,
     title: 'Siapkan ruangan dan posisi',
     desc: 'Cari ruangan dengan pencahayaan cukup (tidak gelap, tidak silau). Untuk tes berjalan, sediakan ruang gerak sekitar 2 meter dan pastikan seluruh tubuh terlihat kamera.',
   },
   {
+    icon: Camera,
     title: 'Izinkan akses kamera',
-    desc: 'Browser akan meminta izin kamera. Video tidak dikirim ke server, semua analisis gerakan berjalan di perangkat Anda sendiri.',
+    desc: 'Browser akan meminta izin kamera. Video tidak pernah dikirim ke server, seluruh analisis estimasi gerakan berjalan langsung di perangkat Anda sendiri.',
   },
   {
+    icon: Activity,
     title: 'Ikuti 6 tes gerakan',
-    desc: 'Setiap tes diawali panduan bergambar dan hitung mundur. Ikuti instruksi bagian tubuh yang diminta. Sistem akan memberi peringatan jika bagian tubuh tidak terdeteksi jelas.',
+    desc: 'Setiap tes diawali panduan visual dan hitung mundur. Ikuti instruksi gerakan yang diminta. Sistem akan memberi peringatan jika bagian tubuh tidak terdeteksi jelas.',
   },
   {
+    icon: TrendingUp,
     title: 'Lihat hasil dan pantau tren',
-    desc: 'Hasil skrining muncul lengkap dengan skor risiko dan rekomendasi. Semua sesi tersimpan di halaman Riwayat agar Anda bisa membandingkan perkembangan dari waktu ke waktu.',
+    desc: 'Hasil skrining muncul lengkap dengan skor risiko dan rekomendasi. Semua sesi tersimpan di halaman Riwayat agar Anda bisa mengunduh PDF atau membandingkan perkembangan berkala.',
   },
 ];
 
 const FAQS = [
   {
     q: 'Apakah video saya disimpan atau dikirim ke server?',
-    a: 'Tidak. Seluruh analisis gerakan dilakukan langsung di browser perangkat Anda menggunakan model estimasi pose. Video tidak pernah diunggah ke server. Yang dikirim dan disimpan hanyalah hasil perhitungan berupa angka, misalnya frekuensi tremor dalam Hertz atau persentase simetri langkah.',
+    a: 'Tidak. Seluruh analisis gerakan dilakukan langsung di browser perangkat Anda menggunakan model estimasi pose. Video tidak pernah diunggah ke server. Yang dikirim dan disimpan hanyalah hasil perhitungan berupa angka biomarker (misalnya frekuensi tremor dalam Hertz atau persentase simetri langkah).',
   },
   {
     q: 'Apakah hasil ini merupakan diagnosis medis?',
-    a: 'Bukan. NeuronMotion adalah alat skrining awal untuk membantu mendeteksi perubahan pola gerakan, bukan alat diagnosis. Hasil apa pun, terutama jika menunjukkan risiko sedang atau tinggi, perlu dikonfirmasi melalui pemeriksaan langsung oleh dokter spesialis saraf.',
+    a: 'Bukan. NeuronMotion adalah alat skrining awal untuk membantu mendeteksi perubahan pola gerakan, bukan alat diagnosis definitif. Hasil apa pun, terutama jika menunjukkan risiko sedang atau tinggi, perlu dikonfirmasi melalui pemeriksaan klinis langsung oleh dokter spesialis saraf.',
   },
   {
     q: 'Kamera saya tidak berfungsi, apa yang harus dilakukan?',
-    a: 'Pertama, pastikan Anda sudah menekan "Izinkan" saat browser meminta akses kamera. Jika sebelumnya pernah menolak, buka pengaturan izin situs di browser dan aktifkan kembali akses kamera untuk situs ini. Pastikan juga tidak ada aplikasi lain yang sedang memakai kamera, lalu muat ulang halaman. Jika masih bermasalah, coba gunakan browser lain seperti Chrome atau Safari versi terbaru.',
+    a: 'Pastikan Anda sudah menekan "Izinkan" saat browser meminta akses kamera. Jika sebelumnya pernah menolak, buka pengaturan izin situs di browser dan aktifkan kembali izin kamera untuk web ini. Pastikan juga tidak ada aplikasi lain yang sedang mengunci kamera, lalu muat ulang halaman.',
   },
   {
     q: 'Seberapa sering saya sebaiknya melakukan skrining?',
-    a: 'Untuk pemantauan umum tanpa keluhan, sekali dalam 6 bulan sudah memadai. Jika Anda berusia di atas 60 tahun atau memiliki riwayat keluarga dengan gangguan saraf, setiap 3 sampai 6 bulan lebih dianjurkan. Bagi yang sedang menjalani rehabilitasi, ikuti jadwal yang disarankan fisioterapis Anda, biasanya setiap 2 sampai 4 minggu.',
+    a: 'Untuk pemantauan umum tanpa keluhan, sekali dalam 6 bulan sudah memadai. Jika Anda berusia di atas 60 tahun atau memiliki riwayat keluarga dengan gangguan saraf, setiap 3 sampai 6 bulan lebih dianjurkan. Bagi yang sedang menjalani terapi, ikuti anjuran fisioterapis Anda (biasanya setiap 2 sampai 4 minggu).',
   },
   {
     q: 'Perangkat apa saja yang didukung?',
-    a: 'NeuronMotion berjalan di browser modern pada laptop, tablet, maupun ponsel, tanpa perlu instalasi aplikasi. Yang dibutuhkan hanya kamera dan browser terbaru (Chrome, Edge, Safari, atau Firefox). Untuk tes yang melibatkan seluruh tubuh seperti berjalan, ponsel yang disandarkan atau laptop dengan jarak sekitar 2 meter akan memberi hasil terbaik.',
+    a: 'NeuronMotion berjalan di browser modern pada laptop, tablet, maupun ponsel cerdas tanpa perlu instalasi aplikasi tambahan. Yang dibutuhkan hanyalah kamera depan/webcam dan browser modern (Chrome, Edge, Safari, atau Firefox).',
   },
   {
     q: 'Kenapa hasil saya berbeda dari sesi sebelumnya?',
-    a: 'Variasi kecil antar sesi adalah hal wajar dan bisa dipengaruhi kondisi tubuh (lelah, baru minum kopi, kurang tidur), pencahayaan ruangan, serta posisi dan jarak Anda terhadap kamera. Karena itu tren jangka panjang di halaman Riwayat lebih bermakna dibanding satu hasil tunggal.',
+    a: 'Variasi wajar antar sesi bisa dipengaruhi oleh kondisi kelelahan tubuh, waktu istirahat, pencahayaan ruangan, serta stabilitas sudut kamera. Karena itu, grafik tren jangka panjang di halaman Riwayat jauh lebih informatif dibanding satu sesi tunggal.',
   },
   {
     q: 'Bagaimana cara menghapus data saya?',
-    a: 'Buka halaman Profil, lalu pada bagian Privasi dan Data Anda dapat memilih Hapus Riwayat untuk menghapus seluruh sesi pemeriksaan, atau Hapus Akun Saya untuk menghapus akun beserta seluruh datanya secara permanen. Ini adalah hak Anda sesuai UU Perlindungan Data Pribadi.',
+    a: 'Buka halaman Profil, lalu pada bagian Privasi dan Data Anda dapat memilih "Hapus Riwayat" untuk menghapus seluruh rekaman sesi, atau "Hapus Akun Saya" untuk menghapus akun secara permanen sesuai standar hak perlindungan data pribadi (UU PDP).',
   },
 ];
 
 const CONTACTS = [
-  { label: 'Email Dukungan', value: 'support@neuronmotion.id' },
-  { label: 'Tim Pengembang', value: 'Last Dance Team' },
-  { label: 'Status Produk', value: 'Beta' },
+  {
+    icon: Mail,
+    label: 'Email Dukungan',
+    value: 'support@neuronmotion.id',
+    href: 'mailto:support@neuronmotion.id',
+  },
+  {
+    icon: Sparkles,
+    label: 'Tim Pengembang',
+    value: 'Last Dance Team',
+  },
+  {
+    icon: HeartPulse,
+    label: 'Status Sistem',
+    value: 'Operasional (Beta)',
+    isStatus: true,
+  },
 ];
 
 export default function BantuanPage() {
@@ -70,68 +105,88 @@ export default function BantuanPage() {
 
       <main className="sheet" id="main">
         <div className={styles.pad}>
-          <header className="docHead">
-            <div className="docHead__meta">
-              <span>Panduan Pengguna</span>
-              <span>{STEPS.length} langkah</span>
-              <span>{FAQS.length} pertanyaan</span>
+          {/* Header Halaman */}
+          <header className={styles.header}>
+            <div className={styles.metaPillGroup}>
+              <span className={styles.metaChip}>
+                <BookOpen size={13} aria-hidden="true" />
+                Panduan Pengguna
+              </span>
+              <span className={styles.metaChip}>
+                <Layers size={13} aria-hidden="true" />
+                {STEPS.length} Langkah Praktis
+              </span>
+              <span className={styles.metaChip}>
+                <HelpCircle size={13} aria-hidden="true" />
+                {FAQS.length} Pertanyaan Umum
+              </span>
             </div>
-            <h1>Bantuan</h1>
+            <h1 className={styles.title}>Pusat Bantuan & Panduan</h1>
             <p className={styles.lead}>
-              Panduan penggunaan, pertanyaan yang sering diajukan, dan kontak tim NeuronMotion.
+              Panduan lengkap persiapan ruangan, prosedur tes kamera, serta jawaban atas pertanyaan medis dan teknis seputar skrining motorik.
             </p>
           </header>
 
-          {/* Batas kemampuan alat ditempatkan di atas isi, bukan di kaki halaman,
-              supaya terbaca sebelum pengguna menarik kesimpulan dari hasilnya.
-              Blok ini tidak punya syarat dan tidak bisa ditutup. */}
-          <section className={`note note--lead ${styles.disclaimer}`} aria-label="Batas kemampuan alat">
-            <p className={`label ${styles.disclaimerLabel}`}>Disclaimer</p>
-            <p>
-              NeuronMotion adalah alat bantu skrining awal berbasis analisis gerakan, bukan alat
-              diagnosis medis dan bukan pengganti pemeriksaan tenaga kesehatan. Model klasifikasi saat
-              ini divalidasi menggunakan dataset sintetis berbasis literatur klinis, bukan uji klinis
-              pada pasien nyata. Untuk keputusan medis apa pun, selalu konsultasikan dengan dokter.
+          {/* Batas Kemampuan Alat & Pernyataan Medis */}
+          <section className={styles.disclaimerCard} aria-label="Batas kemampuan alat">
+            <div className={styles.disclaimerHead}>
+              <div className={styles.disclaimerBadge}>
+                <ShieldAlert size={15} aria-hidden="true" />
+                Disclaimer Medis
+              </div>
+              <h2 className={styles.disclaimerTitle}>Batas Kemampuan Alat Skrining</h2>
+            </div>
+            <p className={styles.disclaimerText}>
+              NeuronMotion adalah alat bantu skrining awal berbasis analisis pergerakan kamera cerdas, bukan alat diagnosis medis mandiri dan bukan pengganti konsultasi tenaga medis profesional. Model klasifikasi divalidasi menggunakan dataset berbasis literatur klinis. Untuk evaluasi dan tindakan medis, selalu konsultasikan kondisi Anda dengan dokter spesialis saraf.
             </p>
-            <p className={styles.emergency}>
-              Jika Anda mengalami gejala darurat seperti kelemahan mendadak pada satu sisi tubuh, wajah
-              perot, atau kesulitan bicara tiba-tiba, segera cari pertolongan medis darurat.
-            </p>
+            <div className={styles.emergencyBox} role="alert">
+              <AlertTriangle size={20} className={styles.emergencyIcon} aria-hidden="true" />
+              <div>
+                <strong>Protokol Gejala Darurat: </strong>
+                Jika Anda atau kerabat mengalami kelemahan mendadak pada satu sisi tubuh, wajah perot, atau kesulitan bicara tiba-tiba, segera cari pertolongan medis darurat (IGD) atau hubungi nomor darurat 112 / 119 terdekat.
+              </div>
+            </div>
           </section>
 
-          {/* ── Panduan langkah ───────────────────────────────────────────── */}
+          {/* ── Panduan 5 Langkah ─────────────────────────────────────────── */}
           <section className={styles.section}>
-            <h2 className={styles.sectionHead}>Panduan 5 Langkah</h2>
-            <ol className={styles.steps}>
-              {STEPS.map((step, i) => (
-                <li key={step.title} className={styles.step}>
-                  <span className={styles.stepNum}>{String(i + 1).padStart(2, '0')}</span>
-                  <div className={styles.stepText}>
+            <div className={styles.sectionHead}>
+              <Layers size={22} className={styles.sectionIcon} aria-hidden="true" />
+              <h2 className={styles.sectionTitle}>Panduan 5 Langkah Skrining</h2>
+            </div>
+            <div className={styles.stepsGrid}>
+              {STEPS.map((step, i) => {
+                const Icon = step.icon;
+                return (
+                  <div key={step.title} className={styles.stepCard}>
+                    <div className={styles.stepTop}>
+                      <span className={styles.stepNum}>{String(i + 1).padStart(2, '0')}</span>
+                      <div className={styles.stepIconWrap} aria-hidden="true">
+                        <Icon size={18} />
+                      </div>
+                    </div>
                     <h3 className={styles.stepTitle}>{step.title}</h3>
                     <p className={styles.stepDesc}>{step.desc}</p>
                   </div>
-                </li>
-              ))}
-            </ol>
+                );
+              })}
+            </div>
           </section>
 
-          {/* ── Pertanyaan yang sering diajukan ───────────────────────────── */}
+          {/* ── Pertanyaan yang Sering Diajukan (FAQ) ───────────────────────── */}
           <section className={styles.section}>
-            <h2 className={styles.sectionHead}>Pertanyaan yang Sering Diajukan</h2>
-            {/* Radix menangani keadaan buka tutup dan atribut aria; keadaannya
-                tetap dibawa kata, bukan tanda tambah yang berputar. */}
-            <Accordion.Root type="single" collapsible defaultValue="faq-0" className={styles.faq}>
+            <div className={styles.sectionHead}>
+              <HelpCircle size={22} className={styles.sectionIcon} aria-hidden="true" />
+              <h2 className={styles.sectionTitle}>Pertanyaan yang Sering Diajukan</h2>
+            </div>
+
+            <Accordion.Root type="single" collapsible defaultValue="faq-0" className={styles.faqList}>
               {FAQS.map((faq, i) => (
                 <Accordion.Item key={faq.q} value={`faq-${i}`} className={styles.faqItem}>
                   <Accordion.Header className={styles.faqHeader}>
                     <Accordion.Trigger className={styles.faqTrigger}>
                       <span className={styles.faqQuestion}>{faq.q}</span>
-                      {/* Keadaan dibawa dua kata yang saling menggantikan,
-                          bukan tanda tambah yang berputar. */}
-                      <span className={styles.faqState} aria-hidden="true">
-                        <span className={styles.faqStateClosed}>Buka</span>
-                        <span className={styles.faqStateOpen}>Tutup</span>
-                      </span>
+                      <ChevronDown size={18} className={styles.faqChevron} aria-hidden="true" />
                     </Accordion.Trigger>
                   </Accordion.Header>
                   <Accordion.Content className={styles.faqContent}>
@@ -142,17 +197,39 @@ export default function BantuanPage() {
             </Accordion.Root>
           </section>
 
-          {/* ── Kontak ────────────────────────────────────────────────────── */}
+          {/* ── Kontak & Dukungan ─────────────────────────────────────────── */}
           <section className={styles.section}>
-            <h2 className={styles.sectionHead}>Kontak Tim</h2>
-            <dl className={styles.contactList}>
-              {CONTACTS.map(item => (
-                <div key={item.label} className={styles.contactRow}>
-                  <dt className={`label ${styles.contactLabel}`}>{item.label}</dt>
-                  <dd className={styles.contactValue}>{item.value}</dd>
-                </div>
-              ))}
-            </dl>
+            <div className={styles.sectionHead}>
+              <Mail size={22} className={styles.sectionIcon} aria-hidden="true" />
+              <h2 className={styles.sectionTitle}>Kontak & Dukungan Pengguna</h2>
+            </div>
+            <div className={styles.contactGrid}>
+              {CONTACTS.map(item => {
+                const Icon = item.icon;
+                return (
+                  <div key={item.label} className={styles.contactCard}>
+                    <div className={styles.contactCardHead}>
+                      <div className={styles.contactIconWrap} aria-hidden="true">
+                        <Icon size={20} />
+                      </div>
+                      <span className={styles.contactLabel}>{item.label}</span>
+                    </div>
+                    {item.href ? (
+                      <a href={item.href} className={styles.contactValue}>
+                        {item.value}
+                      </a>
+                    ) : item.isStatus ? (
+                      <span className={`${styles.contactValue} ${styles.statusLive}`}>
+                        <span className={styles.statusBeacon} />
+                        {item.value}
+                      </span>
+                    ) : (
+                      <span className={styles.contactValue}>{item.value}</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </section>
         </div>
       </main>

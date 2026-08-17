@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/auth';
 import { api, UserProfile } from '@/lib/api';
 import DoctorNav from '@/components/DoctorNav';
 import LocationFields, { LocationValue } from '@/components/LocationFields';
+import LoadingScreen from '@/components/LoadingScreen';
 import styles from '../../profil/profil.module.css';
 
 const SPECIALIZATIONS = ['Neurolog', 'Dokter Umum', 'Fisioterapis', 'Perawat'];
@@ -104,7 +105,10 @@ export default function DoctorProfilPage() {
       <div className={styles.page}>
         <DoctorNav />
         <main className="sheet">
-          <p className={styles.loading} role="status" aria-live="polite">Memuat profil...</p>
+          <LoadingScreen
+            title="Memuat Profil Dokter..."
+            subtitle="Menghubungkan data identitas dan institusi nakes..."
+          />
         </main>
       </div>
     );

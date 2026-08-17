@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import DoctorNav from '@/components/DoctorNav';
 import GeoBreakdown from '@/components/GeoBreakdown';
+import LoadingScreen from '@/components/LoadingScreen';
 import { useI18n, translateServerLabel, dateLocale } from '@/lib/i18n';
 import styles from './doctor.module.css';
 
@@ -157,17 +158,10 @@ export default function DoctorPortal() {
       <div className={styles.page}>
         <DoctorNav />
         <main className="sheet" id="main">
-          <div className={styles.pad}>
-            <header className="docHead">
-              <div className="docHead__meta">
-                <span>{t('doc.portalTitle')}</span>
-              </div>
-              <h1>{t('doc.loadingPortal')}</h1>
-            </header>
-            <p className={styles.loading} role="status" aria-live="polite">
-              {t('doc.loadingPatients')}
-            </p>
-          </div>
+          <LoadingScreen
+            title={t('doc.loadingPortal')}
+            subtitle="Menyiapkan data pasien tertaut dan sebaran risiko klinis..."
+          />
         </main>
       </div>
     );
