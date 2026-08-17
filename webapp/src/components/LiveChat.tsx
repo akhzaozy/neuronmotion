@@ -38,6 +38,38 @@ export default function LiveChat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
+  // Tutup chat saat menekan Escape atau klik di luar jendela chat
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape' && isOpen) {
+        setIsOpen(false);
+      }
+    }
+
+    function handleClickOutside(e: MouseEvent) {
+      const chatWin = document.getElementById('livechat-window');
+      const toggleBtn = document.getElementById('livechat-toggle-btn');
+      if (
+        isOpen &&
+        chatWin &&
+        !chatWin.contains(e.target as Node) &&
+        toggleBtn &&
+        !toggleBtn.contains(e.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
   // Sapaan pembuka ikut berganti saat bahasa diubah, selama percakapan belum dimulai.
   useEffect(() => {
     setMessages(prev => (prev.length <= 1 ? [welcomeMessage(t('bot.welcome'))] : prev));
@@ -127,7 +159,7 @@ export default function LiveChat() {
       {/* Floating Action Button */}
       <button
         id="livechat-toggle-btn"
-        className={`${styles.fab} ${isOpen ? styles.fabOpen : ''}`}
+        className={`${styles.fab} ${isOpen ? styles.fabHidden : ''}`}
         onClick={() => setIsOpen(o => !o)}
         aria-label={isOpen ? t('bot.closeChat') : t('bot.openChat')}
         title={isOpen ? t('bot.closeChat') : t('bot.chatWith')}
