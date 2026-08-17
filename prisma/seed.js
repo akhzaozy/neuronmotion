@@ -8,6 +8,127 @@ import { generateTrainingDataset, CONDITION_PROFILES, CLINICAL_REFERENCE } from 
 
 const prisma = new PrismaClient();
 
+/**
+ * 100 lokasi dummy dari berbagai wilayah di seluruh dunia.
+ * Mencakup ~30 negara dari 6 benua / region global.
+ */
+const WORLD_LOCATIONS = [
+  // ── Asia Tenggara ─────────────────────────────────────────────────────────
+  { country: 'ID', countryName: 'Indonesia',    state: 'DKI Jakarta',       region: 'Asia Tenggara', city: 'Jakarta',          address: 'Jl. Thamrin No. 1' },
+  { country: 'ID', countryName: 'Indonesia',    state: 'Jawa Barat',        region: 'Asia Tenggara', city: 'Bandung',          address: 'Jl. Braga No. 10' },
+  { country: 'ID', countryName: 'Indonesia',    state: 'Jawa Timur',        region: 'Asia Tenggara', city: 'Surabaya',         address: 'Jl. Pemuda No. 31' },
+  { country: 'ID', countryName: 'Indonesia',    state: 'Sumatera Utara',    region: 'Asia Tenggara', city: 'Medan',            address: 'Jl. Gatot Subroto No. 88' },
+  { country: 'ID', countryName: 'Indonesia',    state: 'Bali',              region: 'Asia Tenggara', city: 'Denpasar',         address: 'Jl. Teuku Umar No. 20' },
+  { country: 'ID', countryName: 'Indonesia',    state: 'Sulawesi Selatan',  region: 'Asia Tenggara', city: 'Makassar',         address: 'Jl. Penghibur No. 11' },
+  { country: 'ID', countryName: 'Indonesia',    state: 'DI Yogyakarta',     region: 'Asia Tenggara', city: 'Yogyakarta',       address: 'Jl. Malioboro No. 52' },
+  { country: 'ID', countryName: 'Indonesia',    state: 'Jawa Tengah',       region: 'Asia Tenggara', city: 'Semarang',         address: 'Jl. Pandanaran No. 42' },
+  { country: 'MY', countryName: 'Malaysia',     state: 'Kuala Lumpur',      region: 'Asia Tenggara', city: 'Kuala Lumpur',     address: 'Jalan Bukit Bintang 55' },
+  { country: 'MY', countryName: 'Malaysia',     state: 'Penang',            region: 'Asia Tenggara', city: 'George Town',      address: 'Lebuh Pantai 12' },
+  { country: 'MY', countryName: 'Malaysia',     state: 'Sabah',             region: 'Asia Tenggara', city: 'Kota Kinabalu',    address: 'Jalan Gaya 8' },
+  { country: 'SG', countryName: 'Singapura',    state: 'Singapore',         region: 'Asia Tenggara', city: 'Singapore',        address: 'Orchard Road 238' },
+  { country: 'TH', countryName: 'Thailand',     state: 'Bangkok',           region: 'Asia Tenggara', city: 'Bangkok',          address: 'Sukhumvit Soi 11' },
+  { country: 'TH', countryName: 'Thailand',     state: 'Chiang Mai',        region: 'Asia Tenggara', city: 'Chiang Mai',       address: 'Nimmanhaemin Road 7' },
+  { country: 'PH', countryName: 'Filipina',     state: 'Metro Manila',      region: 'Asia Tenggara', city: 'Manila',           address: 'Roxas Boulevard 100' },
+  { country: 'PH', countryName: 'Filipina',     state: 'Cebu',              region: 'Asia Tenggara', city: 'Cebu City',        address: 'Osmena Boulevard 45' },
+  { country: 'VN', countryName: 'Vietnam',      state: 'Ho Chi Minh',       region: 'Asia Tenggara', city: 'Ho Chi Minh City', address: 'Nguyen Hue Street 88' },
+  { country: 'VN', countryName: 'Vietnam',      state: 'Hanoi',             region: 'Asia Tenggara', city: 'Hanoi',            address: 'Pho Hang Bai 30' },
+
+  // ── Asia Timur ────────────────────────────────────────────────────────────
+  { country: 'JP', countryName: 'Jepang',       state: 'Tokyo',             region: 'Asia Timur',    city: 'Tokyo',            address: 'Shibuya 2-21-1' },
+  { country: 'JP', countryName: 'Jepang',       state: 'Osaka',             region: 'Asia Timur',    city: 'Osaka',            address: 'Namba 5-1-60' },
+  { country: 'JP', countryName: 'Jepang',       state: 'Kyoto',             region: 'Asia Timur',    city: 'Kyoto',            address: 'Kawaramachi Shijo 101' },
+  { country: 'KR', countryName: 'Korea Selatan', state: 'Seoul',            region: 'Asia Timur',    city: 'Seoul',            address: 'Gangnam-daero 396' },
+  { country: 'KR', countryName: 'Korea Selatan', state: 'Busan',            region: 'Asia Timur',    city: 'Busan',            address: 'Haeundae-ro 264' },
+  { country: 'CN', countryName: 'Tiongkok',     state: 'Beijing',           region: 'Asia Timur',    city: 'Beijing',          address: 'Wangfujing Street 255' },
+  { country: 'CN', countryName: 'Tiongkok',     state: 'Shanghai',          region: 'Asia Timur',    city: 'Shanghai',         address: 'Nanjing Road 501' },
+  { country: 'CN', countryName: 'Tiongkok',     state: 'Guangdong',         region: 'Asia Timur',    city: 'Guangzhou',        address: 'Beijing Road 168' },
+  { country: 'TW', countryName: 'Taiwan',       state: 'Taipei',            region: 'Asia Timur',    city: 'Taipei',           address: 'Zhongxiao East Road Sec. 4' },
+  { country: 'HK', countryName: 'Hong Kong',    state: 'Hong Kong',         region: 'Asia Timur',    city: 'Hong Kong',        address: 'Nathan Road 36' },
+
+  // ── Asia Selatan ──────────────────────────────────────────────────────────
+  { country: 'IN', countryName: 'India',        state: 'Maharashtra',       region: 'Asia Selatan',  city: 'Mumbai',           address: 'Marine Drive 120' },
+  { country: 'IN', countryName: 'India',        state: 'Delhi',             region: 'Asia Selatan',  city: 'New Delhi',        address: 'Connaught Place B-14' },
+  { country: 'IN', countryName: 'India',        state: 'Karnataka',         region: 'Asia Selatan',  city: 'Bangalore',        address: 'MG Road 77' },
+  { country: 'IN', countryName: 'India',        state: 'Tamil Nadu',        region: 'Asia Selatan',  city: 'Chennai',          address: 'Anna Salai 850' },
+  { country: 'BD', countryName: 'Bangladesh',   state: 'Dhaka Division',    region: 'Asia Selatan',  city: 'Dhaka',            address: 'Gulshan Avenue 42' },
+  { country: 'PK', countryName: 'Pakistan',     state: 'Punjab',            region: 'Asia Selatan',  city: 'Lahore',           address: 'Mall Road 155' },
+  { country: 'LK', countryName: 'Sri Lanka',    state: 'Western Province',  region: 'Asia Selatan',  city: 'Colombo',          address: 'Galle Road 200' },
+
+  // ── Timur Tengah ──────────────────────────────────────────────────────────
+  { country: 'AE', countryName: 'Uni Emirat Arab', state: 'Dubai',          region: 'Timur Tengah',  city: 'Dubai',            address: 'Sheikh Zayed Road 507' },
+  { country: 'AE', countryName: 'Uni Emirat Arab', state: 'Abu Dhabi',      region: 'Timur Tengah',  city: 'Abu Dhabi',        address: 'Corniche Road 34' },
+  { country: 'SA', countryName: 'Arab Saudi',   state: 'Riyadh Province',   region: 'Timur Tengah',  city: 'Riyadh',           address: 'King Fahd Road 200' },
+  { country: 'SA', countryName: 'Arab Saudi',   state: 'Makkah Province',   region: 'Timur Tengah',  city: 'Jeddah',           address: 'Tahlia Street 80' },
+  { country: 'TR', countryName: 'Turki',        state: 'Istanbul',          region: 'Timur Tengah',  city: 'Istanbul',         address: 'Istiklal Caddesi 140' },
+  { country: 'TR', countryName: 'Turki',        state: 'Ankara',            region: 'Timur Tengah',  city: 'Ankara',           address: 'Ataturk Boulevard 55' },
+  { country: 'QA', countryName: 'Qatar',        state: 'Doha',              region: 'Timur Tengah',  city: 'Doha',             address: 'Corniche Street 12' },
+  { country: 'EG', countryName: 'Mesir',        state: 'Cairo Governorate', region: 'Timur Tengah',  city: 'Cairo',            address: 'Tahrir Square 1' },
+
+  // ── Eropa Barat ───────────────────────────────────────────────────────────
+  { country: 'GB', countryName: 'Inggris',      state: 'England',           region: 'Eropa Barat',   city: 'London',           address: '221B Baker Street' },
+  { country: 'GB', countryName: 'Inggris',      state: 'England',           region: 'Eropa Barat',   city: 'Manchester',       address: 'Deansgate 100' },
+  { country: 'FR', countryName: 'Prancis',      state: 'Ile-de-France',     region: 'Eropa Barat',   city: 'Paris',            address: '15 Rue de Rivoli' },
+  { country: 'FR', countryName: 'Prancis',      state: 'Provence-Alpes',    region: 'Eropa Barat',   city: 'Marseille',        address: '8 Quai du Port' },
+  { country: 'DE', countryName: 'Jerman',       state: 'Berlin',            region: 'Eropa Barat',   city: 'Berlin',           address: 'Friedrichstrasse 43' },
+  { country: 'DE', countryName: 'Jerman',       state: 'Bayern',            region: 'Eropa Barat',   city: 'Munich',           address: 'Marienplatz 8' },
+  { country: 'NL', countryName: 'Belanda',      state: 'Noord-Holland',     region: 'Eropa Barat',   city: 'Amsterdam',        address: 'Damrak 70' },
+  { country: 'ES', countryName: 'Spanyol',      state: 'Madrid',            region: 'Eropa Barat',   city: 'Madrid',           address: 'Gran Via 28' },
+  { country: 'ES', countryName: 'Spanyol',      state: 'Catalonia',         region: 'Eropa Barat',   city: 'Barcelona',        address: 'La Rambla 91' },
+  { country: 'IT', countryName: 'Italia',       state: 'Lazio',             region: 'Eropa Barat',   city: 'Roma',             address: 'Via del Corso 126' },
+  { country: 'IT', countryName: 'Italia',       state: 'Lombardia',         region: 'Eropa Barat',   city: 'Milan',            address: 'Corso Buenos Aires 33' },
+  { country: 'PT', countryName: 'Portugal',     state: 'Lisbon District',   region: 'Eropa Barat',   city: 'Lisbon',           address: 'Rua Augusta 50' },
+  { country: 'CH', countryName: 'Swiss',        state: 'Zurich',            region: 'Eropa Barat',   city: 'Zurich',           address: 'Bahnhofstrasse 17' },
+  { country: 'SE', countryName: 'Swedia',       state: 'Stockholm',         region: 'Eropa Barat',   city: 'Stockholm',        address: 'Drottninggatan 53' },
+
+  // ── Eropa Timur ───────────────────────────────────────────────────────────
+  { country: 'PL', countryName: 'Polandia',     state: 'Masovia',           region: 'Eropa Timur',   city: 'Warsaw',           address: 'Nowy Swiat 22' },
+  { country: 'CZ', countryName: 'Ceko',         state: 'Prague',            region: 'Eropa Timur',   city: 'Prague',           address: 'Vaclavske Namesti 34' },
+  { country: 'RO', countryName: 'Rumania',      state: 'Bucharest',         region: 'Eropa Timur',   city: 'Bucharest',        address: 'Calea Victoriei 120' },
+  { country: 'HU', countryName: 'Hungaria',     state: 'Budapest',          region: 'Eropa Timur',   city: 'Budapest',         address: 'Andrassy ut 60' },
+  { country: 'RU', countryName: 'Rusia',        state: 'Moscow Oblast',     region: 'Eropa Timur',   city: 'Moscow',           address: 'Tverskaya Street 15' },
+
+  // ── Amerika Utara ─────────────────────────────────────────────────────────
+  { country: 'US', countryName: 'Amerika Serikat', state: 'New York',       region: 'Amerika Utara', city: 'New York City',    address: '350 5th Avenue' },
+  { country: 'US', countryName: 'Amerika Serikat', state: 'California',     region: 'Amerika Utara', city: 'Los Angeles',      address: '6801 Hollywood Boulevard' },
+  { country: 'US', countryName: 'Amerika Serikat', state: 'California',     region: 'Amerika Utara', city: 'San Francisco',    address: '1 Market Street' },
+  { country: 'US', countryName: 'Amerika Serikat', state: 'Illinois',       region: 'Amerika Utara', city: 'Chicago',          address: '233 S Wacker Drive' },
+  { country: 'US', countryName: 'Amerika Serikat', state: 'Texas',          region: 'Amerika Utara', city: 'Houston',          address: '1600 Lamar Street' },
+  { country: 'US', countryName: 'Amerika Serikat', state: 'Massachusetts',  region: 'Amerika Utara', city: 'Boston',           address: '1 Beacon Street' },
+  { country: 'CA', countryName: 'Kanada',       state: 'Ontario',           region: 'Amerika Utara', city: 'Toronto',          address: '100 Queen Street W' },
+  { country: 'CA', countryName: 'Kanada',       state: 'British Columbia',  region: 'Amerika Utara', city: 'Vancouver',        address: '999 Canada Place' },
+  { country: 'MX', countryName: 'Meksiko',      state: 'Ciudad de Mexico',  region: 'Amerika Utara', city: 'Mexico City',      address: 'Paseo de la Reforma 222' },
+
+  // ── Amerika Selatan ───────────────────────────────────────────────────────
+  { country: 'BR', countryName: 'Brasil',       state: 'Sao Paulo',         region: 'Amerika Selatan', city: 'Sao Paulo',      address: 'Avenida Paulista 1578' },
+  { country: 'BR', countryName: 'Brasil',       state: 'Rio de Janeiro',    region: 'Amerika Selatan', city: 'Rio de Janeiro', address: 'Avenida Atlantica 1702' },
+  { country: 'AR', countryName: 'Argentina',    state: 'Buenos Aires',      region: 'Amerika Selatan', city: 'Buenos Aires',   address: 'Avenida 9 de Julio 1925' },
+  { country: 'CL', countryName: 'Chile',        state: 'Santiago',          region: 'Amerika Selatan', city: 'Santiago',        address: 'Avenida Libertador 1200' },
+  { country: 'CO', countryName: 'Kolombia',     state: 'Bogota D.C.',       region: 'Amerika Selatan', city: 'Bogota',          address: 'Carrera 7 No. 71-52' },
+  { country: 'PE', countryName: 'Peru',         state: 'Lima Province',     region: 'Amerika Selatan', city: 'Lima',            address: 'Avenida Arequipa 3500' },
+
+  // ── Afrika ────────────────────────────────────────────────────────────────
+  { country: 'ZA', countryName: 'Afrika Selatan', state: 'Gauteng',         region: 'Afrika',        city: 'Johannesburg',     address: '10 Sandton Drive' },
+  { country: 'ZA', countryName: 'Afrika Selatan', state: 'Western Cape',    region: 'Afrika',        city: 'Cape Town',        address: '1 Adderley Street' },
+  { country: 'NG', countryName: 'Nigeria',      state: 'Lagos',             region: 'Afrika',        city: 'Lagos',            address: 'Victoria Island, Adeola Odeku' },
+  { country: 'KE', countryName: 'Kenya',        state: 'Nairobi County',    region: 'Afrika',        city: 'Nairobi',          address: 'Kenyatta Avenue 100' },
+  { country: 'GH', countryName: 'Ghana',        state: 'Greater Accra',     region: 'Afrika',        city: 'Accra',            address: 'Oxford Street, Osu' },
+  { country: 'MA', countryName: 'Maroko',       state: 'Casablanca-Settat', region: 'Afrika',        city: 'Casablanca',       address: 'Boulevard Mohammed V 22' },
+  { country: 'TZ', countryName: 'Tanzania',     state: 'Dar es Salaam',     region: 'Afrika',        city: 'Dar es Salaam',    address: 'Samora Avenue 15' },
+  { country: 'ET', countryName: 'Ethiopia',     state: 'Addis Ababa',       region: 'Afrika',        city: 'Addis Ababa',      address: 'Bole Road 48' },
+
+  // ── Oseania ───────────────────────────────────────────────────────────────
+  { country: 'AU', countryName: 'Australia',    state: 'New South Wales',   region: 'Oseania',       city: 'Sydney',           address: '1 Macquarie Street' },
+  { country: 'AU', countryName: 'Australia',    state: 'Victoria',          region: 'Oseania',       city: 'Melbourne',        address: '385 Bourke Street' },
+  { country: 'AU', countryName: 'Australia',    state: 'Queensland',        region: 'Oseania',       city: 'Brisbane',         address: '100 George Street' },
+  { country: 'NZ', countryName: 'Selandia Baru', state: 'Auckland',        region: 'Oseania',       city: 'Auckland',         address: '2 Queen Street' },
+  { country: 'NZ', countryName: 'Selandia Baru', state: 'Wellington',      region: 'Oseania',       city: 'Wellington',       address: '50 Lambton Quay' },
+];
+
+/** Ambil satu lokasi acak dari daftar */
+function randomLocation() {
+  return WORLD_LOCATIONS[Math.floor(Math.random() * WORLD_LOCATIONS.length)];
+}
+
 async function main() {
   console.log('🌱 Memulai seeding database NeuronMotion...\n');
 
@@ -69,6 +190,7 @@ async function main() {
     const dob = new Date();
     dob.setFullYear(dob.getFullYear() - patientData.age);
 
+    const loc = randomLocation();
     const patient = await prisma.user.create({
       data: {
         email: patientData.email,
@@ -77,6 +199,12 @@ async function main() {
         role: 'PATIENT',
         gender: patientData.gender,
         dateOfBirth: dob,
+        country: loc.country,
+        countryName: loc.countryName,
+        state: loc.state,
+        region: loc.region,
+        city: loc.city,
+        address: loc.address,
       },
     });
     createdPatients.push({ ...patient, condition: patientData.condition });
@@ -142,6 +270,7 @@ async function main() {
 
   console.log(`✅ ${createdPatients.length} pasien sintetis dibuat`);
   console.log(`✅ ${sessionCount} sesi pemeriksaan dibuat`);
+  console.log(`✅ ${WORLD_LOCATIONS.length} lokasi dummy tersedia dari berbagai wilayah dunia`);
 
   // Buat akun pasien demo yang bisa login
   const demoDob = new Date();
@@ -154,6 +283,12 @@ async function main() {
       role: 'PATIENT',
       gender: 'M',
       dateOfBirth: demoDob,
+      country: 'ID',
+      countryName: 'Indonesia',
+      state: 'DKI Jakarta',
+      region: 'Jawa',
+      city: 'Jakarta Pusat',
+      address: 'Jl. Thamrin No. 1',
     },
   });
   await prisma.doctorPatient.create({ data: { doctorId: doctors[0].id, patientId: demoPatient.id } });
