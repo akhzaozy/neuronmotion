@@ -196,117 +196,127 @@ export default function LandingPage() {
         <section className={styles.hero}>
           <div className={styles.heroBlob} aria-hidden="true" />
 
-          <div className={styles.heroInner}>
-            <div className={styles.heroBadgeGroup}>
-              <span className={styles.heroBadgeChip}>
-                <Activity size={14} className={styles.heroBadgeIcon} />
-                <span>Skrining Gangguan Neurologis Berbasis Computer Vision & AI</span>
-              </span>
-            </div>
+          <div className={`sheet ${styles.heroGrid}`}>
+            <div>
+              <h1 className={styles.heroTitle}>
+                {t('land.title1')} {t('land.title2')}{' '}
+                <span className={styles.heroTitleAccent}>{t('land.title3')}</span>
+              </h1>
 
-            <h1 className={styles.heroTitle}>
-              {t('land.title1')} {t('land.title2')}{' '}
-              <span className={styles.heroTitleAccent}>{t('land.title3')}</span>
-            </h1>
+              <p className={styles.heroLead}>{t('land.desc')}</p>
 
-            <p className={styles.heroLead}>{t('land.desc')}</p>
-
-            {/* Bagi pengguna yang sudah masuk, aksi utama adalah mengerjakan
-                skrining sungguhan atau masuk ke dasbor. */}
-            <div className={styles.heroActions}>
-              {authLoading ? null : user ? (
-                <>
-                  {!isDoctor && (
-                    <Link href="/screening" className="btn btn--primary btn--lg">
-                      {t('landing.continueScreening')}
-                    </Link>
-                  )}
-                  <Link
-                    href={homeHref}
-                    className={`btn btn--lg${isDoctor ? ' btn--primary' : ''}`}
-                  >
-                    {homeLabel}
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <Link href="/demo" className="btn btn--primary btn--lg">
-                    {t('land.tryDemo')}
-                  </Link>
-                  <Link href="/register" className="btn btn--lg">
-                    {t('land.startFree')}
-                  </Link>
-                </>
-              )}
-            </div>
-
-            <p className={styles.heroNote}>
-              <Info size={16} strokeWidth={2} className={styles.heroNoteIcon} aria-hidden="true" />
-              {t('land.tryDemoSub')}
-            </p>
-
-            {/* Centered Showcase Card */}
-            <div className={styles.heroShowcase}>
-              <div className={styles.heroShowcaseGrid}>
-                <div className={styles.heroPhotoWrap}>
-                  <Image
-                    src={heroDoctor}
-                    alt={t('land.heroPhotoAlt')}
-                    className={styles.heroPhotoImg}
-                    sizes="(max-width: 900px) 92vw, 420px"
-                    priority
-                  />
-                </div>
-
-                <figure className={styles.panel}>
-                  <div className={styles.panelHead}>
-                    <span className={styles.panelTitle}>{t('land.panelTitle')}</span>
-                    {tremorTrace && (
-                      <span className={styles.panelTag}>
-                        {tremorTrace.kind === 'recording'
-                          ? t('land.tagRecording')
-                          : t('land.tagIllustration')}
-                      </span>
+              {/* Bagi pengguna yang sudah masuk, aksi utama adalah mengerjakan
+                  skrining sungguhan atau masuk ke dasbor. */}
+              <div className={styles.heroActions}>
+                {authLoading ? null : user ? (
+                  <>
+                    {!isDoctor && (
+                      <Link href="/screening" className="btn btn--primary btn--lg">
+                        {t('landing.continueScreening')}
+                      </Link>
                     )}
-                  </div>
-
-                  <TremorPlate />
-
-                  {tremorTrace && (
-                    <div className={styles.panelReadout}>
-                      <div>
-                        <span className={styles.readoutValue}>
-                          {num(tremorTrace.durationSec)}
-                          <span className={styles.readoutUnit}>s</span>
-                        </span>
-                        <span className={styles.readoutLabel}>{t('land.readDuration')}</span>
-                      </div>
-                      <div>
-                        <span className={styles.readoutValue}>
-                          {num(tremorTrace.dominantFrequencyHz)}
-                          <span className={styles.readoutUnit}>Hz</span>
-                        </span>
-                        <span className={styles.readoutLabel}>{t('land.readFrequency')}</span>
-                      </div>
-                      <div>
-                        <span className={styles.readoutValue}>
-                          {num(tremorTrace.amplitudeMillimeter)}
-                          <span className={styles.readoutUnit}>mm</span>
-                        </span>
-                        <span className={styles.readoutLabel}>{t('land.readAmplitude')}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  <figcaption className={styles.panelCaption}>
-                    {!tremorTrace
-                      ? t('land.plateCaption')
-                      : tremorTrace.kind === 'recording'
-                        ? t('land.traceCaptionShort')
-                        : t('land.traceCaptionShortIllustration')}
-                  </figcaption>
-                </figure>
+                    <Link
+                      href={homeHref}
+                      className={`btn btn--lg${isDoctor ? ' btn--primary' : ''}`}
+                    >
+                      {homeLabel}
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/demo" className="btn btn--primary btn--lg">
+                      {t('land.tryDemo')}
+                    </Link>
+                    <Link href="/register" className="btn btn--lg">
+                      {t('land.startFree')}
+                    </Link>
+                  </>
+                )}
               </div>
+
+              <p className={styles.heroNote}>
+                <Info size={16} strokeWidth={2} className={styles.heroNoteIcon} aria-hidden="true" />
+                {t('land.tryDemoSub')}
+              </p>
+            </div>
+
+            {/* Kolom kanan menyusun ulang gerakan komposisi rujukan: subjek
+                manusia di dalam bidang biru, dengan satu kartu kecil melayang
+                menimpanya. Bedanya, kartu yang melayang di sini bukan kotak
+                pencarian melainkan pengukuran sungguhan.
+
+                Fotonya tenaga medis, bukan pasien, dan itu pilihan yang
+                disengaja: produk ini bukan pengganti dokter, dan halaman
+                depannya sebaiknya tidak membuka dengan gambar orang yang
+                sedang sakit. */}
+            <div className={styles.heroFigure}>
+              <div className={styles.heroPhoto}>
+                <Image
+                  src={heroDoctor}
+                  alt={t('land.heroPhotoAlt')}
+                  className={styles.heroPhotoImg}
+                  sizes="(max-width: 900px) 92vw, 560px"
+                  priority
+                />
+              </div>
+
+            {/* Panel bukti.
+                Kiri, posisi tangan saat tes. Kanan, jejak yang dihasilkannya.
+                Di bawah keduanya, tiga bacaan yang dihitung dari jejak yang
+                sama.
+
+                Gambar tangan sengaja ilustrasi, bukan tangkapan layar
+                pengukuran. Jejaknya sebaliknya, dan medan `kind` pada datanya
+                yang memilih apakah ia disebut rekaman atau contoh pola, jadi
+                pola buatan tidak pernah bisa mengaku sebagai pengukuran. */}
+            <figure className={styles.panel}>
+              <div className={styles.panelHead}>
+                <span className={styles.panelTitle}>{t('land.panelTitle')}</span>
+                {tremorTrace && (
+                  <span className={styles.panelTag}>
+                    {tremorTrace.kind === 'recording'
+                      ? t('land.tagRecording')
+                      : t('land.tagIllustration')}
+                  </span>
+                )}
+              </div>
+
+              <TremorPlate />
+
+              {tremorTrace && (
+                <div className={styles.panelReadout}>
+                  <div>
+                    <span className={styles.readoutValue}>
+                      {num(tremorTrace.durationSec)}
+                      <span className={styles.readoutUnit}>s</span>
+                    </span>
+                    <span className={styles.readoutLabel}>{t('land.readDuration')}</span>
+                  </div>
+                  <div>
+                    <span className={styles.readoutValue}>
+                      {num(tremorTrace.dominantFrequencyHz)}
+                      <span className={styles.readoutUnit}>Hz</span>
+                    </span>
+                    <span className={styles.readoutLabel}>{t('land.readFrequency')}</span>
+                  </div>
+                  <div>
+                    <span className={styles.readoutValue}>
+                      {num(tremorTrace.amplitudeMillimeter)}
+                      <span className={styles.readoutUnit}>mm</span>
+                    </span>
+                    <span className={styles.readoutLabel}>{t('land.readAmplitude')}</span>
+                  </div>
+                </div>
+              )}
+
+              <figcaption className={styles.panelCaption}>
+                {!tremorTrace
+                  ? t('land.plateCaption')
+                  : tremorTrace.kind === 'recording'
+                    ? t('land.traceCaptionShort')
+                    : t('land.traceCaptionShortIllustration')}
+              </figcaption>
+            </figure>
             </div>
           </div>
 
