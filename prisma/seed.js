@@ -186,87 +186,119 @@ async function main() {
   let sessionCount = 0;
   const createdPatients = [];
 
-  for (const patientData of syntheticDataset) {
-    const dob = new Date();
-    dob.setFullYear(dob.getFullYear() - patientData.age);
+  // ── Batch insert untuk performa SQLite ────────────────────────────────────
+  // Sebelumnya ~6000 operasi satu per satu (masing-masing 1 transaksi SQLite).
+  // Sekarang dikumpulkan dulu di memori, lalu ditulis dalam batch per 100 di
+  // dalam satu $transaction — jauh lebih cepat karena SQLite hanya perlu flush
+  // ke disk sekali per batch, bukan sekali per baris.
 
-    const loc = randomLocation();
-    const patient = await prisma.user.create({
-      data: {
-        email: patientData.email,
-        password: patientPassword,
-        name: patientData.name,
-        role: 'PATIENT',
-        gender: patientData.gender,
-        dateOfBirth: dob,
-        country: loc.country,
-        countryName: loc.countryName,
-        state: loc.state,
-        region: loc.region,
-        city: loc.city,
-        address: loc.address,
-      },
-    });
-    createdPatients.push({ ...patient, condition: patientData.condition });
+  const BATCH_SIZE = 100;
+  const totalBatches = Math.ceil(syntheticDataset.length / BATCH_SIZE);
 
-    // Link ke dokter acak
-    const assignedDoctor = doctors[Math.floor(Math.random() * doctors.length)];
-    await prisma.doctorPatient.create({
-      data: { doctorId: assignedDoctor.id, patientId: patient.id },
-    });
+  for (let b = 0; b < totalBatches; b++) {
+    const batch = syntheticDataset.slice(b * BATCH_SIZE, (b + 1) * BATCH_SIZE);
 
-    // Buat 1-3 sesi pemeriksaan per pasien
-    const sessionCount_ = Math.floor(Math.random() * 3) + 1;
-    for (let s = 0; s < sessionCount_; s++) {
-      const bm = patientData.biomarkers;
+    // Siapkan semua operasi untuk batch ini
+    const ops = [];
+    const batchMeta = []; // simpan metadata sementara
 
-      // Buat sesi dengan data biomarker sintetis
-      const sessionDate = new Date();
-      sessionDate.setDate(sessionDate.getDate() - (s * 30)); // setiap 30 hari
-
-      await prisma.session.create({
+    // Fase 1: buat semua user dalam satu transaksi
+    const userOps = batch.map(patientData => {
+      const dob = new Date();
+      dob.setFullYear(dob.getFullYear() - patientData.age);
+      const loc = randomLocation();
+      return prisma.user.create({
         data: {
-          patientId: patient.id,
-          doctorId: assignedDoctor.id,
-          tremorResult: JSON.stringify({
-            dominantFrequencyHz: bm.tremor.dominantFrequencyHz,
-            amplitude: bm.tremor.amplitude,
-            category: categorizeTremor(bm.tremor),
-            score: scoreTremor(bm.tremor),
-          }),
-          fingerTappingResult: JSON.stringify({
-            tapRatePerSecond: bm.fingerTapping.tapRatePerSecond,
-            decrementPercent: bm.fingerTapping.decrementPercent,
-            category: categorizeTapping(bm.fingerTapping),
-            score: scoreTapping(bm.fingerTapping),
-          }),
-          gaitResult: JSON.stringify({
-            symmetryIndex: bm.gait.symmetryIndex,
-            cadencePerMin: bm.gait.cadencePerMin,
-            category: categorizeGait(bm.gait),
-            score: scoreGait(bm.gait),
-          }),
-          posturalResult: JSON.stringify({
-            swayAreaNorm: bm.posturalStability.swayArea,
-            swayLengthNorm: bm.posturalStability.swayLength,
-            category: categorizePosture(bm.posturalStability),
-            score: scorePosture(bm.posturalStability),
-          }),
-          compositeScore: patientData.updrsApprox.severityPercent,
-          riskCategory: patientData.updrsApprox.severityPercent >= 65 ? 'HIGH'
-            : patientData.updrsApprox.severityPercent >= 35 ? 'MEDIUM' : 'LOW',
-          mlPrediction: JSON.stringify({ predictedCondition: patientData.condition, predictedLabel: patientData.conditionLabel }),
-          updrsEstimate: JSON.stringify(patientData.updrsApprox),
-          recommendations: JSON.stringify(generateBasicRecs(patientData.condition)),
-          doctorNote: s === 0 && Math.random() > 0.5
-            ? `Pasien datang dengan keluhan ${patientData.conditionLabel}. Perlu tindak lanjut.`
-            : null,
-          timestamp: sessionDate,
+          email: patientData.email,
+          password: patientPassword,
+          name: patientData.name,
+          role: 'PATIENT',
+          gender: patientData.gender,
+          dateOfBirth: dob,
+          country: loc.country,
+          countryName: loc.countryName,
+          state: loc.state,
+          region: loc.region,
+          city: loc.city,
+          address: loc.address,
         },
       });
-      sessionCount++;
+    });
+
+    const batchPatients = await prisma.$transaction(userOps);
+
+    // Fase 2: buat semua link + session dalam satu transaksi
+    const linkAndSessionOps = [];
+    for (let i = 0; i < batchPatients.length; i++) {
+      const patient = batchPatients[i];
+      const patientData = batch[i];
+      createdPatients.push({ ...patient, condition: patientData.condition });
+
+      // Link ke dokter acak
+      const assignedDoctor = doctors[Math.floor(Math.random() * doctors.length)];
+      linkAndSessionOps.push(
+        prisma.doctorPatient.create({
+          data: { doctorId: assignedDoctor.id, patientId: patient.id },
+        })
+      );
+
+      // Buat 1-3 sesi pemeriksaan per pasien
+      const sessionCount_ = Math.floor(Math.random() * 3) + 1;
+      for (let s = 0; s < sessionCount_; s++) {
+        const bm = patientData.biomarkers;
+        const sessionDate = new Date();
+        sessionDate.setDate(sessionDate.getDate() - (s * 30));
+
+        linkAndSessionOps.push(
+          prisma.session.create({
+            data: {
+              patientId: patient.id,
+              doctorId: assignedDoctor.id,
+              tremorResult: JSON.stringify({
+                dominantFrequencyHz: bm.tremor.dominantFrequencyHz,
+                amplitude: bm.tremor.amplitude,
+                category: categorizeTremor(bm.tremor),
+                score: scoreTremor(bm.tremor),
+              }),
+              fingerTappingResult: JSON.stringify({
+                tapRatePerSecond: bm.fingerTapping.tapRatePerSecond,
+                decrementPercent: bm.fingerTapping.decrementPercent,
+                category: categorizeTapping(bm.fingerTapping),
+                score: scoreTapping(bm.fingerTapping),
+              }),
+              gaitResult: JSON.stringify({
+                symmetryIndex: bm.gait.symmetryIndex,
+                cadencePerMin: bm.gait.cadencePerMin,
+                category: categorizeGait(bm.gait),
+                score: scoreGait(bm.gait),
+              }),
+              posturalResult: JSON.stringify({
+                swayAreaNorm: bm.posturalStability.swayArea,
+                swayLengthNorm: bm.posturalStability.swayLength,
+                category: categorizePosture(bm.posturalStability),
+                score: scorePosture(bm.posturalStability),
+              }),
+              compositeScore: patientData.updrsApprox.severityPercent,
+              riskCategory: patientData.updrsApprox.severityPercent >= 65 ? 'HIGH'
+                : patientData.updrsApprox.severityPercent >= 35 ? 'MEDIUM' : 'LOW',
+              mlPrediction: JSON.stringify({ predictedCondition: patientData.condition, predictedLabel: patientData.conditionLabel }),
+              updrsEstimate: JSON.stringify(patientData.updrsApprox),
+              recommendations: JSON.stringify(generateBasicRecs(patientData.condition)),
+              doctorNote: s === 0 && Math.random() > 0.5
+                ? `Pasien datang dengan keluhan ${patientData.conditionLabel}. Perlu tindak lanjut.`
+                : null,
+              timestamp: sessionDate,
+            },
+          })
+        );
+        sessionCount++;
+      }
     }
+
+    await prisma.$transaction(linkAndSessionOps);
+    process.stdout.write(`\r  📦 Batch ${b + 1}/${totalBatches} selesai (${Math.min((b + 1) * BATCH_SIZE, syntheticDataset.length)} pasien)`);
   }
+  console.log(); // newline setelah progress
 
   console.log(`✅ ${createdPatients.length} pasien sintetis dibuat`);
   console.log(`✅ ${sessionCount} sesi pemeriksaan dibuat`);
