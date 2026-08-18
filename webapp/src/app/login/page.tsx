@@ -20,6 +20,7 @@ import { useAuth } from '@/lib/auth';
 import Logo from '@/components/Logo';
 import { ThemeToggle } from '@/lib/theme';
 import { LanguageToggle, useI18n } from '@/lib/i18n';
+import ProcessButton from '@/components/ProcessButton';
 import styles from './auth.module.css';
 
 function LoginForm() {
@@ -51,7 +52,7 @@ function LoginForm() {
     setLoading(true);
 
     try {
-      const data = await api.login(email.trim(), password);
+      const data = await api.login(email.trim().toLowerCase(), password);
       const userRole = data.user.role;
 
       if (userRole !== 'PATIENT' && userRole !== 'DOCTOR') {
@@ -219,22 +220,16 @@ function LoginForm() {
               </div>
             </div>
 
-            <button
+            <ProcessButton
               type="submit"
-              className={`btn btn--primary btn--lg ${styles.submitButton}`}
+              size="lg"
+              fullWidth
+              status={loading ? 'loading' : 'idle'}
               disabled={loading || !email.trim() || !password}
+              loadingText={t('common.loading')}
             >
-              {loading ? (
-                <>
-                  <Loader2 size={18} className={styles.spinner} aria-hidden="true" />
-                  <span>{t('common.loading')}</span>
-                </>
-              ) : role === 'DOCTOR' ? (
-                t('auth.loginAsDoctor')
-              ) : (
-                t('auth.loginAsPatient')
-              )}
-            </button>
+              {role === 'DOCTOR' ? t('auth.loginAsDoctor') : t('auth.loginAsPatient')}
+            </ProcessButton>
           </form>
 
           <div className={styles.footer}>

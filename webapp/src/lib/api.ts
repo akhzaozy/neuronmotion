@@ -271,6 +271,8 @@ export interface PatientDetail {
   region?: string;
   state?: string;
   city?: string;
+  isAnonymous?: boolean;
+  isLinked?: boolean;
   sessions: Session[];
   trend: Array<{ date: string; score: number; risk: string }>;
 }

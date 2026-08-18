@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { motion, type Variants } from 'framer-motion';
 import { Activity, Footprints, Hand, MoveHorizontal, PersonStanding, RotateCw } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { api, Session } from '@/lib/api';
@@ -59,90 +60,108 @@ function greeting(lang: string): string {
    warna tingkat, dan label teks penuh di bawahnya. Pengguna yang tidak
    membedakan warna tetap membaca tingkatnya dari busur dan dari labelnya.
    ══════════════════════════════════════════════════════════════════════════ */
-function AnimatedNumber({
-  value,
-  duration = 1300,
-  decimals = 0,
-}: {
-  value: number;
-  duration?: number;
-  decimals?: number;
-}) {
-  const spanRef = useRef<HTMLSpanElement | null>(null);
+function AnimatedNumber({ value, duration = 1000, decimals = 0 }: { value: number; duration?: number; decimals?: number }) {
+  const spanRef = useRef<HTMLSpanElement>(null);
+  const prevValue = useRef(0);
 
   useEffect(() => {
-    let startTimestamp: number | null = null;
-    let animFrame: number;
-    const startVal = 0;
-    const targetVal = value;
+    const startVal = prevValue.current;
+    const endVal = value;
+    const start = performance.now();
 
-    if (spanRef.current) {
-      spanRef.current.textContent =
-        decimals > 0 ? startVal.toFixed(decimals) : String(Math.round(startVal));
-    }
-
-    const step = (timestamp: number) => {
-      if (!startTimestamp) startTimestamp = timestamp;
-      const elapsed = Math.min((timestamp - startTimestamp) / duration, 1);
-      // Kurva cubic ease-out super mulus
-      const ease = 1 - Math.pow(1 - elapsed, 3);
-      const current = startVal + (targetVal - startVal) * ease;
+    const frame = (now: number) => {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      const current = startVal + (endVal - startVal) * ease;
 
       if (spanRef.current) {
-        spanRef.current.textContent =
-          decimals > 0 ? current.toFixed(decimals) : String(Math.round(current));
+        spanRef.current.textContent = decimals > 0 ? current.toFixed(decimals) : Math.round(current).toString();
       }
 
-      if (elapsed < 1) {
-        animFrame = requestAnimationFrame(step);
+      if (progress < 1) {
+        requestAnimationFrame(frame);
       } else {
-        if (spanRef.current) {
-          spanRef.current.textContent =
-            decimals > 0 ? targetVal.toFixed(decimals) : String(Math.round(targetVal));
-        }
+        prevValue.current = endVal;
       }
     };
 
-    animFrame = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(animFrame);
+    requestAnimationFrame(frame);
   }, [value, duration, decimals]);
 
   return <span ref={spanRef}>{decimals > 0 ? value.toFixed(decimals) : Math.round(value)}</span>;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   CINCIN SKOR (PIECHART / DONUT GAUGE) - 100% GPU ACCELERATED
+   CINCIN SKOR (MOTION RADIX PROGRESS DONUT GAUGE) - 100% GPU ACCELERATED
+   Inspirasi: https://motion.dev/examples/react-radix-progress
    ══════════════════════════════════════════════════════════════════════════ */
 function ScoreRing({ score, label }: { score: number; label: string }) {
-  const r = 78;
-  const circumference = 2 * Math.PI * r; // ~490.08845
+  const r = 76;
+  const circumference = 2 * Math.PI * r; // ~477.52
   const clamped = Math.max(0, Math.min(100, score));
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => {
-      setMounted(true);
-    });
-    return () => cancelAnimationFrame(frame);
-  }, []);
-
   const targetOffset = circumference * (1 - clamped / 100);
+  const level = levelOf(score);
 
   return (
-    <div className={styles.ringWrap}>
+    <motion.div
+      className={styles.ringWrap}
+      initial={{ scale: 0.88, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+    >
       <svg viewBox="0 0 200 200" className={styles.ring} role="img" aria-label={`${Math.round(score)} / 100. ${label}`}>
-        <circle cx="100" cy="100" r={r} fill="none" stroke="var(--inset)" strokeWidth="16" />
+        <defs>
+          <linearGradient id="scoreRingGradLow" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#10b981" />
+            <stop offset="100%" stopColor="#059669" />
+          </linearGradient>
+          <linearGradient id="scoreRingGradMid" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#f59e0b" />
+            <stop offset="100%" stopColor="#d97706" />
+          </linearGradient>
+          <linearGradient id="scoreRingGradHigh" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#ef4444" />
+            <stop offset="100%" stopColor="#dc2626" />
+          </linearGradient>
+          <filter id="ringGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+        </defs>
+
+        {/* Ambient Track */}
         <circle
           cx="100"
           cy="100"
           r={r}
           fill="none"
-          stroke="currentColor"
-          strokeWidth="16"
+          stroke="var(--inset, rgba(0, 0, 0, 0.06))"
+          strokeWidth="15"
+        />
+
+        {/* Animated Motion Radix Progress Arc */}
+        <motion.circle
+          cx="100"
+          cy="100"
+          r={r}
+          fill="none"
+          stroke={
+            level === 'high'
+              ? 'url(#scoreRingGradHigh)'
+              : level === 'mid'
+                ? 'url(#scoreRingGradMid)'
+                : 'url(#scoreRingGradLow)'
+          }
+          strokeWidth="15"
           strokeLinecap="round"
           strokeDasharray={circumference}
-          strokeDashoffset={mounted ? targetOffset : circumference}
-          /* Busur dimulai dari puncak (-90 deg) */
+          initial={{ strokeDashoffset: circumference }}
+          animate={{ strokeDashoffset: targetOffset }}
+          transition={{
+            duration: 1.4,
+            ease: [0.16, 1, 0.3, 1],
+          }}
           transform="rotate(-90 100 100)"
           className={styles.ringArc}
         />
@@ -153,7 +172,7 @@ function ScoreRing({ score, label }: { score: number; label: string }) {
         </span>
         <span className={styles.ringUnit}>{label}</span>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -286,6 +305,45 @@ const BIOMARKERS: BioRead[] = [
   { key: 'rom', labelKey: 'card.rom', unitKey: 'card.romUnit', icon: RotateCw, digits: 0, read: b => b.romDeg },
 ];
 
+const heroStaggerContainer: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.06,
+    },
+  },
+};
+
+const heroStaggerItem: Variants = {
+  hidden: { opacity: 0, y: 18, filter: 'blur(3px)' },
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: 'blur(0px)',
+    transition: {
+      type: 'spring',
+      stiffness: 300,
+      damping: 24,
+    },
+  },
+};
+
+const heroCardSpring: Variants = {
+  hidden: { opacity: 0, y: 22, scale: 0.95 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      type: 'spring',
+      stiffness: 280,
+      damping: 22,
+    },
+  },
+};
+
 export default function DashboardPage() {
   const router = useRouter();
   const { user, token, isLoading } = useAuth();
@@ -348,7 +406,6 @@ export default function DashboardPage() {
       average: summary?.averageScore ?? scores.reduce((a, b) => a + b, 0) / scores.length,
       lowest: Math.min(...scores),
       highest: Math.max(...scores),
-      total: summary?.totalSessions ?? scores.length,
     };
   }, [timeline, summary]);
 
@@ -357,7 +414,7 @@ export default function DashboardPage() {
   const activeBio = useMemo(() => normalizeBiomarkers(activeSession), [activeSession]);
   const previousBio = useMemo(() => normalizeBiomarkers(previousSession), [previousSession]);
 
-  if (isLoading || loading) {
+  if (isLoading || (loading && !summary && history.length === 0)) {
     return (
       <div className={styles.page}>
         <AppNav />
@@ -371,7 +428,7 @@ export default function DashboardPage() {
     );
   }
 
-  if (failed) {
+  if (failed && !summary && history.length === 0) {
     return (
       <div className={styles.page}>
         <AppNav />
@@ -394,8 +451,8 @@ export default function DashboardPage() {
     );
   }
 
-  const hasData = history.length > 0 && summary?.latestScore !== undefined;
-  const latestScore = summary?.latestScore ?? 0;
+  const hasData = history.length > 0 && (summary || history.length > 0);
+  const latestScore = summary?.latestScore ?? history[0]?.compositeScore ?? 0;
   const latestRisk = timeline[timeline.length - 1]?.risk;
   const level = latestRisk === 'HIGH' ? 'high' : latestRisk === 'MEDIUM' ? 'mid' : levelOf(latestScore);
   const riskLabel =
@@ -415,39 +472,51 @@ export default function DashboardPage() {
       <main className="sheet" id="main">
         <div className={styles.pad}>
           {/* ── Kop ──────────────────────────────────────────────────────── */}
-          <header className={styles.pageHead}>
+          <motion.header
+            className={styles.pageHead}
+            variants={heroStaggerItem}
+            initial="hidden"
+            animate="visible"
+          >
             <div className={styles.pageHeadText}>
               <h1 className={styles.pageTitle}>
                 {greeting(lang)}, <span data-no-translate="">{user?.name?.split(' ')[0]}</span>
               </h1>
               <p className={styles.pageLead}>{t('dash.overviewTitle')}</p>
             </div>
-            <Link href="/screening" className="btn btn--primary btn--lg">
-              {t('dash.startNow')}
-            </Link>
-          </header>
-
-          {!hasData ? (
-            /* Keadaan kosong.
-               ───────────────────────────────────────────────────────────────
-               Ini yang dilihat setiap akun baru, jadi ia dirancang sebagai
-               halaman utuh dan bukan sisa dari tata letak yang datanya belum
-               datang. Panel kanan tidak ditampilkan sebagai kerangka kosong:
-               cincin skor bernilai nol akan terbaca sebagai hasil pengukuran
-               yang sangat baik, padahal belum ada pengukuran apa pun. */
-            <section className={styles.empty}>
-              <h2 className={styles.emptyTitle}>{t('dash.noData')}</h2>
-              <p className={styles.emptyBody}>{t('dash.emptyBody')}</p>
+            <motion.div whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.97 }}>
               <Link href="/screening" className="btn btn--primary btn--lg">
                 {t('dash.startNow')}
               </Link>
-            </section>
+            </motion.div>
+          </motion.header>
+
+          {!hasData ? (
+            <motion.section
+              className={styles.empty}
+              variants={heroCardSpring}
+              initial="hidden"
+              animate="visible"
+            >
+              <h2 className={styles.emptyTitle}>{t('dash.noData')}</h2>
+              <p className={styles.emptyBody}>{t('dash.emptyBody')}</p>
+              <motion.div whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.96 }}>
+                <Link href="/screening" className="btn btn--primary btn--lg">
+                  {t('dash.startNow')}
+                </Link>
+              </motion.div>
+            </motion.section>
           ) : (
-            <div className={styles.layout}>
+            <motion.div
+              className={styles.layout}
+              variants={heroStaggerContainer}
+              initial="hidden"
+              animate="visible"
+            >
               {/* ══ Kolom utama ══════════════════════════════════════════ */}
               <div className={styles.main}>
-                {/* Kartu biomarker. */}
-                <section aria-labelledby="measuresHead">
+                {/* Kartu biomarker (Staggered Hero Animation) */}
+                <motion.section aria-labelledby="measuresHead" variants={heroStaggerItem}>
                   <div className={styles.sectionHead}>
                     <h2 id="measuresHead" className={styles.sectionTitle}>
                       {t('dash.latestMeasures')}
@@ -462,7 +531,7 @@ export default function DashboardPage() {
                     </span>
                   </div>
 
-                  <div className={styles.bioGrid}>
+                  <motion.div className={styles.bioGrid} variants={heroStaggerContainer}>
                     {activeSession &&
                       BIOMARKERS.map(b => {
                         const value = b.read(activeBio);
@@ -472,21 +541,28 @@ export default function DashboardPage() {
                         const Icon = b.icon;
 
                         return (
-                          <article key={b.key} className={styles.bioCard}>
+                          <motion.article
+                            key={b.key}
+                            className={styles.bioCard}
+                            variants={heroCardSpring}
+                            whileHover={{ y: -5, scale: 1.025 }}
+                            whileTap={{ scale: 0.98 }}
+                            transition={{ type: 'spring', stiffness: 350, damping: 22 }}
+                          >
                             <div className={styles.bioHead}>
-                              <span className={styles.bioIcon}>
+                              <motion.span
+                                className={styles.bioIcon}
+                                whileHover={{ rotate: 12, scale: 1.12 }}
+                                transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                              >
                                 <Icon size={18} strokeWidth={2} aria-hidden="true" />
-                              </span>
+                              </motion.span>
                               <h3 className={styles.bioLabel}>{t(b.labelKey)}</h3>
                             </div>
                             <p className={styles.bioValue}>
                               <AnimatedNumber value={value} duration={1100} decimals={b.digits} />
                               <span className={styles.bioUnit}>{t(b.unitKey)}</span>
                             </p>
-                            {/* Perubahan dibawa kata dan tanda, bukan panah
-                                berwarna sendirian. Arah "membaik" berbeda per
-                                biomarker, jadi di sini hanya dinyatakan
-                                selisihnya tanpa menghakimi baik atau buruk. */}
                             <p className={styles.bioDelta}>
                               {delta === null ? (
                                 t('dash.noPrevious')
@@ -500,19 +576,15 @@ export default function DashboardPage() {
                                 </>
                               )}
                             </p>
-                          </article>
+                          </motion.article>
                         );
                       })}
-                  </div>
-                </section>
+                  </motion.div>
+                </motion.section>
 
-                {/* Pita tanggal sesi. Menggantikan jadwal pemeriksaan pada
-                    rujukan. Produk ini tidak punya penjadwalan, dan menaruh
-                    janji temu karangan di sini adalah hal pertama yang akan
-                    dibongkar penilai. Yang ditaruh justru tanggal sesi yang
-                    benar-benar ada, dan setiap tanggal bisa dibuka. */}
+                {/* Pita tanggal sesi. */}
                 {history.length > 1 && (
-                  <section aria-labelledby="stripHead">
+                  <motion.section aria-labelledby="stripHead" variants={heroStaggerItem}>
                     <div className={styles.sectionHead}>
                       <h2 id="stripHead" className={styles.sectionTitle}>
                         {t('dash.sessionStrip')}
@@ -522,33 +594,36 @@ export default function DashboardPage() {
                       </Link>
                     </div>
 
-                    <div className={styles.strip}>
+                    <motion.div className={styles.strip} variants={heroStaggerContainer}>
                       {history.slice(0, 10).map((s, i) => {
                         const d = new Date(s.timestamp);
                         const active = i === activeIndex;
                         return (
-                          <button
+                          <motion.button
                             key={s.id}
                             type="button"
                             className={styles.stripItem}
                             data-active={active ? '' : undefined}
                             aria-pressed={active}
                             onClick={() => setActiveIndex(i)}
+                            variants={heroCardSpring}
+                            whileHover={{ y: -3, scale: 1.06 }}
+                            whileTap={{ scale: 0.95 }}
                           >
                             <span className={styles.stripDay}>
                               {d.toLocaleDateString(dateLocale(lang), { weekday: 'short' })}
                             </span>
                             <span className={styles.stripDate}>{d.getDate()}</span>
                             <span className={styles.stripScore}>{Math.round(s.compositeScore)}</span>
-                          </button>
+                          </motion.button>
                         );
                       })}
-                    </div>
-                  </section>
+                    </motion.div>
+                  </motion.section>
                 )}
 
                 {/* Tabel riwayat. */}
-                <section aria-labelledby="histHead">
+                <motion.section aria-labelledby="histHead" variants={heroStaggerItem}>
                   <div className={styles.sectionHead}>
                     <h2 id="histHead" className={styles.sectionTitle}>
                       {t('dash.recentHistory')}
@@ -598,12 +673,17 @@ export default function DashboardPage() {
                       </tbody>
                     </table>
                   </div>
-                </section>
+                </motion.section>
               </div>
 
               {/* ══ Panel skor ═══════════════════════════════════════════ */}
-              <aside className={styles.aside}>
-                <section className={`${styles.scorePanel} ${styles[`panel_${level}`]}`}>
+              <motion.aside className={styles.aside} variants={heroStaggerItem}>
+                <motion.section
+                  className={`${styles.scorePanel} ${styles[`panel_${level}`]}`}
+                  variants={heroCardSpring}
+                  whileHover={{ y: -3, scale: 1.01 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                >
                   <h2 className={styles.scorePanelTitle}>{t('dash.scorePanel')}</h2>
 
                   <ScoreRing score={latestScore} label={t('dash.scoreUnit')} />
@@ -624,36 +704,52 @@ export default function DashboardPage() {
                   <p className={styles.lowerBetter}>{t('dash.lowerBetter')}</p>
 
                   {stats && (
-                    <dl className={styles.miniStats}>
-                      <div className={styles.miniStat}>
+                    <motion.dl className={styles.miniStats} variants={heroStaggerContainer}>
+                      <motion.div
+                        className={styles.miniStat}
+                        variants={heroStaggerItem}
+                        whileHover={{ y: -2, scale: 1.04 }}
+                      >
                         <dt className={styles.miniLabel}>{t('dash.statAverage')}</dt>
                         <dd className={styles.miniValue}>
                           <AnimatedNumber value={stats.average} duration={1100} />
                         </dd>
-                      </div>
-                      <div className={styles.miniStat}>
+                      </motion.div>
+                      <motion.div
+                        className={styles.miniStat}
+                        variants={heroStaggerItem}
+                        whileHover={{ y: -2, scale: 1.04 }}
+                      >
                         <dt className={styles.miniLabel}>{t('dash.statLowest')}</dt>
                         <dd className={styles.miniValue}>
                           <AnimatedNumber value={stats.lowest} duration={1100} />
                         </dd>
-                      </div>
-                      <div className={styles.miniStat}>
+                      </motion.div>
+                      <motion.div
+                        className={styles.miniStat}
+                        variants={heroStaggerItem}
+                        whileHover={{ y: -2, scale: 1.04 }}
+                      >
                         <dt className={styles.miniLabel}>{t('dash.statHighest')}</dt>
                         <dd className={styles.miniValue}>
                           <AnimatedNumber value={stats.highest} duration={1100} />
                         </dd>
-                      </div>
-                    </dl>
+                      </motion.div>
+                    </motion.dl>
                   )}
-                </section>
+                </motion.section>
 
                 {timeline.length > 1 && (
-                  <section className={styles.chartCard}>
+                  <motion.section
+                    className={styles.chartCard}
+                    variants={heroCardSpring}
+                    whileHover={{ y: -2, scale: 1.01 }}
+                  >
                     <SessionBars points={timeline} label={t('dash.trendChart')} />
-                  </section>
+                  </motion.section>
                 )}
-              </aside>
-            </div>
+              </motion.aside>
+            </motion.div>
           )}
         </div>
       </main>

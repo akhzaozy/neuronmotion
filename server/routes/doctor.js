@@ -31,12 +31,15 @@ function resolveDoctorId(req, requested) {
  * Menyusun sebaran wilayah pasien beserta kategori risiko terakhirnya.
  * Menyediakan struktur berjenjang (Negara -> Provinsi -> Kota) untuk drilldown interaktif
  * serta daftar datar (byCountry, byState, byCity) untuk kompatibilitas.
+ * Jika dokter belum memiliki pasien tertaut, data epidemiologi populasi umum disajikan.
  */
 async function buildGeoBreakdown(patientIds) {
-  if (!patientIds.length) return { byCountry: [], byState: [], byCity: [], hierarchy: [], unknownCount: 0, totalPatients: 0 };
+  const where = patientIds && patientIds.length > 0
+    ? { id: { in: patientIds } }
+    : { role: 'PATIENT' };
 
   const patients = await prisma.user.findMany({
-    where: { id: { in: patientIds } },
+    where,
     select: {
       country: true, countryName: true, region: true, state: true, city: true,
       patientSessions: {
@@ -45,6 +48,10 @@ async function buildGeoBreakdown(patientIds) {
       },
     },
   });
+
+  if (!patients.length) {
+    return { byCountry: [], byState: [], byCity: [], hierarchy: [], unknownCount: 0, totalPatients: 0 };
+  }
 
   const countryMap = new Map();
   const stateFlatMap = new Map();
@@ -111,20 +118,37 @@ async function buildGeoBreakdown(patientIds) {
     if (risk === 'HIGH' || risk === 'MEDIUM' || risk === 'LOW') cityEntry[risk]++;
 
     // 2. Flat state map
-    if (p.state) {
-      const sf = stateFlatMap.get(p.state) || { name: p.state, countryName: effectiveCountry, total: 0, HIGH: 0, MEDIUM: 0, LOW: 0 };
-      sf.total++;
-      if (risk === 'HIGH' || risk === 'MEDIUM' || risk === 'LOW') sf[risk]++;
-      stateFlatMap.set(p.state, sf);
+    const sKey = `${effectiveCountry}::${effectiveState}`;
+    if (!stateFlatMap.has(sKey)) {
+      stateFlatMap.set(sKey, {
+        name: effectiveState,
+        countryName: effectiveCountry,
+        total: 0,
+        HIGH: 0,
+        MEDIUM: 0,
+        LOW: 0,
+      });
     }
+    const sFlat = stateFlatMap.get(sKey);
+    sFlat.total++;
+    if (risk === 'HIGH' || risk === 'MEDIUM' || risk === 'LOW') sFlat[risk]++;
 
     // 3. Flat city map
-    if (p.city) {
-      const cf = cityFlatMap.get(p.city) || { name: p.city, stateName: effectiveState, countryName: effectiveCountry, total: 0, HIGH: 0, MEDIUM: 0, LOW: 0 };
-      cf.total++;
-      if (risk === 'HIGH' || risk === 'MEDIUM' || risk === 'LOW') cf[risk]++;
-      cityFlatMap.set(p.city, cf);
+    const cKey = `${effectiveCountry}::${effectiveState}::${effectiveCity}`;
+    if (!cityFlatMap.has(cKey)) {
+      cityFlatMap.set(cKey, {
+        name: effectiveCity,
+        stateName: effectiveState,
+        countryName: effectiveCountry,
+        total: 0,
+        HIGH: 0,
+        MEDIUM: 0,
+        LOW: 0,
+      });
     }
+    const cFlat = cityFlatMap.get(cKey);
+    cFlat.total++;
+    if (risk === 'HIGH' || risk === 'MEDIUM' || risk === 'LOW') cFlat[risk]++;
   }
 
   const hierarchy = Array.from(countryMap.values()).map(c => ({
@@ -180,6 +204,7 @@ router.get('/patients', async (req, res) => {
         patient: {
           select: {
             id: true, name: true, email: true, gender: true, dateOfBirth: true,
+            country: true, countryName: true, state: true, city: true,
             patientSessions: {
               orderBy: { timestamp: 'desc' }, take: 1,
               select: { riskCategory: true, compositeScore: true, timestamp: true, doctorNote: true, mlPrediction: true },
@@ -188,21 +213,66 @@ router.get('/patients', async (req, res) => {
         },
       },
       orderBy: { linkedAt: 'desc' },
-      take: 50, // batasi 50 pasien terbaru untuk performa
+      take: 50,
     });
 
-    const patients = links.map(l => {
-      const age = l.patient.dateOfBirth
-        ? Math.floor((Date.now() - new Date(l.patient.dateOfBirth)) / (365.25 * 24 * 3600 * 1000))
-        : null;
-      return { ...l.patient, age, linkedAt: l.linkedAt, lastSession: l.patient.patientSessions[0] || null };
-    });
+    let patients = [];
+    if (links.length > 0) {
+      patients = links.map(l => {
+        const age = l.patient.dateOfBirth
+          ? Math.floor((Date.now() - new Date(l.patient.dateOfBirth)) / (365.25 * 24 * 3600 * 1000))
+          : null;
+        return {
+          ...l.patient,
+          age,
+          linkedAt: l.linkedAt,
+          lastSession: l.patient.patientSessions[0] || null,
+          isLinked: true,
+        };
+      });
+    } else {
+      // Jika dokter baru belum memiliki pasien tertaut, tampilkan registri umum teranonimasi
+      const samplePatients = await prisma.user.findMany({
+        where: { role: 'PATIENT' },
+        take: 30,
+        select: {
+          id: true, gender: true, dateOfBirth: true,
+          country: true, countryName: true, state: true, city: true,
+          patientSessions: {
+            orderBy: { timestamp: 'desc' }, take: 1,
+            select: { riskCategory: true, compositeScore: true, timestamp: true, mlPrediction: true },
+          },
+        },
+      });
+
+      patients = samplePatients.map(p => {
+        const age = p.dateOfBirth
+          ? Math.floor((Date.now() - new Date(p.dateOfBirth)) / (365.25 * 24 * 3600 * 1000))
+          : null;
+        return {
+          id: p.id,
+          name: `Pasien #${p.id} (Anonim)`,
+          email: 'anonim@neuronmotion.id',
+          gender: p.gender,
+          dateOfBirth: p.dateOfBirth,
+          country: p.country,
+          countryName: p.countryName,
+          state: p.state,
+          city: p.city,
+          age,
+          linkedAt: null,
+          lastSession: p.patientSessions[0] || null,
+          isLinked: false,
+          isAnonymous: true,
+        };
+      });
+    }
 
     // Summary stats
     const highRisk = patients.filter(p => p.lastSession?.riskCategory === 'HIGH').length;
     const medRisk = patients.filter(p => p.lastSession?.riskCategory === 'MEDIUM').length;
 
-    res.json({ total: patients.length, highRisk, medRisk, patients });
+    res.json({ total: patients.length, hasLinkedPatients: links.length > 0, highRisk, medRisk, patients });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Internal server error' });
@@ -317,11 +387,13 @@ router.get('/dashboard/:doctorId', async (req, res) => {
       select: { patientId: true },
       orderBy: { linkedAt: 'desc' },
     });
-    const patientIds = links.map(l => l.patientId);
+    const linkedPatientIds = links.map(l => l.patientId);
+    const hasLinked = linkedPatientIds.length > 0;
+    const sessionWhere = hasLinked ? { patientId: { in: linkedPatientIds } } : {};
 
     const [recentSessions, riskBreakdown, conditionBreakdown] = await Promise.all([
       prisma.session.findMany({
-        where: { patientId: { in: patientIds } },
+        where: sessionWhere,
         orderBy: { timestamp: 'desc' },
         take: 10,
         select: {
@@ -331,12 +403,14 @@ router.get('/dashboard/:doctorId', async (req, res) => {
       }),
       prisma.session.groupBy({
         by: ['riskCategory'],
-        where: { patientId: { in: patientIds } },
+        where: sessionWhere,
         _count: { id: true },
       }),
-      // Ambil kondisi ML dari sesi terbaru
       prisma.session.findMany({
-        where: { patientId: { in: patientIds }, mlPrediction: { not: null } },
+        where: {
+          ...sessionWhere,
+          mlPrediction: { not: null },
+        },
         orderBy: { timestamp: 'desc' },
         select: { mlPrediction: true, patientId: true },
         distinct: ['patientId'],
@@ -352,18 +426,29 @@ router.get('/dashboard/:doctorId', async (req, res) => {
       } catch {}
     });
 
+    const isLinkedSet = new Set(linkedPatientIds);
+
     res.json({
-      totalPatients: patientIds.length,
-      recentSessions: recentSessions.map(s => ({
-        ...s,
-        mlPrediction: s.mlPrediction ? JSON.parse(s.mlPrediction) : null,
-      })),
+      totalPatients: linkedPatientIds.length,
+      hasLinkedPatients: hasLinked,
+      recentSessions: recentSessions.map(s => {
+        const isLinked = isLinkedSet.has(s.patient?.id);
+        return {
+          ...s,
+          mlPrediction: s.mlPrediction ? JSON.parse(s.mlPrediction) : null,
+          patient: s.patient ? {
+            ...s.patient,
+            name: isLinked ? s.patient.name : `Pasien #${s.patient.id} (Anonim)`,
+            isLinked,
+          } : null,
+        };
+      }),
       riskBreakdown: riskBreakdown.reduce((acc, r) => {
         acc[r.riskCategory || 'UNKNOWN'] = r._count.id;
         return acc;
       }, {}),
       conditionBreakdown: conditionCounts,
-      geoBreakdown: await buildGeoBreakdown(patientIds),
+      geoBreakdown: await buildGeoBreakdown(linkedPatientIds),
     });
   } catch (e) {
     console.error(e);

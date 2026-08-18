@@ -28,8 +28,13 @@ router.post('/register', async (req, res) => {
       country, countryName, region, state, city,
     } = req.body;
 
+    const normalizedEmail = email ? email.trim().toLowerCase() : '';
+    if (!normalizedEmail || !password) {
+      return res.status(400).json({ error: 'Email dan password wajib diisi' });
+    }
+
     // Check if user exists
-    const existingUser = await prisma.user.findUnique({ where: { email } });
+    const existingUser = await prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (existingUser) {
       return res.status(400).json({ error: 'Email already exists' });
     }
@@ -41,9 +46,9 @@ router.post('/register', async (req, res) => {
     // Create user
     const user = await prisma.user.create({
       data: {
-        email,
+        email: normalizedEmail,
         password: hashedPassword,
-        name,
+        name: name ? name.trim() : '',
         role: resolvedRole,
         gender: gender === 'M' || gender === 'F' ? gender : null,
         // Pasien: tanggal lahir dipakai untuk hitung usia & rentang normal per kelompok usia
@@ -65,9 +70,6 @@ router.post('/register', async (req, res) => {
     res.status(201).json({ message: 'User created successfully', userId: user.id });
   } catch (error) {
     console.error('Registration Error:', error);
-    // Struktur database tertinggal dari skema (kolom belum ada) menghasilkan galat
-    // Prisma tersendiri. Tanpa dibedakan, kondisi ini muncul sebagai 500 tanpa
-    // petunjuk, padahal perbaikannya cukup menjalankan `npx prisma db push`.
     if (isSchemaDriftError(error)) {
       return res.status(500).json({
         error: 'Struktur database server belum diperbarui. Jalankan "npx prisma db push" di server lalu restart layanan.',
@@ -81,8 +83,13 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
+    const normalizedEmail = email ? email.trim().toLowerCase() : '';
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    if (!normalizedEmail || !password) {
+      return res.status(400).json({ error: 'Email dan password wajib diisi' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }

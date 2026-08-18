@@ -24,7 +24,48 @@ import {
   Layers,
 } from 'lucide-react';
 import { useI18n, translateServerLabel, dateLocale, type Lang } from '@/lib/i18n';
+import { motion, type Variants } from 'framer-motion';
+import ProcessButton from '@/components/ProcessButton';
 import styles from './riwayat.module.css';
+
+const heroStaggerContainer: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.05,
+    },
+  },
+};
+
+const heroStaggerItem: Variants = {
+  hidden: { opacity: 0, y: 16, filter: 'blur(3px)' },
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: 'blur(0px)',
+    transition: {
+      type: 'spring',
+      stiffness: 300,
+      damping: 24,
+    },
+  },
+};
+
+const heroCardSpring: Variants = {
+  hidden: { opacity: 0, y: 20, scale: 0.96 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      type: 'spring',
+      stiffness: 280,
+      damping: 22,
+    },
+  },
+};
 
 /**
  * Warna tingkat pengukuran, dipakai untuk titik grafik dan pita latarnya.
@@ -375,54 +416,73 @@ export default function RiwayatPage() {
       <AppNav />
 
       <main className="sheet" id="main">
-        <div className={styles.pad}>
-          <header className={styles.pageHeader}>
+        <motion.div
+          className={styles.pad}
+          variants={heroStaggerContainer}
+          initial="hidden"
+          animate="visible"
+        >
+          <motion.header className={styles.pageHeader} variants={heroStaggerItem}>
             <div className={styles.pageHeaderInfo}>
-              <div className={styles.metaPillGroup}>
-                <span className={styles.metaChip}>
+              <motion.div className={styles.metaPillGroup} variants={heroStaggerContainer}>
+                <motion.span className={styles.metaChip} variants={heroCardSpring}>
                   <History size={13} aria-hidden="true" />
                   {t('hist.title')}
-                </span>
-                <span className={styles.metaChip} data-no-translate="">
+                </motion.span>
+                <motion.span className={styles.metaChip} variants={heroCardSpring} data-no-translate="">
                   <User size={13} aria-hidden="true" />
                   {user?.name}
-                </span>
-                <span className={styles.metaChip}>
+                </motion.span>
+                <motion.span className={styles.metaChip} variants={heroCardSpring}>
                   <Layers size={13} aria-hidden="true" />
                   {sessions.length} {t('prof.sessions')}
-                </span>
-              </div>
+                </motion.span>
+              </motion.div>
               <h1>{t('hist.title')}</h1>
               <p className={styles.lead}>{t('hist.subtitle')}</p>
             </div>
             {sessions.length > 0 && (
               <div className={styles.exportRow}>
-                <button
+                <motion.button
                   type="button"
                   className={`btn btn--primary ${styles.btnExport}`}
                   onClick={() => setPrinting(true)}
+                  whileHover={{ scale: 1.03, y: -2 }}
+                  whileTap={{ scale: 0.97 }}
                 >
                   <Download size={16} aria-hidden="true" />
                   {t('hist.downloadPdf')}
-                </button>
-                <button
+                </motion.button>
+                <motion.button
                   type="button"
                   className={`btn ${styles.btnExport}`}
                   onClick={exportCSV}
+                  whileHover={{ scale: 1.03, y: -2 }}
+                  whileTap={{ scale: 0.97 }}
                 >
                   <FileSpreadsheet size={16} aria-hidden="true" />
                   {t('hist.exportCsv')}
-                </button>
+                </motion.button>
               </div>
             )}
-          </header>
+          </motion.header>
 
           {/* Kartu Bagikan ke Tenaga Kesehatan */}
-          <section className={styles.shareCard}>
+          <motion.section
+            className={styles.shareCard}
+            variants={heroCardSpring}
+            whileHover={{ y: -3, scale: 1.01 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+          >
             <div className={styles.shareCardHead}>
-              <div className={styles.shareIconBadge} aria-hidden="true">
+              <motion.div
+                className={styles.shareIconBadge}
+                aria-hidden="true"
+                whileHover={{ rotate: 15, scale: 1.15 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+              >
                 <Share2 size={22} strokeWidth={2} />
-              </div>
+              </motion.div>
               <div>
                 <h2 className={styles.shareCardTitle}>{t('share.title')}</h2>
                 <p className={styles.shareCardDesc}>{t('share.desc')}</p>
@@ -437,28 +497,28 @@ export default function RiwayatPage() {
                 </code>
               </div>
               <div className={styles.shareActions}>
-                <button
+                <ProcessButton
                   type="button"
-                  className={`btn ${codeCopied ? styles.btnCopied : ''}`}
+                  size="sm"
+                  variant={codeCopied ? 'primary' : 'secondary'}
+                  status={codeCopied ? 'success' : 'idle'}
                   onClick={copyShareCode}
                   disabled={!shareCode}
+                  icon={<Copy size={15} aria-hidden="true" />}
+                  successText={t('share.copied')}
                 >
-                  {codeCopied ? (
-                    <Check size={16} className={styles.checkIcon} aria-hidden="true" />
-                  ) : (
-                    <Copy size={16} aria-hidden="true" />
-                  )}
-                  {codeCopied ? t('share.copied') : t('share.copy')}
-                </button>
-                <button
+                  {t('share.copy')}
+                </ProcessButton>
+                <ProcessButton
                   type="button"
-                  className="btn"
+                  size="sm"
+                  variant="secondary"
                   onClick={resetShareCode}
                   disabled={!shareCode}
+                  icon={<RefreshCw size={14} aria-hidden="true" />}
                 >
-                  <RefreshCw size={15} aria-hidden="true" />
                   {t('share.reset')}
-                </button>
+                </ProcessButton>
               </div>
             </div>
 
@@ -466,28 +526,28 @@ export default function RiwayatPage() {
               <ShieldCheck size={16} className={styles.shieldIcon} aria-hidden="true" />
               <span>{shareCode ? t('share.resetHint') : t('share.loading')}</span>
             </div>
-          </section>
+          </motion.section>
 
           {sessions.length === 0 ? (
-            <section className={styles.section}>
+            <motion.section className={styles.section} variants={heroCardSpring}>
               <div className={styles.emptyState}>
                 <p>{t('hist.noHistory')}</p>
                 <div className={styles.exportRow}>
                   <Link href="/screening" className="btn btn--primary">{t('hist.startFirst')}</Link>
                 </div>
               </div>
-            </section>
+            </motion.section>
           ) : (
             <>
-              <section className={styles.section}>
+              <motion.section className={styles.section} variants={heroCardSpring}>
                 <div className={styles.sectionHead}>
                   <h2 className={styles.sectionTitle}>{t('hist.trendTitle')}</h2>
                 </div>
                 <TrendChart sessions={sessions} />
-              </section>
+              </motion.section>
 
               {sessions.length >= 2 && (
-                <section className={styles.section}>
+                <motion.section className={styles.section} variants={heroCardSpring}>
                   <div className={styles.sectionHead}>
                     <h2 className={styles.sectionTitle}>{t('hist.compareTitle')}</h2>
                   </div>
@@ -512,13 +572,11 @@ export default function RiwayatPage() {
                   </div>
 
                   {sessionA && sessionB && (
-                    <div className={styles.deltaList}>
-                      <div className={styles.deltaItem}>
+                    <motion.div className={styles.deltaList} variants={heroStaggerContainer}>
+                      <motion.div className={styles.deltaItem} variants={heroStaggerItem}>
                         <span className={styles.deltaLabel}>{t('hist.compositeScore')}</span>
                         <span className={styles.deltaValue}>
                           {Math.round(sessionA.compositeScore)} → {Math.round(sessionB.compositeScore)}{' '}
-                          {/* Arah perubahan dibawa kata penuh dan bobot huruf,
-                              bukan panah berwarna. */}
                           <span className={
                             sessionB.compositeScore > sessionA.compositeScore ? styles.deltaWorse
                               : sessionB.compositeScore < sessionA.compositeScore ? styles.deltaBetter
@@ -528,13 +586,13 @@ export default function RiwayatPage() {
                               : sessionB.compositeScore < sessionA.compositeScore ? t('hist.improving') : t('hist.stable')}
                           </span>
                         </span>
-                      </div>
+                      </motion.div>
                       {getBiomarkerDeltas(sessionA, sessionB, t).map(d => {
                         if (d.from === undefined || d.to === undefined) return null;
                         const worse = d.higherIsWorse ? d.to > d.from : d.to < d.from;
                         const better = d.higherIsWorse ? d.to < d.from : d.to > d.from;
                         return (
-                          <div key={d.label} className={styles.deltaItem}>
+                          <motion.div key={d.label} className={styles.deltaItem} variants={heroStaggerItem}>
                             <span className={styles.deltaLabel}>{d.label}</span>
                             <span className={styles.deltaValue}>
                               {d.from} → {d.to} {d.unit}{' '}
@@ -542,15 +600,15 @@ export default function RiwayatPage() {
                                 {worse ? t('hist.worsening') : better ? t('hist.improving') : t('hist.stable')}
                               </span>
                             </span>
-                          </div>
+                          </motion.div>
                         );
                       })}
-                    </div>
+                    </motion.div>
                   )}
-                </section>
+                </motion.section>
               )}
 
-              <section className={styles.section}>
+              <motion.section className={styles.section} variants={heroCardSpring}>
                 <div className={styles.sectionHead}>
                   <h2 className={styles.sectionTitle}>{t('hist.allSessions')} ({sessions.length})</h2>
                 </div>
@@ -596,10 +654,10 @@ export default function RiwayatPage() {
                     </tbody>
                   </table>
                 </div>
-              </section>
+              </motion.section>
             </>
           )}
-        </div>
+        </motion.div>
       </main>
 
       {/* Panel detail memakai Radix Dialog, bukan div dengan klik di luar.

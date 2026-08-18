@@ -145,21 +145,19 @@ export function useBiomarkerCapture() {
   const [fault, setFault] = useState<CameraFault | null>(null);
   const [rejection, setRejection] = useState<CaptureRejection | null>(null);
 
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
+  const facingModeRef = useRef<'user' | 'environment'>('user');
+
   // ── Init Camera ─────────────────────────────────────────────────────────────
-  /**
-   * Tiga tes membutuhkan seluruh tubuh berdiri masuk frame. Pada layar sempit
-   * yang dipegang portrait, meminta 1280x720 lanskap menghasilkan strip
-   * mendatar yang secara fisik tidak bisa memuat orang dewasa berdiri pada
-   * jarak dua meter, dan pergelangan kaki yang jadi dasar biomarker gait jatuh
-   * di luar frame. Jadi orientasi permintaan mengikuti orientasi layar.
-   */
-  const startCamera = useCallback(async () => {
+  const startCamera = useCallback(async (targetFacing?: 'user' | 'environment') => {
     setFault(null);
     setError(null);
 
-    // getUserMedia hanya tersedia pada konteks aman. Tanpa pemeriksaan ini,
-    // kegagalannya muncul sebagai penolakan biasa dan pengguna diminta memberi
-    // izin yang tidak akan pernah ditawarkan browser.
+    const mode = targetFacing || facingModeRef.current;
+    facingModeRef.current = mode;
+    setFacingMode(mode);
+
+    // getUserMedia hanya tersedia pada konteks aman
     if (typeof window !== 'undefined' && !window.isSecureContext) {
       setFault('insecure');
       return;
@@ -169,23 +167,34 @@ export function useBiomarkerCapture() {
       return;
     }
 
+    // Hentikan stream lama jika sedang berjalan (misal saat switch kamera)
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+
     const portrait =
       typeof window !== 'undefined' && window.matchMedia('(orientation: portrait)').matches;
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: portrait
-          ? { width: { ideal: 720 }, height: { ideal: 1280 }, facingMode: 'user' }
-          : { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
+          ? {
+              width: { ideal: 1080, max: 1920 },
+              height: { ideal: 1440, max: 1920 },
+              aspectRatio: { ideal: 3 / 4 },
+              facingMode: mode,
+            }
+          : {
+              width: { ideal: 1280, max: 1920 },
+              height: { ideal: 720, max: 1080 },
+              aspectRatio: { ideal: 16 / 9 },
+              facingMode: mode,
+            },
         audio: false,
       });
       streamRef.current = stream;
 
-      // Elemen video harus sudah ada. Bila belum, aliran kamera tidak punya
-      // tempat dipasang: izin sudah diberikan, lampu kamera menyala, tetapi
-      // layar berhenti pada ajakan mengaktifkan kamera tanpa sebab yang
-      // terlihat. Dulu keadaan ini lewat begitu saja karena hanya dibungkus
-      // pemeriksaan if tanpa cabang gagal.
       if (!videoRef.current) {
         stream.getTracks().forEach(track => track.stop());
         streamRef.current = null;
@@ -196,9 +205,6 @@ export function useBiomarkerCapture() {
 
       videoRef.current.srcObject = stream;
 
-      // Kegagalan play() bukan penolakan izin. Bila ia ikut masuk ke penangan
-      // di bawah, pengguna diberi tahu bahwa ia menolak izin yang justru baru
-      // saja ia berikan, lalu diminta membetulkan setelan yang tidak salah.
       try {
         await videoRef.current.play();
       } catch (playError) {
@@ -218,6 +224,13 @@ export function useBiomarkerCapture() {
       console.error(e);
     }
   }, []);
+
+  const switchCamera = useCallback(async () => {
+    const nextMode = facingModeRef.current === 'user' ? 'environment' : 'user';
+    facingModeRef.current = nextMode;
+    setFacingMode(nextMode);
+    await startCamera(nextMode);
+  }, [startCamera]);
 
   // ── Init MediaPipe Models ───────────────────────────────────────────────────
   const initMediaPipe = useCallback(async () => {
@@ -788,6 +801,7 @@ export function useBiomarkerCapture() {
     videoRef, canvasRef,
     cameraReady, poseReady: modelsReady, error,
     fault, rejection, clearRejection,
+    facingMode, switchCamera,
     activeTest, isCapturing: isCapturingState,
     liveMetrics, countdown, capturedData, detectionWarning, lightingWarning,
     startCamera, stopCamera,

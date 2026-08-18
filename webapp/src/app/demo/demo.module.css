@@ -97,8 +97,119 @@
   color: var(--ink-muted);
 }
 
-/* Baris ekspor rekaman. Hanya tampil pada /demo?export=1, dipakai untuk
-   mengambil data plat di halaman depan. Bukan bagian dari alur pengguna. */
+/* ── Panduan Penjelasan Parameter & Warna (Revisi Faiq) ─────────────────── */
+
+.guideCard {
+  margin-top: var(--s4);
+  padding: var(--s5);
+  background: var(--field, rgba(255, 255, 255, 0.7));
+  border: 1px solid var(--rule, rgba(0, 0, 0, 0.1));
+  border-radius: var(--radius-lg, 16px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+.guideHead {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  margin-bottom: var(--s4);
+  color: var(--accent, #0284c7);
+}
+
+.guideHead h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--ink, #0f172a);
+}
+
+.guideGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--s4);
+  margin-bottom: var(--s4);
+}
+
+.guideItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: var(--s3) var(--s4);
+  background: var(--sheet, #f8fafc);
+  border-radius: var(--radius, 12px);
+  border: 1px solid var(--rule-hair, rgba(0, 0, 0, 0.06));
+}
+
+.guideItemTitle {
+  font-weight: 700;
+  font-size: 0.9375rem;
+  color: var(--ink, #0f172a);
+}
+
+.guideItemText {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--ink-secondary, #475569);
+}
+
+.colorLegendSection {
+  padding-top: var(--s4);
+  border-top: 1px dashed var(--rule, rgba(0, 0, 0, 0.12));
+}
+
+.colorLegendTitle {
+  font-size: 0.875rem;
+  font-weight: 700;
+  margin-bottom: var(--s3);
+  color: var(--ink, #0f172a);
+}
+
+.colorLegendList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+.colorLegendRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s3);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--ink-secondary, #475569);
+}
+
+.colorTag {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+.tagLow {
+  background: var(--level-low-wash, #ecfdf5);
+  color: var(--level-low, #059669);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.tagMid {
+  background: var(--level-mid-wash, #fffbeb);
+  color: var(--level-mid, #d97706);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.tagHigh {
+  background: var(--level-high-wash, #fef2f2);
+  color: var(--level-high, #dc2626);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* Baris ekspor rekaman */
 .exportRow {
   display: flex;
   flex-wrap: wrap;

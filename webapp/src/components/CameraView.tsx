@@ -1,5 +1,6 @@
 'use client';
 import { RefObject, useEffect, useRef } from 'react';
+import { RotateCcw, SwitchCamera } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { CameraFault, LiveMetrics, TestType } from '@/hooks/useBiomarkerCapture';
 import { TestSpec } from '@/lib/tests';
@@ -7,19 +8,7 @@ import styles from './Camera.module.css';
 
 /**
  * Jendela perekaman.
- *
- * Aturan utama komponen ini adalah kebalikan dari versi sebelumnya: instruksi
- * TAMPIL selama perekaman, bukan disembunyikan. Pengguna menekan tombol,
- * menjauh dua meter, lalu melakukan gerakan yang tidak bisa ia lihat umpan
- * baliknya. Pada saat itulah satu-satunya kalimat yang penting justru dulu
- * dihapus dari layar.
- *
- * Karena itu semua yang tampil saat merekam diukur untuk jarak dua meter, dan
- * pengaturan waktunya juga diberikan lewat suara, supaya tidak menuntut
- * membaca sama sekali.
  */
-
-/** Nada aba-aba. Dibangkitkan WebAudio, tanpa berkas audio yang harus diunduh. */
 function useCues(enabled: boolean) {
   const ctxRef = useRef<AudioContext | null>(null);
 
@@ -68,6 +57,8 @@ interface Props {
   fault: CameraFault | null;
   detectionWarning: string | null;
   lightingWarning: string | null;
+  facingMode?: 'user' | 'environment';
+  onSwitchCamera?: () => void;
   /** Bilah metrik mentah hanya untuk peragaan, tidak pernah tampil ke pasien. */
   showMetrics?: boolean;
   onStart: () => void;
@@ -86,6 +77,8 @@ export default function CameraView({
   fault,
   detectionWarning,
   lightingWarning,
+  facingMode = 'user',
+  onSwitchCamera,
   showMetrics = false,
   onStart,
   onStop,
@@ -168,7 +161,10 @@ export default function CameraView({
     <section className={styles.stage} data-capturing={isCapturing && ready ? '' : undefined}>
       {stateBox}
 
-      <div className={ready ? styles.frame : styles.offstage} aria-hidden={ready ? undefined : true}>
+      <div
+        className={`${ready ? styles.frame : styles.offstage} ${facingMode === 'user' ? styles.mirrored : ''}`}
+        aria-hidden={ready ? undefined : true}
+      >
         <video ref={videoRef} className={styles.video} playsInline muted />
         <canvas
           ref={canvasRef}
@@ -176,6 +172,20 @@ export default function CameraView({
           role="img"
           aria-label={t(test.cueKey)}
         />
+
+        {/* Tombol switch kamera depan / belakang */}
+        {ready && onSwitchCamera && (
+          <button
+            type="button"
+            className={styles.btnSwitchCamera}
+            onClick={onSwitchCamera}
+            aria-label={facingMode === 'environment' ? 'Ganti ke Kamera Depan' : 'Ganti ke Kamera Belakang'}
+            title={facingMode === 'environment' ? 'Kamera Belakang Aktif (Klik untuk Kamera Depan)' : 'Kamera Depan Aktif (Klik untuk Kamera Belakang)'}
+          >
+            <RotateCcw size={15} />
+            <span>{facingMode === 'environment' ? 'Kamera Belakang' : 'Kamera Depan'}</span>
+          </button>
+        )}
 
         {/* Peringatan kondisi. Keduanya ditumpuk di satu jalur supaya tidak
             saling menimpa, dan keduanya diumumkan ke pembaca layar. */}

@@ -1,12 +1,14 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { Info, HelpCircle, Activity, ShieldCheck, Sparkles, RotateCcw } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useBiomarkerCapture } from '@/hooks/useBiomarkerCapture';
 import { getTest } from '@/lib/tests';
 import { useI18n } from '@/lib/i18n';
 import CameraView from '@/components/CameraView';
 import ScreeningInstruction from '@/components/ScreeningInstruction';
+import ProcessButton from '@/components/ProcessButton';
 import Logo from '@/components/Logo';
 import styles from './demo.module.css';
 
@@ -18,14 +20,6 @@ interface TremorResult {
   score: number;
 }
 
-/**
- * Peragaan satu tes tanpa akun.
- *
- * Ini satu-satunya permukaan yang menampilkan angka mentah pengukuran, karena
- * di sinilah angka itu memang jadi isinya: pengunjung datang untuk melihat
- * bahwa alatnya benar-benar mengukur sesuatu. Pada alur skrining pasien,
- * bilah metrik yang sama disembunyikan.
- */
 export default function DemoPage() {
   const { t } = useI18n();
   const test = getTest('tremor');
@@ -34,6 +28,7 @@ export default function DemoPage() {
     videoRef, canvasRef, cameraReady, poseReady,
     activeTest, isCapturing, liveMetrics, countdown, capturedData,
     detectionWarning, lightingWarning, fault,
+    facingMode, switchCamera,
     startCamera, startCapture, stopCapture,
   } = useBiomarkerCapture();
 
@@ -42,18 +37,10 @@ export default function DemoPage() {
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzeError, setAnalyzeError] = useState('');
 
-  /* Ekspor rekaman untuk plat di halaman depan.
-     Digerbangi ?export=1 supaya tidak pernah tampil kepada pengguna biasa
-     maupun saat produk ini diperagakan. Membaca dari window.location alih-alih
-     useSearchParams agar halaman ini tetap bisa dirender statis. */
   const [canExport, setCanExport] = useState(false);
   const [exportState, setExportState] = useState<'idle' | 'copied' | 'downloaded'>('idle');
 
   useEffect(() => {
-    // Ditunda satu bingkai agar tidak menetapkan keadaan secara sinkron di
-    // dalam efek. Nilainya tidak bisa dihitung saat inisialisasi useState
-    // karena window belum ada saat prarender, dan menebaknya di sana akan
-    // membuat hasil server dan klien berbeda.
     const frame = requestAnimationFrame(() =>
       setCanExport(new URLSearchParams(window.location.search).get('export') === '1'),
     );
@@ -73,7 +60,6 @@ export default function DemoPage() {
 
   const level = result ? (result.score >= 65 ? 'high' : result.score >= 35 ? 'mid' : 'low') : 'low';
 
-  /** Menyusun rekaman dalam bentuk yang dipakai src/data/tremorTrace.ts. */
   const buildTraceJson = () => {
     const raw = (capturedData?.payload as { samples?: Array<{ timestamp: number; x: number; y: number }> })?.samples;
     if (!raw?.length || !result) return null;
@@ -87,8 +73,6 @@ export default function DemoPage() {
         durationSec: round((raw[raw.length - 1].timestamp - t0) / 1000, 1),
         dominantFrequencyHz: result.dominantFrequencyHz,
         amplitudeMillimeter: result.amplitudeMillimeter,
-        // Empat desimal sudah jauh melampaui ketelitian pelacak, dan menahan
-        // berkasnya tetap kecil karena ia ikut terkirim ke setiap pengunjung.
         samples: raw.map(s => ({ t: Math.round(s.timestamp - t0), x: round(s.x, 4), y: round(s.y, 4) })),
       },
       null,
@@ -103,7 +87,6 @@ export default function DemoPage() {
       await navigator.clipboard.writeText(json);
       setExportState('copied');
     } catch {
-      // Papan klip bisa ditolak peramban. Berkasnya tetap harus bisa diambil.
       const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
       const a = document.createElement('a');
       a.href = url;
@@ -154,20 +137,23 @@ export default function DemoPage() {
                   fault={fault}
                   detectionWarning={detectionWarning}
                   lightingWarning={lightingWarning}
+                  facingMode={facingMode}
+                  onSwitchCamera={switchCamera}
                   showMetrics
-                  onStart={startCamera}
+                  onStart={() => startCamera()}
                   onStop={stopCapture}
                 />
               )}
 
               {cameraReady && poseReady && !isCapturing && !showInstruction && !analyzing && (
-                <button
+                <ProcessButton
                   type="button"
-                  className="btn btn--primary btn--lg btn--block"
+                  size="lg"
+                  fullWidth
                   onClick={() => setShowInstruction(true)}
                 >
                   {t('scr.beginTest')}
-                </button>
+                </ProcessButton>
               )}
 
               {analyzing && (
@@ -211,6 +197,20 @@ export default function DemoPage() {
                 </tbody>
               </table>
 
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+                <ProcessButton
+                  type="button"
+                  variant="secondary"
+                  size="md"
+                  onClick={() => {
+                    setResult(null);
+                    setShowInstruction(false);
+                  }}
+                >
+                  Uji Coba Ulang Tes
+                </ProcessButton>
+              </div>
+
               {canExport && (
                 <div className={styles.exportRow}>
                   <button type="button" className="btn" onClick={exportTrace}>
@@ -239,8 +239,51 @@ export default function DemoPage() {
               <p className={styles.footnote}>{t('demo.notStored')}</p>
             </article>
           )}
+
+          {/* ── Panduan Penjelasan Parameter & Warna (Revisi Faiq) ─── */}
+          <section className={styles.guideCard} aria-labelledby="param-guide-title">
+            <div className={styles.guideHead}>
+              <HelpCircle size={20} aria-hidden="true" />
+              <h3 id="param-guide-title">Panduan Membaca Angka & Perubahan Warna</h3>
+            </div>
+
+            <div className={styles.guideGrid}>
+              <div className={styles.guideItem}>
+                <span className={styles.guideItemTitle}>Frekuensi Dominan (Hz)</span>
+                <p className={styles.guideItemText}>
+                  Menunjukkan jumlah getaran per detik. <strong>4-6 Hz</strong> adalah ritme khas tremor istirahat Parkinson. Di luar rentang ini biasanya merupakan variasi alami atau tremor fisiologis normal (&gt;8 Hz).
+                </p>
+              </div>
+
+              <div className={styles.guideItem}>
+                <span className={styles.guideItemTitle}>Amplitudo Simpangan (mm)</span>
+                <p className={styles.guideItemText}>
+                  Menunjukkan rentang/jarak goyangan tangan dalam milimeter. Nilai <strong>&lt; 1.5 mm</strong> menandakan tangan sangat stabil tanpa pergeseran berlebih.
+                </p>
+              </div>
+            </div>
+
+            <div className={styles.colorLegendSection}>
+              <h4 className={styles.colorLegendTitle}>Arti Perubahan Warna Parameter:</h4>
+              <div className={styles.colorLegendList}>
+                <div className={styles.colorLegendRow}>
+                  <span className={`${styles.colorTag} ${styles.tagLow}`}>● Hijau (Risiko Rendah / Skor &lt; 35)</span>
+                  <span>Gerak tangan stabil dalam batas normal, tidak ada osilasi ritmis 4-6 Hz yang signifikan.</span>
+                </div>
+                <div className={styles.colorLegendRow}>
+                  <span className={`${styles.colorTag} ${styles.tagMid}`}>● Kuning (Risiko Sedang / Skor 35-64)</span>
+                  <span>Terdeteksi sedikit getaran atau variasi ritme yang melebihi ambang batas tenang.</span>
+                </div>
+                <div className={styles.colorLegendRow}>
+                  <span className={`${styles.colorTag} ${styles.tagHigh}`}>● Merah (Risiko Tinggi / Skor ≥ 65)</span>
+                  <span>Pola tremor istirahat ritmis 4-6 Hz terdeteksi dengan amplitudo jelas. Disarankan konsultasi medis.</span>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
       </main>
     </div>
   );
 }
+

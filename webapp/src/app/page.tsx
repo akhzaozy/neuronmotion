@@ -31,6 +31,8 @@ import { LanguageToggle, useI18n } from '@/lib/i18n';
 import { TEST_SEQUENCE, TOTAL_CAPTURE_SECONDS } from '@/lib/tests';
 import { useReveal, useCountUp } from '@/lib/reveal';
 import styles from './landing.module.css';
+import SplitText from '@/components/SplitText';
+import StaggeredGrid from '@/components/StaggeredGrid';
 
 const CONDITIONS = ['cond.parkinson', 'cond.essentialTremor', 'cond.postStroke', 'cond.ataxia'];
 
@@ -138,6 +140,7 @@ export default function LandingPage() {
 
   return (
     <div className={styles.page}>
+      <StaggeredGrid />
       <a href="#main" className="skipToContent">
         {t('nav.skipToContent')}
       </a>
@@ -199,11 +202,27 @@ export default function LandingPage() {
           <div className={`sheet ${styles.heroGrid}`}>
             <div>
               <h1 className={styles.heroTitle}>
-                {t('land.title1')} {t('land.title2')}{' '}
-                <span className={styles.heroTitleAccent}>{t('land.title3')}</span>
+                <SplitText
+                  text={`${t('land.title1')} ${t('land.title2')} ${t('land.title3')}`}
+                  accentText={t('land.title3')}
+                  accentClassName={styles.heroTitleAccent}
+                  splitBy="chars"
+                  stagger={0.022}
+                  duration={0.65}
+                  delay={0.1}
+                  as="span"
+                />
               </h1>
 
-              <p className={styles.heroLead}>{t('land.desc')}</p>
+              <SplitText
+                text={t('land.desc')}
+                splitBy="words"
+                stagger={0.015}
+                duration={0.5}
+                delay={0.35}
+                as="p"
+                className={styles.heroLead}
+              />
 
               {/* Bagi pengguna yang sudah masuk, aksi utama adalah mengerjakan
                   skrining sungguhan atau masuk ke dasbor. */}
@@ -373,7 +392,15 @@ export default function LandingPage() {
                   {TOTAL_CAPTURE_SECONDS} s
                 </span>
               </div>
-              <h2 className={styles.sectionTitle}>{t('land.featuresTitle')}</h2>
+              <SplitText
+                text={t('land.featuresTitle')}
+                inView={true}
+                splitBy="words"
+                stagger={0.035}
+                duration={0.6}
+                as="h2"
+                className={styles.sectionTitle}
+              />
               <p className={styles.sectionLead}>{t('land.featuresDesc')}</p>
             </div>
 
@@ -435,7 +462,15 @@ export default function LandingPage() {
               stepsShown ? styles.revealShown : ''
             }`}
           >
-            <h2 className={styles.bandTitle}>{t('land.mechanismTitle')}</h2>
+            <SplitText
+              text={t('land.mechanismTitle')}
+              inView={true}
+              splitBy="words"
+              stagger={0.035}
+              duration={0.6}
+              as="h2"
+              className={styles.bandTitle}
+            />
             <p className={styles.bandLead}>{t('land.mechanismBody')}</p>
 
             <div className={styles.steps}>
@@ -462,7 +497,15 @@ export default function LandingPage() {
               <div className="docHead__meta" style={{ justifyContent: 'center' }}>
                 <span>{t('land.provenance')}</span>
               </div>
-              <h2 className={styles.sectionTitle}>{t('land.evidenceTitle')}</h2>
+              <SplitText
+                text={t('land.evidenceTitle')}
+                inView={true}
+                splitBy="words"
+                stagger={0.035}
+                duration={0.6}
+                as="h2"
+                className={styles.sectionTitle}
+              />
               <p className={styles.sectionLead}>{t('land.evidenceLead')}</p>
             </div>
 
@@ -531,7 +574,15 @@ export default function LandingPage() {
               </div>
 
               <div className={styles.closingBody}>
-                <h2 className={styles.closingTitle}>{t('land.ctaTitle')}</h2>
+                <SplitText
+                  text={t('land.ctaTitle')}
+                  inView={true}
+                  splitBy="words"
+                  stagger={0.035}
+                  duration={0.6}
+                  as="h2"
+                  className={styles.closingTitle}
+                />
                 <p className={styles.closingLead}>{t('land.ctaDesc')}</p>
                 <div className={styles.closingActions}>
                   {authLoading ? null : user ? (

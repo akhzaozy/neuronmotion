@@ -36,6 +36,7 @@ import GeoBreakdown from '@/components/GeoBreakdown';
 import LoadingScreen from '@/components/LoadingScreen';
 import ReportTemplate from '@/components/ReportTemplate';
 import ReportPrintHost from '@/components/ReportPrintHost';
+import ProcessButton from '@/components/ProcessButton';
 import { useI18n, translateServerLabel, dateLocale } from '@/lib/i18n';
 import styles from './doctor.module.css';
 
@@ -409,14 +410,16 @@ export default function DoctorPortal() {
                       onChange={e => setLinkCode(e.target.value.toUpperCase())}
                       onKeyDown={e => { if (e.key === 'Enter') linkByCode(); }}
                     />
-                    <button
+                    <ProcessButton
                       type="button"
-                      className={styles.btnSubmitLink}
+                      size="sm"
+                      status={linking ? 'loading' : 'idle'}
                       onClick={linkByCode}
                       disabled={linking || !linkCode.trim()}
+                      loadingText={t('link.linking')}
                     >
-                      {linking ? t('link.linking') : t('link.submit')}
-                    </button>
+                      {t('link.submit')}
+                    </ProcessButton>
                   </div>
                   {linkMsg && (
                     <p
@@ -573,7 +576,14 @@ export default function DoctorPortal() {
                         {activePatient.name ? activePatient.name[0].toUpperCase() : 'P'}
                       </div>
                       <div>
-                        <h2 className={styles.detailTitle} data-no-translate="">{activePatient.name}</h2>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <h2 className={styles.detailTitle} data-no-translate="">{activePatient.name}</h2>
+                          {activePatient.isAnonymous && (
+                            <span className={styles.genderChip} style={{ background: 'var(--amber-wash, #fffbeb)', color: 'var(--amber, #d97706)', border: '1px solid currentColor' }}>
+                              Registri Anonim
+                            </span>
+                          )}
+                        </div>
                         <div className={styles.detailMetaRow}>
                           <span data-no-translate="">{activePatient.email}</span>
                           <span>·</span>
@@ -595,15 +605,17 @@ export default function DoctorPortal() {
                         <span>Unduh PDF</span>
                       </button>
 
-                      <button
-                        type="button"
-                        className={styles.btnUnlink}
-                        onClick={() => unlinkPatient(activePatient.id)}
-                        title="Lepaskan Tautan Pasien"
-                      >
-                        <Unlink size={13} />
-                        <span>{t('link.unlink')}</span>
-                      </button>
+                      {activePatient.isLinked !== false && (
+                        <button
+                          type="button"
+                          className={styles.btnUnlink}
+                          onClick={() => unlinkPatient(activePatient.id)}
+                          title="Lepaskan Tautan Pasien"
+                        >
+                          <Unlink size={13} />
+                          <span>{t('link.unlink')}</span>
+                        </button>
+                      )}
 
                       {session && (
                         <div className={`${styles.riskBannerPill} ${styles[`riskBanner_${levelOf(session.riskCategory)}`]}`}>
@@ -812,24 +824,18 @@ export default function DoctorPortal() {
                         </div>
 
                         <div className={styles.noteActionsRow}>
-                          <button
+                          <ProcessButton
                             type="button"
-                            className={styles.btnSaveNote}
+                            size="md"
+                            status={isSavingNote ? 'loading' : saveSuccess ? 'success' : 'idle'}
                             onClick={saveNote}
                             disabled={isSavingNote}
+                            loadingText={t('doc.saving')}
+                            successText="Tersimpan"
+                            icon={<Check size={14} />}
                           >
-                            {isSavingNote ? (
-                              <>
-                                <RefreshCw size={14} className={styles.spinning} />
-                                <span>{t('doc.saving')}</span>
-                              </>
-                            ) : (
-                              <>
-                                <Check size={14} />
-                                <span>{t('doc.saveNote')}</span>
-                              </>
-                            )}
-                          </button>
+                            {t('doc.saveNote')}
+                          </ProcessButton>
                         </div>
                       </div>
                     </div>

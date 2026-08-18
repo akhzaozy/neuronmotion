@@ -10,6 +10,7 @@ import Logo from '@/components/Logo';
 import { ThemeToggle } from '@/lib/theme';
 import { LanguageToggle, useI18n } from '@/lib/i18n';
 import LocationFields, { LocationValue } from '@/components/LocationFields';
+import ProcessButton from '@/components/ProcessButton';
 import styles from '../login/auth.module.css';
 
 const SPECIALIZATIONS = ['Neurolog', 'Dokter Umum', 'Fisioterapis', 'Perawat'];
@@ -40,8 +41,13 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
+      const cleanEmail = email.trim().toLowerCase();
       await api.register({
-        email, password, name, role, gender,
+        email: cleanEmail,
+        password,
+        name: name.trim(),
+        role,
+        gender,
         dateOfBirth: !isDoctor && dateOfBirth ? dateOfBirth : undefined,
         specialization: isDoctor ? specialization : undefined,
         institution: isDoctor ? institution : undefined,
@@ -51,14 +57,7 @@ export default function RegisterPage() {
         state: location.state,
         city: location.city,
       });
-      /* Langsung masuk memakai kredensial yang baru saja diketik.
-         ─────────────────────────────────────────────────────────────────────
-         Sebelumnya baris ini memanggil api.login, membuang hasilnya, lalu
-         memindahkan pengguna ke /login, sehingga orang yang baru mendaftar
-         harus mengetik email dan kata sandi yang sama untuk kedua kalinya
-         berturut-turut. Konteks autentikasi memang tersedia di sini lewat
-         useAuth, jadi tidak ada alasan menyimpan token itu lalu membuangnya. */
-      const data = await api.login(email, password);
+      const data = await api.login(cleanEmail, password);
       login(data.user, data.token);
 
       /* Diarahkan sesuai peran, bukan ke satu tujuan tetap. Dokter yang tiba
@@ -221,20 +220,16 @@ export default function RegisterPage() {
             hint={isDoctor ? t('loc.hintDoctor') : t('loc.hintPatient')}
           />
 
-            <button
+            <ProcessButton
               type="submit"
-              className="btn btn--primary btn--lg btn--block"
-              disabled={loading || passwordTooShort}
+              size="lg"
+              fullWidth
+              status={loading ? 'loading' : 'idle'}
+              disabled={loading || passwordTooShort || !email.trim() || !name.trim()}
+              loadingText={t('common.loading')}
             >
-              {loading ? (
-                <>
-                  <Loader2 size={18} className={styles.spinner} aria-hidden="true" />
-                  <span>{t('common.loading')}</span>
-                </>
-              ) : (
-                t('auth.registerNow')
-              )}
-            </button>
+              {t('auth.registerNow')}
+            </ProcessButton>
           </form>
 
           <p className={styles.footer}>

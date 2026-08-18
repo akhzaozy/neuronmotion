@@ -12,6 +12,7 @@ import AppNav from '@/components/AppNav';
 import ScreeningInstruction from '@/components/ScreeningInstruction';
 import PreScreeningQuestionnaire, { QuestionnaireAnswers } from '@/components/PreScreeningQuestionnaire';
 import LoadingScreen from '@/components/LoadingScreen';
+import ProcessButton from '@/components/ProcessButton';
 import styles from './screening.module.css';
 
 /**
@@ -43,6 +44,7 @@ export default function ScreeningPage() {
     videoRef, canvasRef, cameraReady, poseReady,
     activeTest, isCapturing, liveMetrics, countdown, capturedData,
     detectionWarning, lightingWarning, fault, rejection, clearRejection,
+    facingMode, switchCamera,
     startCamera, startCapture, stopCapture,
   } = useBiomarkerCapture();
 
@@ -230,12 +232,12 @@ export default function ScreeningPage() {
   }
 
   return (
-    <div className={styles.page}>
+    <div className={styles.page} data-capturing={isCapturing ? 'true' : undefined}>
       <AppNav />
 
       <main className="sheet" id="main">
         <div className={styles.pad}>
-          <header className="docHead">
+          <header className={`docHead ${isCapturing ? styles.compactHead : ''}`}>
             <div className="docHead__meta">
               <span>{t('res.title')}</span>
               <span>
@@ -248,7 +250,7 @@ export default function ScreeningPage() {
               </span>
             </div>
             <h1>{t(currentTest.nameKey)}</h1>
-            <p className={styles.lead}>{t(currentTest.descKey)}</p>
+            <p className={`${styles.lead} ${isCapturing ? styles.headerLeadHidden : ''}`}>{t(currentTest.descKey)}</p>
           </header>
 
           <div className={styles.layout}>
@@ -274,7 +276,9 @@ export default function ScreeningPage() {
                   fault={fault}
                   detectionWarning={detectionWarning}
                   lightingWarning={lightingWarning}
-                  onStart={startCamera}
+                  facingMode={facingMode}
+                  onSwitchCamera={switchCamera}
+                  onStart={() => startCamera()}
                   onStop={stopCapture}
                 />
               )}
@@ -356,23 +360,31 @@ export default function ScreeningPage() {
                             >
                               Lengkapi Tes Berikutnya ({TEST_SEQUENCE.length - doneCount} tersisa)
                             </button>
-                            <button
+                            <ProcessButton
                               type="button"
-                              className="btn btn--lg btn--block"
+                              size="lg"
+                              fullWidth
+                              variant="secondary"
+                              status={isSubmitting ? 'loading' : 'idle'}
                               onClick={submitScreening}
+                              loadingText={t('scr.submitting')}
                             >
                               {t('scr.submitPartial').replace('{n}', String(doneCount))}
-                            </button>
+                            </ProcessButton>
                           </div>
                         </div>
                       ) : (
-                        <button
+                        <ProcessButton
                           type="button"
-                          className="btn btn--primary btn--lg btn--block"
+                          size="lg"
+                          fullWidth
+                          variant="primary"
+                          status={isSubmitting ? 'loading' : 'idle'}
                           onClick={submitScreening}
+                          loadingText={t('scr.submitting')}
                         >
                           ✓ {t('scr.submitAll')}
-                        </button>
+                        </ProcessButton>
                       )}
                     </div>
                   )}

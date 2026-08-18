@@ -19,7 +19,24 @@
 
 @media (max-width: 720px) {
   .pad {
-    padding: var(--s5) 0 var(--s8);
+    padding: var(--s3) 0 var(--s6);
+  }
+  .page[data-capturing="true"] .pad {
+    padding-top: var(--s1);
+  }
+  .page[data-capturing="true"] .headerLeadHidden {
+    display: none;
+  }
+  .compactHead {
+    margin-bottom: var(--s2);
+  }
+  .compactHead h1 {
+    font-size: 1.25rem;
+    margin-bottom: 0.2rem;
+  }
+  .lead {
+    font-size: var(--t-body);
+    margin-top: var(--s1);
   }
 }
 
