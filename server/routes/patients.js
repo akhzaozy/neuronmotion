@@ -134,6 +134,16 @@ router.get('/:id', requireAuth, async (req, res) => {
     // Tren skor risiko
     const trend = sessions.map(s => ({ date: s.timestamp, score: s.compositeScore, risk: s.riskCategory }));
 
+    let age = null;
+    if (patient.dateOfBirth) {
+      const birthDate = new Date(patient.dateOfBirth);
+      const today = new Date();
+      age = today.getFullYear() - birthDate.getFullYear();
+      if (today.getMonth() < birthDate.getMonth() || (today.getMonth() === birthDate.getMonth() && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+    }
+
     res.json({ ...patient, age, sessions, trend, doctors: patient.patientDoctors });
   } catch (e) {
     console.error(e);
