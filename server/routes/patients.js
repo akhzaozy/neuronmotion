@@ -2,7 +2,7 @@ import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { generateTrainingDataset, CONDITION_PROFILES, CLINICAL_REFERENCE } from '../data/clinicalData.js';
 import { requireAuth } from '../middleware/auth.js';
-import { requireRole, canAccessPatient } from '../middleware/access.js';
+import { requireRole, canAccessPatient, isLinkedToPatient } from '../middleware/access.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
