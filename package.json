@@ -31,5 +31,8 @@
     "concurrently": "^8.2.2",
     "nodemon": "^3.1.14",
     "vite": "^5.4.0"
+  },
+  "prisma": {
+    "seed": "node --env-file=.env prisma/seed.js"
   }
 }
