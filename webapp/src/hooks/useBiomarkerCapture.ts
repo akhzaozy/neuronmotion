@@ -216,13 +216,12 @@ export function useBiomarkerCapture() {
         (window.matchMedia && window.matchMedia('(max-width: 768px)').matches));
 
     // Resolusi kamera adaptif:
-    // Pada mobile / ponsel, kunci secara tegas orientasi portrait (9:16 atau 3:4)
-    // agar sensor kamera HP selalu menggunakan orientasi portrait tegak
+    // Pada mobile / ponsel, gunakan rasio portrait 9:16 vertikal penuh tanpa crop
     const videoConstraints: MediaTrackConstraints = isMobile
       ? {
           facingMode: { ideal: mode },
-          width: { ideal: 720, max: 1080 },
-          height: { ideal: 1280, max: 1920 },
+          width: { ideal: 720, min: 480 },
+          height: { ideal: 1280, min: 640 },
           aspectRatio: { ideal: 9 / 16 },
         }
       : {

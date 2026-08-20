@@ -28,10 +28,18 @@
   transition: aspect-ratio 0.2s ease, max-height 0.2s ease;
 }
 
-@media (max-width: 768px), (orientation: portrait) {
+@media (max-width: 768px) {
   .frame {
-    aspect-ratio: var(--stream-aspect, 9 / 16);
-    max-height: min(65vh, 540px);
+    aspect-ratio: 9 / 16 !important;
+    max-height: min(70vh, 560px);
+    border-radius: var(--radius-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .frame {
+    aspect-ratio: 9 / 16 !important;
+    max-height: min(68vh, 520px);
     border-radius: var(--radius-md);
   }
 }
