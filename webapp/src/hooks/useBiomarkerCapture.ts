@@ -215,23 +215,21 @@ export function useBiomarkerCapture() {
         window.innerWidth <= 768 ||
         (window.matchMedia && window.matchMedia('(max-width: 768px)').matches));
 
-    const isPortrait =
-      typeof window !== 'undefined' &&
-      (window.innerHeight > window.innerWidth ||
-        (window.matchMedia && window.matchMedia('(orientation: portrait)').matches));
-
-    // Resolusi kamera adaptif tanpa memaksakan aspectRatio sempit
-    // agar sensor kamera HP tidak melakukan digital crop / zoom-in yang merusak FoV
-    const videoConstraints: MediaTrackConstraints = isMobile && isPortrait
+    // Resolusi kamera adaptif:
+    // Pada mobile / ponsel, kunci secara tegas orientasi portrait (9:16 atau 3:4)
+    // agar sensor kamera HP selalu menggunakan orientasi portrait tegak
+    const videoConstraints: MediaTrackConstraints = isMobile
       ? {
           facingMode: { ideal: mode },
           width: { ideal: 720, max: 1080 },
           height: { ideal: 1280, max: 1920 },
+          aspectRatio: { ideal: 9 / 16 },
         }
       : {
           facingMode: { ideal: mode },
           width: { ideal: 1280, max: 1920 },
           height: { ideal: 720, max: 1080 },
+          aspectRatio: { ideal: 16 / 9 },
         };
 
     try {
