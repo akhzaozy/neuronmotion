@@ -58,7 +58,9 @@ interface Props {
   detectionWarning: string | null;
   lightingWarning: string | null;
   facingMode?: 'user' | 'environment';
+  hasMultipleCameras?: boolean;
   onSwitchCamera?: () => void;
+  streamAspectRatio?: number | null;
   /** Bilah metrik mentah hanya untuk peragaan, tidak pernah tampil ke pasien. */
   showMetrics?: boolean;
   onStart: () => void;
@@ -78,7 +80,9 @@ export default function CameraView({
   detectionWarning,
   lightingWarning,
   facingMode = 'user',
+  hasMultipleCameras = false,
   onSwitchCamera,
+  streamAspectRatio,
   showMetrics = false,
   onStart,
   onStop,
@@ -163,6 +167,11 @@ export default function CameraView({
 
       <div
         className={`${ready ? styles.frame : styles.offstage} ${facingMode === 'user' ? styles.mirrored : ''}`}
+        style={
+          streamAspectRatio
+            ? ({ '--stream-aspect': `${streamAspectRatio}` } as React.CSSProperties)
+            : undefined
+        }
         aria-hidden={ready ? undefined : true}
       >
         <video ref={videoRef} className={styles.video} playsInline muted />
@@ -173,8 +182,8 @@ export default function CameraView({
           aria-label={t(test.cueKey)}
         />
 
-        {/* Tombol switch kamera depan / belakang */}
-        {ready && onSwitchCamera && (
+        {/* Tombol switch kamera depan / belakang (hanya tampil di HP / perangkat multi-kamera) */}
+        {ready && !isCapturing && hasMultipleCameras && onSwitchCamera && (
           <button
             type="button"
             className={styles.btnSwitchCamera}

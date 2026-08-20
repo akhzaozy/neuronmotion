@@ -44,7 +44,7 @@ export default function ScreeningPage() {
     videoRef, canvasRef, cameraReady, poseReady,
     activeTest, isCapturing, liveMetrics, countdown, capturedData,
     detectionWarning, lightingWarning, fault, rejection, clearRejection,
-    facingMode, switchCamera,
+    facingMode, switchCamera, hasMultipleCameras, streamAspectRatio,
     startCamera, startCapture, stopCapture,
   } = useBiomarkerCapture();
 
@@ -277,7 +277,9 @@ export default function ScreeningPage() {
                   detectionWarning={detectionWarning}
                   lightingWarning={lightingWarning}
                   facingMode={facingMode}
+                  hasMultipleCameras={hasMultipleCameras}
                   onSwitchCamera={switchCamera}
+                  streamAspectRatio={streamAspectRatio}
                   onStart={() => startCamera()}
                   onStop={stopCapture}
                 />

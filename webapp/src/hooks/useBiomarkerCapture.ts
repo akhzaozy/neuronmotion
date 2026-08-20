@@ -147,6 +147,42 @@ export function useBiomarkerCapture() {
 
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const facingModeRef = useRef<'user' | 'environment'>('user');
+  const [streamAspectRatio, setStreamAspectRatio] = useState<number | null>(null);
+  const streamAspectRef = useRef<number | null>(null);
+  const [hasMultipleCameras, setHasMultipleCameras] = useState<boolean>(false);
+
+  // ── Deteksi ketersediaan lebih dari 1 kamera (Depan/Belakang pada HP) ───────
+  const checkMultipleCameras = useCallback(async () => {
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.enumerateDevices) {
+      return;
+    }
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoInputs = devices.filter(d => d.kind === 'videoinput');
+      const isMobile =
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        (typeof window !== 'undefined' && ('ontouchstart' in window && window.innerWidth <= 1024));
+
+      // Jika di laptop hanya ada 1 webcam built-in, hasMultipleCameras false (tombol switch disembunyikan).
+      // Pada HP/tablet atau perangkat dengan multi-kamera, hasMultipleCameras bernilai true.
+      setHasMultipleCameras(videoInputs.length > 1 || (isMobile && videoInputs.length >= 1));
+    } catch {
+      const isMobile =
+        typeof navigator !== 'undefined' &&
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      setHasMultipleCameras(isMobile);
+    }
+  }, []);
+
+  useEffect(() => {
+    void checkMultipleCameras();
+    if (typeof navigator !== 'undefined' && navigator.mediaDevices?.addEventListener) {
+      navigator.mediaDevices.addEventListener('devicechange', checkMultipleCameras);
+      return () => {
+        navigator.mediaDevices.removeEventListener('devicechange', checkMultipleCameras);
+      };
+    }
+  }, [checkMultipleCameras]);
 
   // ── Init Camera ─────────────────────────────────────────────────────────────
   const startCamera = useCallback(async (targetFacing?: 'user' | 'environment') => {
@@ -173,24 +209,34 @@ export function useBiomarkerCapture() {
       streamRef.current = null;
     }
 
-    const portrait =
-      typeof window !== 'undefined' && window.matchMedia('(orientation: portrait)').matches;
+    const isMobile =
+      typeof window !== 'undefined' &&
+      (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        window.innerWidth <= 768 ||
+        (window.matchMedia && window.matchMedia('(max-width: 768px)').matches));
+
+    const isPortrait =
+      typeof window !== 'undefined' &&
+      (window.innerHeight > window.innerWidth ||
+        (window.matchMedia && window.matchMedia('(orientation: portrait)').matches));
+
+    // Resolusi kamera adaptif tanpa memaksakan aspectRatio sempit
+    // agar sensor kamera HP tidak melakukan digital crop / zoom-in yang merusak FoV
+    const videoConstraints: MediaTrackConstraints = isMobile && isPortrait
+      ? {
+          facingMode: { ideal: mode },
+          width: { ideal: 720, max: 1080 },
+          height: { ideal: 1280, max: 1920 },
+        }
+      : {
+          facingMode: { ideal: mode },
+          width: { ideal: 1280, max: 1920 },
+          height: { ideal: 720, max: 1080 },
+        };
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: portrait
-          ? {
-              width: { ideal: 1080, max: 1920 },
-              height: { ideal: 1440, max: 1920 },
-              aspectRatio: { ideal: 3 / 4 },
-              facingMode: mode,
-            }
-          : {
-              width: { ideal: 1280, max: 1920 },
-              height: { ideal: 720, max: 1080 },
-              aspectRatio: { ideal: 16 / 9 },
-              facingMode: mode,
-            },
+        video: videoConstraints,
         audio: false,
       });
       streamRef.current = stream;
@@ -208,22 +254,31 @@ export function useBiomarkerCapture() {
       try {
         await videoRef.current.play();
       } catch (playError) {
+        if ((playError as Error)?.name === 'AbortError') {
+          // Play request dibatalkan oleh siklus render/stream berikutnya, bukan galat fatal
+          return;
+        }
         console.error(playError);
         setFault('unknown');
         return;
       }
 
       setCameraReady(true);
+      void checkMultipleCameras();
       await initMediaPipe();
     } catch (e) {
       const name = (e as { name?: string })?.name;
+      if (name === 'AbortError') {
+        // Permintaan stream dibatalkan oleh pengguna / komponen, abaikan
+        return;
+      }
       if (name === 'NotAllowedError' || name === 'SecurityError') setFault('denied');
       else if (name === 'NotFoundError' || name === 'OverconstrainedError') setFault('notFound');
-      else if (name === 'NotReadableError' || name === 'AbortError') setFault('inUse');
+      else if (name === 'NotReadableError') setFault('inUse');
       else setFault('unknown');
       console.error(e);
     }
-  }, []);
+  }, [checkMultipleCameras]);
 
   const switchCamera = useCallback(async () => {
     const nextMode = facingModeRef.current === 'user' ? 'environment' : 'user';
@@ -232,13 +287,26 @@ export function useBiomarkerCapture() {
     await startCamera(nextMode);
   }, [startCamera]);
 
-  // ── Init MediaPipe Models ───────────────────────────────────────────────────
+  // ── Init MediaPipe Models (Singleton / Cache per sesi) ────────────────────────
+  const isInitializingModelsRef = useRef(false);
+
   const initMediaPipe = useCallback(async () => {
+    // Gunakan instance yang sudah ada untuk menghindari pemborosan WebGL context
+    if (modelsRef.current) {
+      setModelsReady(true);
+      startRenderLoop();
+      return;
+    }
+
+    if (isInitializingModelsRef.current) return;
+    isInitializingModelsRef.current = true;
+
     // Timeout 30 detik, jika model tidak selesai load, tampilkan error
     const timeoutId = setTimeout(() => {
       if (!modelsRef.current) {
         setFault('modelTimeout');
         setModelsReady(false);
+        isInitializingModelsRef.current = false;
       }
     }, 30_000);
 
@@ -277,6 +345,7 @@ export function useBiomarkerCapture() {
 
       clearTimeout(timeoutId);
       modelsRef.current = { poseLandmarker, handLandmarker };
+      isInitializingModelsRef.current = false;
       setModelsReady(true);
       startRenderLoop();
     } catch (e) {
@@ -287,9 +356,16 @@ export function useBiomarkerCapture() {
   }, []);
 
   const initMediaPipeCPU = useCallback(async () => {
+    if (modelsRef.current) {
+      setModelsReady(true);
+      startRenderLoop();
+      return;
+    }
+
     const timeoutId = setTimeout(() => {
       if (!modelsRef.current) {
         setFault('modelTimeout');
+        isInitializingModelsRef.current = false;
       }
     }, 30_000);
     try {
@@ -323,10 +399,12 @@ export function useBiomarkerCapture() {
 
       clearTimeout(timeoutId);
       modelsRef.current = { poseLandmarker, handLandmarker };
+      isInitializingModelsRef.current = false;
       setModelsReady(true);
       startRenderLoop();
     } catch (e) {
       clearTimeout(timeoutId);
+      isInitializingModelsRef.current = false;
       setFault('modelFailed');
     }
   }, []);
@@ -424,17 +502,20 @@ export function useBiomarkerCapture() {
       // yang menjawabnya dengan melempar galat.
       if (!video.videoWidth || !video.videoHeight) return;
 
+      const currentAspect = video.videoWidth / video.videoHeight;
+      if (streamAspectRef.current !== currentAspect) {
+        streamAspectRef.current = currentAspect;
+        setStreamAspectRatio(currentAspect);
+      }
+
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
 
-      // Draw mirrored video
-      ctx.save();
-      ctx.scale(-1, 1);
-      ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
-      ctx.restore();
+      // Render aliran video alami ke kanvas (mirroring dikelola oleh CSS .mirrored)
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       // Cek pencahayaan setiap ~20 frame (bukan tiap frame, demi performa) dengan
       // menyampel kecerahan rata-rata dari kanvas mini terpisah.
@@ -593,8 +674,8 @@ export function useBiomarkerCapture() {
       ctx.lineWidth = isRomKneeLine ? 4 : (isHand ? 3 : 2);
 
       ctx.beginPath();
-      ctx.moveTo((1 - lA.x) * w, lA.y * h);
-      ctx.lineTo((1 - lB.x) * w, lB.y * h);
+      ctx.moveTo(lA.x * w, lA.y * h);
+      ctx.lineTo(lB.x * w, lB.y * h);
       ctx.stroke();
     });
 
@@ -607,7 +688,7 @@ export function useBiomarkerCapture() {
       const isKneePoint = test === 'rom' && (i === 25 || i === 26);
       ctx.fillStyle = isKneePoint ? 'rgba(16,185,129,1)' : (isTarget ? 'rgba(239,68,68,0.95)' : (isHand ? 'rgba(16,185,129,0.6)' : 'rgba(59,130,246,0.6)'));
       ctx.beginPath();
-      ctx.arc((1 - lm.x) * w, lm.y * h, isKneePoint ? 7 : (isTarget ? (isHand ? 6 : 5) : 3), 0, Math.PI * 2);
+      ctx.arc(lm.x * w, lm.y * h, isKneePoint ? 7 : (isTarget ? (isHand ? 6 : 5) : 3), 0, Math.PI * 2);
       ctx.fill();
     });
   }
@@ -787,10 +868,18 @@ export function useBiomarkerCapture() {
 
   // ── Stop camera ───────────────────────────────────────────────────────────────
   const stopCamera = useCallback(() => {
-    if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
-    streamRef.current?.getTracks().forEach(t => t.stop());
+    if (animFrameRef.current) {
+      cancelAnimationFrame(animFrameRef.current);
+      animFrameRef.current = 0;
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(t => t.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
     setCameraReady(false);
-    setModelsReady(false);
   }, []);
 
   useEffect(() => () => stopCamera(), [stopCamera]);
@@ -802,6 +891,8 @@ export function useBiomarkerCapture() {
     cameraReady, poseReady: modelsReady, error,
     fault, rejection, clearRejection,
     facingMode, switchCamera,
+    hasMultipleCameras,
+    streamAspectRatio,
     activeTest, isCapturing: isCapturingState,
     liveMetrics, countdown, capturedData, detectionWarning, lightingWarning,
     startCamera, stopCamera,

@@ -28,7 +28,7 @@ export default function DemoPage() {
     videoRef, canvasRef, cameraReady, poseReady,
     activeTest, isCapturing, liveMetrics, countdown, capturedData,
     detectionWarning, lightingWarning, fault,
-    facingMode, switchCamera,
+    facingMode, switchCamera, hasMultipleCameras, streamAspectRatio,
     startCamera, startCapture, stopCapture,
   } = useBiomarkerCapture();
 
@@ -138,7 +138,9 @@ export default function DemoPage() {
                   detectionWarning={detectionWarning}
                   lightingWarning={lightingWarning}
                   facingMode={facingMode}
+                  hasMultipleCameras={hasMultipleCameras}
                   onSwitchCamera={switchCamera}
+                  streamAspectRatio={streamAspectRatio}
                   showMetrics
                   onStart={() => startCamera()}
                   onStop={stopCapture}

@@ -248,6 +248,20 @@
   margin-top: var(--s5);
 }
 
+@media (max-width: 640px) {
+  .heroActions {
+    flex-direction: column;
+    gap: var(--s2);
+    margin-top: var(--s4);
+  }
+
+  .heroActions > :global(.btn) {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+}
+
 .heroNote {
   display: flex;
   align-items: center;
@@ -256,6 +270,13 @@
   font-size: var(--t-record);
   color: var(--ink-muted);
   max-width: 60ch;
+}
+
+@media (max-width: 640px) {
+  .heroNote {
+    font-size: 12px;
+    margin-top: var(--s2);
+  }
 }
 
 .heroNoteIcon {
