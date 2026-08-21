@@ -33,7 +33,7 @@ function resolveDoctorId(req, requested) {
  * serta daftar datar (byCountry, byState, byCity) untuk kompatibilitas.
  * Jika dokter belum memiliki pasien tertaut, data epidemiologi populasi umum disajikan.
  */
-async function buildGeoBreakdown(patientIds) {
+async function buildGeoBreakdown(patientIds = null) {
   const where = patientIds && patientIds.length > 0
     ? { id: { in: patientIds } }
     : { role: 'PATIENT' };
@@ -216,57 +216,18 @@ router.get('/patients', async (req, res) => {
       take: 50,
     });
 
-    let patients = [];
-    if (links.length > 0) {
-      patients = links.map(l => {
-        const age = l.patient.dateOfBirth
-          ? Math.floor((Date.now() - new Date(l.patient.dateOfBirth)) / (365.25 * 24 * 3600 * 1000))
-          : null;
-        return {
-          ...l.patient,
-          age,
-          linkedAt: l.linkedAt,
-          lastSession: l.patient.patientSessions[0] || null,
-          isLinked: true,
-        };
-      });
-    } else {
-      // Jika dokter baru belum memiliki pasien tertaut, tampilkan registri umum teranonimasi
-      const samplePatients = await prisma.user.findMany({
-        where: { role: 'PATIENT' },
-        take: 30,
-        select: {
-          id: true, gender: true, dateOfBirth: true,
-          country: true, countryName: true, state: true, city: true,
-          patientSessions: {
-            orderBy: { timestamp: 'desc' }, take: 1,
-            select: { riskCategory: true, compositeScore: true, timestamp: true, mlPrediction: true },
-          },
-        },
-      });
-
-      patients = samplePatients.map(p => {
-        const age = p.dateOfBirth
-          ? Math.floor((Date.now() - new Date(p.dateOfBirth)) / (365.25 * 24 * 3600 * 1000))
-          : null;
-        return {
-          id: p.id,
-          name: `Pasien #${p.id} (Anonim)`,
-          email: 'anonim@neuronmotion.id',
-          gender: p.gender,
-          dateOfBirth: p.dateOfBirth,
-          country: p.country,
-          countryName: p.countryName,
-          state: p.state,
-          city: p.city,
-          age,
-          linkedAt: null,
-          lastSession: p.patientSessions[0] || null,
-          isLinked: false,
-          isAnonymous: true,
-        };
-      });
-    }
+    const patients = links.map(l => {
+      const age = l.patient.dateOfBirth
+        ? Math.floor((Date.now() - new Date(l.patient.dateOfBirth)) / (365.25 * 24 * 3600 * 1000))
+        : null;
+      return {
+        ...l.patient,
+        age,
+        linkedAt: l.linkedAt,
+        lastSession: l.patient.patientSessions[0] || null,
+        isLinked: true,
+      };
+    });
 
     // Summary stats
     const highRisk = patients.filter(p => p.lastSession?.riskCategory === 'HIGH').length;
@@ -389,7 +350,22 @@ router.get('/dashboard/:doctorId', async (req, res) => {
     });
     const linkedPatientIds = links.map(l => l.patientId);
     const hasLinked = linkedPatientIds.length > 0;
-    const sessionWhere = hasLinked ? { patientId: { in: linkedPatientIds } } : {};
+
+    // Sebaran Wilayah Pasien (makro epidemiologi sebaran seluruh pasien) dapat diakses seluruh dokter
+    const geoData = await buildGeoBreakdown();
+
+    if (!hasLinked) {
+      return res.json({
+        totalPatients: 0,
+        hasLinkedPatients: false,
+        recentSessions: [],
+        riskBreakdown: { HIGH: 0, MEDIUM: 0, LOW: 0 },
+        conditionBreakdown: {},
+        geoBreakdown: geoData,
+      });
+    }
+
+    const sessionWhere = { patientId: { in: linkedPatientIds } };
 
     const [recentSessions, riskBreakdown, conditionBreakdown] = await Promise.all([
       prisma.session.findMany({
@@ -426,29 +402,24 @@ router.get('/dashboard/:doctorId', async (req, res) => {
       } catch {}
     });
 
-    const isLinkedSet = new Set(linkedPatientIds);
-
     res.json({
       totalPatients: linkedPatientIds.length,
-      hasLinkedPatients: hasLinked,
-      recentSessions: recentSessions.map(s => {
-        const isLinked = isLinkedSet.has(s.patient?.id);
-        return {
-          ...s,
-          mlPrediction: s.mlPrediction ? JSON.parse(s.mlPrediction) : null,
-          patient: s.patient ? {
-            ...s.patient,
-            name: isLinked ? s.patient.name : `Pasien #${s.patient.id} (Anonim)`,
-            isLinked,
-          } : null,
-        };
-      }),
+      hasLinkedPatients: true,
+      recentSessions: recentSessions.map(s => ({
+        ...s,
+        mlPrediction: s.mlPrediction ? JSON.parse(s.mlPrediction) : null,
+        patient: s.patient ? {
+          ...s.patient,
+          name: s.patient.name,
+          isLinked: true,
+        } : null,
+      })),
       riskBreakdown: riskBreakdown.reduce((acc, r) => {
         acc[r.riskCategory || 'UNKNOWN'] = r._count.id;
         return acc;
       }, {}),
       conditionBreakdown: conditionCounts,
-      geoBreakdown: await buildGeoBreakdown(linkedPatientIds),
+      geoBreakdown: geoData,
     });
   } catch (e) {
     console.error(e);

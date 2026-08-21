@@ -617,8 +617,8 @@ const DICT: Record<string, { id: string; en: string }> = {
   'doc.systemOnline': { id: 'Sistem Terhubung', en: 'System Connected' },
   'doc.geoTitle': { id: 'Sebaran Wilayah Pasien', en: 'Patient Geographic Distribution' },
   'doc.geoSubtitle': {
-    id: 'Distribusi pasien tertaut beserta kategori risiko pada sesi terakhir mereka.',
-    en: 'Distribution of linked patients with the risk category from their latest session.',
+    id: 'Distribusi sebaran wilayah pasien beserta kategori risiko pada sesi terakhir mereka.',
+    en: 'Geographic distribution of patients with the risk category from their latest session.',
   },
   'doc.patients': { id: 'pasien', en: 'patients' },
   'doc.clinicalNote': { id: 'Catatan Klinis Dokter', en: 'Clinical Notes' },

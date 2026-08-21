@@ -182,24 +182,6 @@ router.post('/full-screening', requireAuth, async (req, res) => {
       },
     });
 
-    // Auto-link pasien ke SEMUA dokter yang ada
-    // sehingga setiap akun dokter langsung bisa melihat hasil screening pasien baru
-    try {
-      const allDoctors = await prisma.user.findMany({
-        where: { role: 'DOCTOR' },
-        select: { id: true },
-      });
-      for (const doc of allDoctors) {
-        await prisma.doctorPatient.upsert({
-          where: { doctorId_patientId: { doctorId: doc.id, patientId: parseInt(patientId) } },
-          update: { status: 'ACTIVE' },
-          create: { doctorId: doc.id, patientId: parseInt(patientId), status: 'ACTIVE' },
-        });
-      }
-    } catch (linkErr) {
-      console.warn('Auto-link warning:', linkErr.message);
-    }
-
     res.status(201).json({
       sessionId: session.id,
       timestamp: session.timestamp,

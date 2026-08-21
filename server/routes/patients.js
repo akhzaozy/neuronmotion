@@ -55,21 +55,12 @@ router.get('/', requireAuth, requireRole('ADMIN'), async (req, res) => {
 });
 
 /** GET /api/patients/:id, detail pasien beserta seluruh sesinya. */
-router.get('/:id', requireAuth, async (req, res) => {
+router.get('/:id', requireAuth, canAccessPatient, async (req, res) => {
   try {
     const rawId = req.params.id;
     const patientId = Number.parseInt(rawId, 10);
     if (!Number.isInteger(patientId)) {
       return res.status(400).json({ error: 'Nomor pasien tidak valid' });
-    }
-
-    const { userId, role } = req.user;
-    const isOwner = userId === patientId;
-    const isAdmin = role === 'ADMIN';
-    const isLinked = role === 'DOCTOR' ? await isLinkedToPatient(userId, patientId) : false;
-
-    if (!isOwner && !isAdmin && role !== 'DOCTOR') {
-      return res.status(403).json({ error: 'Anda tidak berhak mengakses data pasien ini' });
     }
 
     const patient = await prisma.user.findUnique({
@@ -92,31 +83,6 @@ router.get('/:id', requireAuth, async (req, res) => {
     });
 
     if (!patient) return res.status(404).json({ error: 'Pasien tidak ditemukan' });
-
-    // Jika dokter belum ditautkan melalui kode berbagi, sajikan data tersamarkan (anonim)
-    if (role === 'DOCTOR' && !isLinked && !isAdmin) {
-      return res.json({
-        id: patient.id,
-        name: `Pasien #${patient.id} (Anonim)`,
-        email: 'anonim@neuronmotion.id',
-        phone: null,
-        address: null,
-        gender: patient.gender,
-        dateOfBirth: patient.dateOfBirth,
-        country: patient.country,
-        countryName: patient.countryName,
-        state: patient.state,
-        city: patient.city,
-        isLinked: false,
-        isAnonymous: true,
-        sessions: patient.patientSessions.map(s => ({
-          ...s,
-          doctorNote: null,
-          doctor: s.doctor,
-        })),
-        doctors: [],
-      });
-    }
 
     // Parse JSON fields
     const sessions = patient.patientSessions.map(s => ({

@@ -2,7 +2,7 @@
 import { RefObject, useEffect, useRef } from 'react';
 import { RotateCcw, SwitchCamera } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
-import { CameraFault, LiveMetrics, TestType } from '@/hooks/useBiomarkerCapture';
+import { CameraFault, LiveMetrics, TestType, TEST_DURATION } from '@/hooks/useBiomarkerCapture';
 import { TestSpec } from '@/lib/tests';
 import styles from './Camera.module.css';
 
@@ -73,6 +73,7 @@ export default function CameraView({
   cameraReady,
   poseReady,
   isCapturing,
+  activeTest,
   test,
   liveMetrics,
   countdown,
@@ -205,14 +206,32 @@ export default function CameraView({
           </div>
         )}
 
-        {/* Pita instruksi. Inilah yang dulu dihapus tepat saat dibutuhkan. */}
+        {/* HUD Countdown Melingkar di Pojok Kanan Atas (Seragam dengan Tema Web) */}
         {ready && isCapturing && (
-          <div className={styles.cueBand}>
-            <p className={styles.cueText}>{t(test.cueKey)}</p>
-            <p className={styles.cueCount} aria-live="assertive">
-              <span className={styles.cueNum}>{countdown}</span>
-              <span className={styles.cueUnit}>{t('scr.secondsLeft')}</span>
-            </p>
+          <div className={styles.hudCountdown} aria-live="assertive">
+            <div className={styles.hudTimerCircle}>
+              <svg className={styles.hudRingSvg} viewBox="0 0 64 64" aria-hidden="true">
+                <circle
+                  className={styles.hudRingBg}
+                  cx="32"
+                  cy="32"
+                  r="26"
+                />
+                <circle
+                  className={styles.hudRingProgress}
+                  cx="32"
+                  cy="32"
+                  r="26"
+                  style={{
+                    strokeDashoffset: `${163.36 * (1 - Math.max(0, Math.min(1, countdown / (TEST_DURATION[test?.type || activeTest || 'tremor'] || 10))))}`,
+                  }}
+                />
+              </svg>
+              <div className={styles.hudNumberWrap}>
+                <span className={styles.hudTimerNumber}>{countdown}</span>
+                <span className={styles.hudTimerLabel}>detik</span>
+              </div>
+            </div>
           </div>
         )}
 
@@ -221,17 +240,6 @@ export default function CameraView({
             <span className={styles.recDot} aria-hidden="true" />
             {t('scr.recording')}
           </p>
-        )}
-
-        {ready && isCapturing && (
-          <div className={styles.signalBadge}>
-            <span className={styles.signalDot} aria-hidden="true" />
-            {test.type === 'rom'
-              ? 'Lutut & Sendi Aktif'
-              : test.type === 'tremor' || test.type === 'fingerTapping'
-                ? 'Landmark Jari Aktif'
-                : 'Pelacakan Pose Aktif'}
-          </div>
         )}
       </div>
 

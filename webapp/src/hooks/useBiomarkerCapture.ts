@@ -659,22 +659,25 @@ export function useBiomarkerCapture() {
     animFrameRef.current = requestAnimationFrame(render);
   }, []);
 
-  // ── Draw Skeleton ─────────────────────────────────────────────────────────────
+  // ── Draw Skeleton & Hand Landmarks ──────────────────────────────────────────
   function drawSkeleton(ctx: CanvasRenderingContext2D, landmarks: Landmark[], w: number, h: number, isHand: boolean) {
     const test = activeTestRef.current;
-    ctx.strokeStyle = isHand ? 'rgba(16,185,129,0.75)' : (test === 'rom' ? 'rgba(6,182,212,0.85)' : 'rgba(59,130,246,0.75)');
-    ctx.lineWidth = isHand ? 3 : (test === 'rom' ? 3.5 : 2.5);
-    
     const connections = isHand ? HAND_CONNECTIONS : POSE_CONNECTIONS;
+
+    // Garis sambungan sendi
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
 
     connections.forEach(([a, b]) => {
       const lA = landmarks[a], lB = landmarks[b];
       if (!lA || !lB) return;
-      if (!isHand && ((lA.visibility || 0) < 0.12 || (lB.visibility || 0) < 0.12)) return;
-      
-      const isRomKneeLine = test === 'rom' && ((a === 23 && b === 25) || (a === 25 && b === 27) || (a === 24 && b === 26) || (a === 26 && b === 28));
-      ctx.strokeStyle = isRomKneeLine ? 'rgba(16,185,129,0.95)' : (isHand ? 'rgba(16,185,129,0.75)' : 'rgba(59,130,246,0.75)');
-      ctx.lineWidth = isRomKneeLine ? 4 : (isHand ? 3 : 2);
+      if (!isHand && ((lA.visibility || 0) < 0.15 || (lB.visibility || 0) < 0.15)) return;
+
+      const isRomKnee = test === 'rom' && ((a === 23 && b === 25) || (a === 25 && b === 27) || (a === 24 && b === 26) || (a === 26 && b === 28));
+      ctx.strokeStyle = isHand
+        ? 'rgba(16, 185, 129, 0.85)'
+        : (isRomKnee ? 'rgba(52, 211, 153, 0.95)' : 'rgba(56, 189, 248, 0.8)');
+      ctx.lineWidth = isRomKnee ? 3.5 : (isHand ? 2.5 : 2);
 
       ctx.beginPath();
       ctx.moveTo(lA.x * w, lA.y * h);
@@ -682,19 +685,34 @@ export function useBiomarkerCapture() {
       ctx.stroke();
     });
 
+    // Titik-titik sendi dan ujung jari
     landmarks.forEach((lm, i) => {
-      if (!isHand && (lm.visibility || 0) < 0.12) return;
-      const isTarget = isHand
-        ? (i === 4 || i === 8 || i === 0)
-        : (test === 'rom' ? [23, 24, 25, 26, 27, 28].includes(i) : [11,12,13,14,23,24,25,26,27,28].includes(i));
-      
-      const isKneePoint = test === 'rom' && (i === 25 || i === 26);
-      ctx.fillStyle = isKneePoint ? 'rgba(16,185,129,1)' : (isTarget ? 'rgba(239,68,68,0.95)' : (isHand ? 'rgba(16,185,129,0.6)' : 'rgba(59,130,246,0.6)'));
+      if (!isHand && (lm.visibility || 0) < 0.15) return;
+      const isKeyPoint = isHand
+        ? (i === 4 || i === 8 || i === 0 || i === 12 || i === 16 || i === 20)
+        : (test === 'rom' ? [23, 24, 25, 26, 27, 28].includes(i) : [11, 12, 13, 14, 23, 24, 25, 26, 27, 28].includes(i));
+
+      const cx = lm.x * w;
+      const cy = lm.y * h;
+      const r = isHand ? (isKeyPoint ? 4.5 : 3) : (isKeyPoint ? 5 : 3.5);
+
       ctx.beginPath();
-      ctx.arc(lm.x * w, lm.y * h, isKneePoint ? 7 : (isTarget ? (isHand ? 6 : 5) : 3), 0, Math.PI * 2);
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = isHand
+        ? (isKeyPoint ? '#10b981' : '#34d399')
+        : (isKeyPoint ? '#38bdf8' : '#60a5fa');
       ctx.fill();
+
+      // Highlight titik putih kecil di tengah key point
+      if (isKeyPoint) {
+        ctx.beginPath();
+        ctx.arc(cx, cy, 1.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+      }
     });
   }
+
 
   // Helper throttled live metrics update: menjaga React re-render ringan (~6x/detik)
   // sementara sampling data klinis di samplesRef.current tetap berjalan penuh di setiap frame (30-60 fps).
@@ -861,6 +879,10 @@ export function useBiomarkerCapture() {
     setIsCapturingState(true);
     setCapturedData(null);
     setLiveMetrics({});
+    // Inisialisasi countdown langsung ke durasi tes agar tidak hilang/nol
+    const dur = TEST_DURATION[testType || 'tremor'] || 10;
+    lastCountdownRef.current = dur;
+    setCountdown(dur);
     // Reset state machine finger tapping
     tapStateRef.current = 'OPEN';
     tapTimesRef.current = [];

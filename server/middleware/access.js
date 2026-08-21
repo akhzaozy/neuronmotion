@@ -28,8 +28,11 @@ export function requireRole(...roles) {
 
 /** Benar bila dokter tersebut punya tautan aktif ke pasien yang diminta. */
 export async function isLinkedToPatient(doctorId, patientId) {
+  const dId = Number.parseInt(doctorId, 10);
+  const pId = Number.parseInt(patientId, 10);
+  if (!Number.isInteger(dId) || !Number.isInteger(pId)) return false;
   const link = await prisma.doctorPatient.findUnique({
-    where: { doctorId_patientId: { doctorId, patientId } },
+    where: { doctorId_patientId: { doctorId: dId, patientId: pId } },
     select: { status: true },
   });
   return link?.status === 'ACTIVE';
