@@ -134,6 +134,9 @@ export function useBiomarkerCapture() {
   const lightingFrameCounterRef = useRef(0);
   const [lightingWarning, setLightingWarning] = useState<string | null>(null);
 
+  const lastMetricsUpdateRef = useRef<number>(0);
+  const lastCountdownRef = useRef<number>(0);
+
   const [cameraReady, setCameraReady] = useState(false);
   const [activeTest, setActiveTest] = useState<TestType>(null);
   const [liveMetrics, setLiveMetrics] = useState<LiveMetrics>({});
@@ -215,19 +218,21 @@ export function useBiomarkerCapture() {
         window.innerWidth <= 768 ||
         (window.matchMedia && window.matchMedia('(max-width: 768px)').matches));
 
-    // Resolusi kamera adaptif:
-    // TIDAK memaksakan aspectRatio agar sensor kamera HP menggunakan rasio bawaan
-    // tanpa digital crop / zoom. Kontainer CSS yang menyesuaikan via --stream-aspect.
+    // Resolusi kamera adaptif berkinerja tinggi:
+    // Menghindari 1080p berlebih yang membebani GPU/CPU mobile & laptop.
+    // 720p pada desktop dan 480p/720p pada mobile ideal untuk pipeline MediaPipe (256x256 tensor).
     const videoConstraints: MediaTrackConstraints = isMobile
       ? {
           facingMode: { ideal: mode },
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
+          width: { ideal: 640, max: 1280 },
+          height: { ideal: 480, max: 720 },
+          frameRate: { ideal: 30, max: 30 },
         }
       : {
           facingMode: { ideal: mode },
-          width: { ideal: 1280, max: 1920 },
-          height: { ideal: 720, max: 1080 },
+          width: { ideal: 1280, max: 1280 },
+          height: { ideal: 720, max: 720 },
+          frameRate: { ideal: 30, max: 60 },
         };
 
     try {
@@ -314,10 +319,10 @@ export function useBiomarkerCapture() {
         'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm'
       );
 
-      // Gunakan pose_landmarker_full untuk akurasi sendi dan visibilitas lutut/kaki yang jauh lebih presisi
+      // Gunakan pose_landmarker_lite resmi dari Google untuk inferensi real-time super cepat (3-4x lebih ringan & mulus)
       const poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
         baseOptions: {
-          modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task',
+          modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',
           delegate: 'GPU',
         },
         runningMode: 'VIDEO',
@@ -372,7 +377,7 @@ export function useBiomarkerCapture() {
       
       const poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
         baseOptions: {
-          modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task',
+          modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',
           delegate: 'CPU',
         },
         runningMode: 'VIDEO',
@@ -507,11 +512,14 @@ export function useBiomarkerCapture() {
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
+      // Hanya ubah dimensi canvas jika dimensi video berubah untuk mencegah memory re-allocation
+      if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+      }
 
-      // Render aliran video alami ke kanvas (mirroring dikelola oleh CSS .mirrored)
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      // Bersihkan kanvas overlay transparan (video native dirender langsung secara akselerasi hardware pada <video>)
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       // Cek pencahayaan setiap ~20 frame (bukan tiap frame, demi performa) dengan
       // menyampel kecerahan rata-rata dari kanvas mini terpisah.
@@ -595,17 +603,16 @@ export function useBiomarkerCapture() {
         drawSkeleton(ctx, landmarksToDraw, canvas.width, canvas.height, isHandMode);
       }
 
-      // Countdown overlay
+      // Countdown overlay (di-throttle agar React tidak me-render ulang setiap frame)
       if (isCapturing.current) {
         const elapsed = (Date.now() - startTime.current) / 1000;
         const dur = TEST_DURATION[test || 'tremor'] || 10;
         const remaining = Math.max(0, dur - elapsed);
-        setCountdown(Math.ceil(remaining));
-
-        // Hitung mundur digambar sebagai DOM di atas video, bukan di canvas ini.
-        // Teks canvas hidup dalam ruang koordinat selebar 1280, sehingga pada
-        // HP selebar 390 piksel ia tampil sekitar 6 piksel, tidak terbaca oleh
-        // siapa pun, apalagi oleh pengguna yang berdiri dua meter di depannya.
+        const currentSec = Math.ceil(remaining);
+        if (lastCountdownRef.current !== currentSec) {
+          lastCountdownRef.current = currentSec;
+          setCountdown(currentSec);
+        }
 
         if (remaining <= 0) {
           handleStopFromLoop();
@@ -689,6 +696,16 @@ export function useBiomarkerCapture() {
     });
   }
 
+  // Helper throttled live metrics update: menjaga React re-render ringan (~6x/detik)
+  // sementara sampling data klinis di samplesRef.current tetap berjalan penuh di setiap frame (30-60 fps).
+  function updateLiveMetricThrottled(updater: (prev: LiveMetrics) => LiveMetrics) {
+    const now = performance.now();
+    if (now - lastMetricsUpdateRef.current >= 150) {
+      lastMetricsUpdateRef.current = now;
+      setLiveMetrics(updater);
+    }
+  }
+
   // ── Process Hand Samples (HandLandmarker) ──────────────────────────────────
   function processHandSample(landmarks: Landmark[]) {
     const now = Date.now() - startTime.current;
@@ -704,7 +721,7 @@ export function useBiomarkerCapture() {
             const avgX = recent.reduce((s, p) => s + p.x, 0) / recent.length;
             const avgY = recent.reduce((s, p) => s + p.y, 0) / recent.length;
             const amp = recent.reduce((s, p) => s + Math.hypot(p.x - avgX, p.y - avgY), 0) / recent.length;
-            setLiveMetrics(prev => ({ ...prev, tremorAmp: parseFloat((amp * 1000).toFixed(2)) }));
+            updateLiveMetricThrottled(prev => ({ ...prev, tremorAmp: parseFloat((amp * 1000).toFixed(2)) }));
           }
         }
         break;
@@ -729,7 +746,7 @@ export function useBiomarkerCapture() {
 
           const tapCount = tapTimesRef.current.length;
           const dur = now / 1000 || 1;
-          setLiveMetrics(p => ({
+          updateLiveMetricThrottled(p => ({
             ...p,
             tapRate: parseFloat((tapCount / dur).toFixed(1)),
             tapCount,
@@ -765,7 +782,7 @@ export function useBiomarkerCapture() {
               gaitStepCountRef.current += 1;
             }
           }
-          setLiveMetrics(p => ({ ...p, gaitSteps: gaitStepCountRef.current }));
+          updateLiveMetricThrottled(p => ({ ...p, gaitSteps: gaitStepCountRef.current }));
         }
         break;
       }
@@ -785,7 +802,7 @@ export function useBiomarkerCapture() {
           samplesRef.current.push({ timestamp: now, leftAngle: lAngle, rightAngle: rAngle });
           
           const asym = Math.abs(lAngle - rAngle) / (Math.max(lAngle, rAngle) || 1) * 100;
-          setLiveMetrics(p => ({ ...p, armAsymmetry: parseFloat(asym.toFixed(1)) }));
+          updateLiveMetricThrottled(p => ({ ...p, armAsymmetry: parseFloat(asym.toFixed(1)) }));
         }
         break;
       }
@@ -801,7 +818,7 @@ export function useBiomarkerCapture() {
             const recent = samplesRef.current.slice(-10) as Array<{ hipX: number; hipY: number }>;
             const xs = recent.map(s => s.hipX), ys = recent.map(s => s.hipY);
             const area = (Math.max(...xs) - Math.min(...xs)) * (Math.max(...ys) - Math.min(...ys));
-            setLiveMetrics(p => ({ ...p, swayArea: parseFloat((area * 10000).toFixed(3)) }));
+            updateLiveMetricThrottled(p => ({ ...p, swayArea: parseFloat((area * 10000).toFixed(3)) }));
           }
         }
         break;
@@ -826,7 +843,7 @@ export function useBiomarkerCapture() {
           const angle = mag > 0 ? Math.acos(Math.min(1, Math.max(-1, dot / mag))) * (180 / Math.PI) : 0;
           if (angle >= 10 && angle <= 180) {
             samplesRef.current.push(angle);
-            setLiveMetrics(p => ({ ...p, romKnee: parseFloat(angle.toFixed(1)) }));
+            updateLiveMetricThrottled(p => ({ ...p, romKnee: parseFloat(angle.toFixed(1)) }));
           }
         }
         break;
