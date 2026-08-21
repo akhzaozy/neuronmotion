@@ -99,19 +99,23 @@
 .logout {
   display: inline-flex;
   align-items: center;
+  gap: 6px;
   min-height: var(--touch);
   padding: 0 var(--s3);
+  margin-left: var(--s3);
+  border-left: 1px solid var(--rule-hair);
   border-radius: var(--radius-pill);
   font-size: var(--t-record);
   font-weight: 600;
-  color: var(--ink-muted);
+  color: var(--danger, #ef4444);
   white-space: nowrap;
   transition: background-color 0.18s ease-out, color 0.18s ease-out;
+  flex-shrink: 0;
 }
 
 .logout:hover {
-  background: var(--inset);
-  color: var(--ink);
+  background: color-mix(in srgb, var(--danger, #ef4444) 12%, transparent);
+  color: var(--danger, #dc2626);
 }
 
 /* ── Layar Tablet & Laptop Kecil (<= 1040px) ──────────────────────────────── */
@@ -173,6 +177,12 @@
   .logout {
     padding: 0 var(--s2);
     font-size: 12px;
+    margin-left: var(--s2);
+    border-left: 0;
+  }
+
+  .logout span {
+    display: none;
   }
 
   .link {

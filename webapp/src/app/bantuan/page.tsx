@@ -1,4 +1,5 @@
 'use client';
+import { motion } from 'framer-motion';
 import * as Accordion from '@radix-ui/react-accordion';
 import {
   UserCheck,
@@ -128,25 +129,47 @@ export default function BantuanPage() {
           </header>
 
           {/* Batas Kemampuan Alat & Pernyataan Medis */}
-          <section className={styles.disclaimerCard} aria-label="Batas kemampuan alat">
-            <div className={styles.disclaimerHead}>
+          <motion.section
+            className={styles.disclaimerCard}
+            aria-label="Batas kemampuan alat"
+            initial={{ opacity: 0, y: 24, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <motion.div
+              className={styles.disclaimerHead}
+              initial={{ opacity: 0, x: -16 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.15, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            >
               <div className={styles.disclaimerBadge}>
                 <ShieldAlert size={15} aria-hidden="true" />
                 Disclaimer Medis
               </div>
               <h2 className={styles.disclaimerTitle}>Batas Kemampuan Alat Skrining</h2>
-            </div>
-            <p className={styles.disclaimerText}>
+            </motion.div>
+            <motion.p
+              className={styles.disclaimerText}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            >
               NeuronMotion adalah alat bantu skrining awal berbasis analisis pergerakan kamera cerdas, bukan alat diagnosis medis mandiri dan bukan pengganti konsultasi tenaga medis profesional. Model klasifikasi divalidasi menggunakan dataset berbasis literatur klinis. Untuk evaluasi dan tindakan medis, selalu konsultasikan kondisi Anda dengan dokter spesialis saraf.
-            </p>
-            <div className={styles.emergencyBox} role="alert">
+            </motion.p>
+            <motion.div
+              className={styles.emergencyBox}
+              role="alert"
+              initial={{ opacity: 0, y: 16, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ delay: 0.4, duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+            >
               <AlertTriangle size={20} className={styles.emergencyIcon} aria-hidden="true" />
               <div>
                 <strong>Protokol Gejala Darurat: </strong>
                 Jika Anda atau kerabat mengalami kelemahan mendadak pada satu sisi tubuh, wajah perot, atau kesulitan bicara tiba-tiba, segera cari pertolongan medis darurat (IGD) atau hubungi nomor darurat 112 / 119 terdekat.
               </div>
-            </div>
-          </section>
+            </motion.div>
+          </motion.section>
 
           {/* ── Panduan 5 Langkah ─────────────────────────────────────────── */}
           <section className={styles.section}>

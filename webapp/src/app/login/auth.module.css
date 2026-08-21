@@ -63,18 +63,24 @@
   }
 }
 
-/* Header bar */
+/* Header bar - fixed at top */
 .bar {
-  position: relative;
-  z-index: 10;
+  position: sticky;
+  top: 0;
+  z-index: 40;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--s4);
   padding: var(--s3) var(--s5);
-  max-width: 1200px;
+  max-width: 100%;
   width: 100%;
   margin: 0 auto;
+  background: color-mix(in srgb, var(--sheet) 85%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--rule-hair);
+  box-sizing: border-box;
 }
 
 @media (max-width: 640px) {
@@ -120,7 +126,7 @@
   max-width: 480px;
   display: flex;
   flex-direction: column;
-  gap: var(--s5);
+  gap: var(--s3);
   background: var(--field);
   border: 1px solid var(--rule-hair);
   border-radius: var(--radius-xl);
@@ -128,6 +134,10 @@
   padding: var(--s6) var(--s6) var(--s7);
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
   animation: formFadePop 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.form :global(.docHead) {
+  margin-bottom: 0;
 }
 
 @keyframes formFadePop {

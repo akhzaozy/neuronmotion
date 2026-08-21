@@ -535,7 +535,13 @@ export default function DoctorProfilPage() {
                 logout();
                 router.push('/login');
               }}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: '15px', fontWeight: 750, minHeight: '46px' }}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                fontSize: '15px', fontWeight: 750, minHeight: '46px',
+                color: 'var(--danger, #ef4444)',
+                borderColor: 'var(--danger, #ef4444)',
+                background: 'transparent',
+              }}
             >
               <LogOut size={18} />
               <span>Keluar dari Akun Dokter</span>

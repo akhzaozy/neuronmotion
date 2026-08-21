@@ -27,7 +27,7 @@ export default function RegisterPage() {
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [specialization, setSpecialization] = useState('');
   const [institution, setInstitution] = useState('');
-  const [location, setLocation] = useState<LocationValue>({});
+  const [location, setLocation] = useState<LocationValue>({ country: 'ID', countryName: 'Indonesia', region: 'Asia' });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -164,9 +164,9 @@ export default function RegisterPage() {
             </select>
           </div>
           <div className={styles.field}>
-            <label className="label" htmlFor="reg-gender">{t('auth.gender')}{lang === 'en' ? ' (optional)' : ' (opsional)'}</label>
-            <select id="reg-gender" className="input" value={gender} onChange={(e) => setGender(e.target.value)}>
-              <option value="">{t('auth.preferNotSay')}</option>
+            <label className="label" htmlFor="reg-gender">{t('auth.gender')}</label>
+            <select id="reg-gender" className="input" value={gender} onChange={(e) => setGender(e.target.value)} required>
+              <option value="" disabled>{lang === 'en' ? 'Select gender' : 'Pilih jenis kelamin'}</option>
               <option value="M">{t('auth.male')}</option>
               <option value="F">{t('auth.female')}</option>
             </select>
@@ -218,6 +218,7 @@ export default function RegisterPage() {
             onChange={setLocation}
             title={isDoctor ? t('loc.practice') : t('loc.residence')}
             hint={isDoctor ? t('loc.hintDoctor') : t('loc.hintPatient')}
+            countryLocked
           />
 
             <ProcessButton

@@ -275,8 +275,8 @@ export default function ProfilPage() {
                     <>
                       <div className={styles.formGroup}>
                         <label className="label" htmlFor="prof-gender">{t('prof.gender')}</label>
-                        <select id="prof-gender" className="input" value={gender} onChange={e => setGender(e.target.value)}>
-                          <option value="">{t('common.notFilled')}</option>
+                        <select id="prof-gender" className="input" value={gender} onChange={e => setGender(e.target.value)} required>
+                          <option value="" disabled>{lang === 'en' ? 'Select gender' : 'Pilih jenis kelamin'}</option>
                           <option value="M">{t('prof.male')}</option>
                           <option value="F">{t('prof.female')}</option>
                         </select>
@@ -413,7 +413,12 @@ export default function ProfilPage() {
             <button
               className="btn btn--block"
               onClick={() => { logout(); router.push('/login'); }}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                color: 'var(--danger, #ef4444)',
+                borderColor: 'var(--danger, #ef4444)',
+                background: 'transparent',
+              }}
             >
               <LogOut size={16} />
               <span>{t('common.logout')}</span>

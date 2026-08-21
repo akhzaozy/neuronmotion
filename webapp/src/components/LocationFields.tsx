@@ -21,9 +21,10 @@ interface Props {
   required?: boolean;
   title?: string;
   hint?: string;
+  countryLocked?: boolean;
 }
 
-export default function LocationFields({ value, onChange, required = false, title, hint }: Props) {
+export default function LocationFields({ value, onChange, required = false, title, hint, countryLocked = false }: Props) {
   const { t, lang } = useI18n();
   // Komponen ini bisa muncul lebih dari sekali pada satu halaman, jadi id-nya
   // dibuat unik agar pasangan label dan isian tidak saling tertukar.
@@ -111,7 +112,7 @@ export default function LocationFields({ value, onChange, required = false, titl
         <label className={styles.label} htmlFor={`${uid}-country`}>
           {t('loc.country')} {required && <span className={styles.req}>*</span>}
         </label>
-        <select id={`${uid}-country`} className="input" value={value.country || ''} onChange={e => selectCountry(e.target.value)} required={required}>
+        <select id={`${uid}-country`} className="input" value={value.country || ''} onChange={e => selectCountry(e.target.value)} required={required} disabled={countryLocked}>
           <option value="">{t('loc.selectCountry')}</option>
           {/* Nama negara, provinsi, dan kota adalah nama diri. Selain salah bila
               diterjemahkan, jumlahnya mencapai ribuan dan akan menghabiskan
@@ -120,6 +121,7 @@ export default function LocationFields({ value, onChange, required = false, titl
         </select>
       </div>
 
+      {!countryLocked && (
       <div className={styles.field}>
         <label className={styles.label} htmlFor={`${uid}-region`}>{t('loc.region')}</label>
         <select
@@ -133,6 +135,7 @@ export default function LocationFields({ value, onChange, required = false, titl
         </select>
         <span className={styles.note}>{t('loc.autoFilled')}</span>
       </div>
+      )}
 
       <div className={styles.row}>
         <div className={styles.field}>

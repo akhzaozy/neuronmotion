@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { LogOut } from 'lucide-react';
 import Logo from './Logo';
 import { useAuth } from '@/lib/auth';
 import { ThemeToggle } from '@/lib/theme';
@@ -28,22 +29,9 @@ export default function AppNav() {
           <Logo size={17} />
         </Link>
 
-        {/* Keluar sebelumnya hanya ada di halaman Profil, sehingga pasien di
-            perangkat bersama harus menebak tempatnya. Portal nakes sudah
-            punya tombolnya sendiri di halaman, jadi ini menyamakan keduanya. */}
         <div className={styles.actions}>
           <LanguageToggle />
           <ThemeToggle size="sm" />
-          <button
-            type="button"
-            className={styles.logout}
-            onClick={() => {
-              logout();
-              router.push('/login');
-            }}
-          >
-            {t('common.logout')}
-          </button>
         </div>
 
         <div className={styles.links}>
@@ -61,6 +49,18 @@ export default function AppNav() {
             );
           })}
         </div>
+
+        <button
+          type="button"
+          className={styles.logout}
+          onClick={() => {
+            logout();
+            router.push('/login');
+          }}
+        >
+          <LogOut size={14} aria-hidden="true" />
+          <span>{t('common.logout')}</span>
+        </button>
       </div>
     </nav>
   );
