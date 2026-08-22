@@ -195,6 +195,29 @@ async function main() {
     }
   });
 
+  const adhitDob = new Date();
+  adhitDob.setFullYear(adhitDob.getFullYear() - 36);
+
+  // Akun Pasien Mandiri: Adhitya (Tidak tertaut ke dokter manapun)
+  const adhitya = await prisma.user.create({
+    data: {
+      email: 'adhitya@neuronmotion.id',
+      password: hash,
+      name: 'Adhitya',
+      role: 'PATIENT',
+      dateOfBirth: adhitDob,
+      gender: 'M',
+      phone: '081298765432',
+      country: 'ID',
+      countryName: 'Indonesia',
+      state: 'DKI Jakarta',
+      region: 'Jawa',
+      city: 'Jakarta Selatan',
+      address: 'Jl. Senopati No. 88, Kebayoran Baru',
+      shareCode: 'NM-ADHIT',
+    }
+  });
+
   await prisma.doctorPatient.create({
     data: {
       doctorId: doctor.id,
@@ -202,7 +225,7 @@ async function main() {
     }
   });
 
-  console.log('✅ Akun demo dokter, pasien, dan admin dibuat');
+  console.log('✅ Akun demo dokter, pasien demo, admin, dan pasien mandiri (Adhitya) dibuat');
 
   // 4. Generate dataset pasien sintetis
   console.log('🧠 Menghasilkan dataset klinis sintetis...');
@@ -366,17 +389,175 @@ async function main() {
     console.log(`  -> Sesi terisi ${Math.min(i + BATCH_SIZE, sessionsToCreate.length)} / ${sessionsToCreate.length}`);
   }
 
-  console.log(`✅ Berhasil menulis ${sessionsToCreate.length} sesi skrining`);
+  console.log(`✅ Berhasil menulis ${sessionsToCreate.length} sesi skrining untuk pasien demo & dummy`);
+
+  // 7. Buat 15 sesi skrining mandiri untuk Adhitya (Riwayat panjang, tanpa tertaut dokter)
+  console.log('📱 Membuat riwayat skrining mandiri Adhitya (15 sesi)...');
+  const adhitTimelines = [
+    { daysAgo: 165, cond: 'HEALTHY', condLabel: 'Normal / Pola motorik stabil', risk: 'LOW', score: 12.5, tremorFreq: 7.8, tremorAmp: 0.003, tapRate: 4.8, tapDec: 6, cadence: 108, sym: 0.96, armAsym: 8, swayArea: 0.0025, qScore: 0 },
+    { daysAgo: 150, cond: 'HEALTHY', condLabel: 'Normal / Pola motorik stabil', risk: 'LOW', score: 14.0, tremorFreq: 8.2, tremorAmp: 0.004, tapRate: 4.6, tapDec: 8, cadence: 106, sym: 0.95, armAsym: 9, swayArea: 0.0028, qScore: 5 },
+    { daysAgo: 138, cond: 'HEALTHY', condLabel: 'Normal / Pola motorik stabil', risk: 'LOW', score: 15.8, tremorFreq: 8.0, tremorAmp: 0.004, tapRate: 4.5, tapDec: 9, cadence: 104, sym: 0.94, armAsym: 11, swayArea: 0.0031, qScore: 5 },
+    { daysAgo: 125, cond: 'HEALTHY', condLabel: 'Normal / Pola motorik stabil', risk: 'LOW', score: 19.2, tremorFreq: 6.8, tremorAmp: 0.006, tapRate: 4.3, tapDec: 11, cadence: 102, sym: 0.92, armAsym: 13, swayArea: 0.0035, qScore: 10 },
+    { daysAgo: 110, cond: 'ESSENTIAL_TREMOR', condLabel: 'Tremor Esensial Ringan', risk: 'MEDIUM', score: 39.5, tremorFreq: 5.8, tremorAmp: 0.014, tapRate: 3.9, tapDec: 15, cadence: 98, sym: 0.89, armAsym: 17, swayArea: 0.0048, qScore: 35 },
+    { daysAgo: 98, cond: 'PARKINSON_EARLY', condLabel: 'Indikasi Parkinson Awal', risk: 'MEDIUM', score: 44.8, tremorFreq: 5.2, tremorAmp: 0.018, tapRate: 3.7, tapDec: 18, cadence: 96, sym: 0.87, armAsym: 21, swayArea: 0.0055, qScore: 45 },
+    { daysAgo: 85, cond: 'PARKINSON_EARLY', condLabel: 'Indikasi Parkinson Awal', risk: 'MEDIUM', score: 47.0, tremorFreq: 4.9, tremorAmp: 0.019, tapRate: 3.5, tapDec: 20, cadence: 94, sym: 0.86, armAsym: 23, swayArea: 0.0060, qScore: 50 },
+    { daysAgo: 72, cond: 'PARKINSON_EARLY', condLabel: 'Indikasi Parkinson Awal', risk: 'MEDIUM', score: 51.5, tremorFreq: 4.8, tremorAmp: 0.022, tapRate: 3.4, tapDec: 22, cadence: 92, sym: 0.84, armAsym: 25, swayArea: 0.0068, qScore: 55 },
+    { daysAgo: 60, cond: 'PARKINSON_EARLY', condLabel: 'Indikasi Parkinson Awal', risk: 'MEDIUM', score: 48.2, tremorFreq: 5.0, tremorAmp: 0.020, tapRate: 3.6, tapDec: 19, cadence: 95, sym: 0.86, armAsym: 22, swayArea: 0.0062, qScore: 45 },
+    { daysAgo: 48, cond: 'PARKINSON_EARLY', condLabel: 'Indikasi Parkinson Awal', risk: 'MEDIUM', score: 53.0, tremorFreq: 4.7, tremorAmp: 0.024, tapRate: 3.3, tapDec: 24, cadence: 91, sym: 0.83, armAsym: 27, swayArea: 0.0072, qScore: 60 },
+    { daysAgo: 35, cond: 'PARKINSON_EARLY', condLabel: 'Indikasi Parkinson Awal', risk: 'MEDIUM', score: 49.6, tremorFreq: 5.1, tremorAmp: 0.021, tapRate: 3.5, tapDec: 20, cadence: 93, sym: 0.85, armAsym: 24, swayArea: 0.0065, qScore: 50 },
+    { daysAgo: 22, cond: 'PARKINSON_EARLY', condLabel: 'Indikasi Parkinson Awal', risk: 'MEDIUM', score: 52.4, tremorFreq: 4.8, tremorAmp: 0.023, tapRate: 3.4, tapDec: 23, cadence: 92, sym: 0.84, armAsym: 26, swayArea: 0.0070, qScore: 55 },
+    { daysAgo: 14, cond: 'PARKINSON_EARLY', condLabel: 'Indikasi Parkinson Awal', risk: 'MEDIUM', score: 50.1, tremorFreq: 4.9, tremorAmp: 0.022, tapRate: 3.5, tapDec: 21, cadence: 94, sym: 0.85, armAsym: 23, swayArea: 0.0066, qScore: 50 },
+    { daysAgo: 7, cond: 'PARKINSON_EARLY', condLabel: 'Indikasi Parkinson Awal', risk: 'MEDIUM', score: 54.2, tremorFreq: 4.6, tremorAmp: 0.025, tapRate: 3.2, tapDec: 25, cadence: 90, sym: 0.82, armAsym: 28, swayArea: 0.0075, qScore: 60 },
+    { daysAgo: 1, cond: 'PARKINSON_EARLY', condLabel: 'Indikasi Parkinson Awal', risk: 'MEDIUM', score: 51.8, tremorFreq: 4.8, tremorAmp: 0.022, tapRate: 3.4, tapDec: 22, cadence: 93, sym: 0.84, armAsym: 25, swayArea: 0.0069, qScore: 55 },
+  ];
+
+  for (const s of adhitTimelines) {
+    const ts = new Date(Date.now() - s.daysAgo * 86400 * 1000);
+    const isMedium = s.risk === 'MEDIUM';
+
+    const tremorResult = {
+      dominantFrequencyHz: s.tremorFreq,
+      amplitude: s.tremorAmp,
+      category: isMedium ? 'PARKINSON_TREMOR' : 'NORMAL',
+      score: Math.round(s.tremorFreq * 10),
+    };
+
+    const fingerTappingResult = {
+      tapRatePerSecond: s.tapRate,
+      decrementPercent: s.tapDec,
+      category: s.tapDec > 15 ? 'MODERATE_BRADYKINESIA' : 'NORMAL',
+      score: Math.round(s.tapDec * 2),
+    };
+
+    const gaitResult = {
+      cadencePerMin: s.cadence,
+      strideSymmetryIndex: s.sym,
+      symmetryPercent: Math.round(s.sym * 100),
+      stepCount: 28,
+      category: s.sym < 0.85 ? 'MODERATE_ASYMMETRY' : 'NORMAL',
+      score: Math.round((1 - s.sym) * 100),
+    };
+
+    const armSwingResult = {
+      leftAmplitudeDeg: 32,
+      rightAmplitudeDeg: Math.round(32 * (1 - s.armAsym / 100)),
+      asymmetryPercent: s.armAsym,
+      weakerSide: 'kanan',
+      category: s.armAsym > 15 ? 'MILD_ASYMMETRY' : 'NORMAL',
+      score: Math.round(s.armAsym * 1.5),
+    };
+
+    const romResult = {
+      joint: 'knee',
+      maxAngleDeg: isMedium ? 122 : 135,
+      minAngleDeg: 5,
+      romDeg: isMedium ? 117 : 130,
+      category: 'NORMAL',
+      score: 10,
+    };
+
+    const posturalResult = {
+      swayLengthNorm: s.swayArea * 15,
+      swayAreaNorm: s.swayArea,
+      swayAreaCm2: parseFloat((s.swayArea * 1000).toFixed(2)),
+      frameCount: 300,
+      category: s.swayArea > 0.008 ? 'UNSTABLE' : 'STABLE',
+      score: Math.round(s.swayArea * 5000),
+    };
+
+    const questionnaire = {
+      tremorSaatIstirahat: isMedium,
+      kekakuanOtot: s.score > 50,
+      gerakanMelambat: s.score > 45,
+      gangguanKeseimbangan: false,
+      kesulitanMenulis: s.score > 45,
+      langkahMenyeret: false,
+      durasiGejalaBulan: s.daysAgo > 100 ? 1 : 4,
+    };
+
+    const aiAnalysis = {
+      available: true,
+      ringkasan: isMedium
+        ? `Hasil skrining mandiri menunjukkan indikasi tremor istirahat (${s.tremorFreq} Hz) pada tangan kanan dan perlambatan laju ketukan jari (${s.tapRate} ketukan/dtk, penurunan ${s.tapDec}%). Keseimbangan postural dan stabilitas tubuh masih tergolong baik.`
+        : 'Hasil skrining mandiri menunjukkan seluruh biomarker motorik (tremor, ketukan jari, gaya berjalan, dan postur) berada dalam rentang normal dan stabil.',
+      tingkatKeyakinan: isMedium ? 'SEDANG' : 'TINGGI',
+      korelasiGejala: [
+        {
+          gejala: 'Tremor saat tangan istirahat',
+          biomarkerTerkait: 'Frekuensi Tremor Tangan',
+          penjelasan: isMedium
+            ? `Frekuensi tremor terukur ${s.tremorFreq} Hz dengan amplitudo ${s.tremorAmp}, sesuai dengan karakteristik tremor istirahat frekuensi 4-6 Hz.`
+            : 'Frekuensi dan amplitudo tremor berada dalam batas fisiologis normal.',
+          tingkatKesesuaian: isMedium ? 'SESUAI' : 'TIDAK_SESUAI',
+        },
+        {
+          gejala: 'Kecepatan ketukan jari berkurang',
+          biomarkerTerkait: 'Finger Tapping Rate & Decrement',
+          penjelasan: isMedium
+            ? `Penurunan ritme ketukan jari sebesar ${s.tapDec}% selama pengujian berulang.`
+            : 'Ketukan jari konsisten stabil tanpa penurunan ritme signifikan.',
+          tingkatKesesuaian: isMedium ? 'SESUAI' : 'TIDAK_SESUAI',
+        },
+      ],
+      saranTindakLanjut: [
+        'Lakukan skrining mandiri berkala setiap 2-4 minggu untuk memantau perkembangan tren motorik.',
+        isMedium
+          ? 'Gunakan fitur bagikan kode akses (Share Code) bila ingin berkonsultasi langsung dengan dokter spesialis neurologi.'
+          : 'Pertahankan aktivitas fisik teratur, latihan peregangan, dan pola istirahat yang cukup.',
+      ],
+      perluPerhatianSegera: false,
+    };
+
+    await prisma.session.create({
+      data: {
+        patientId: adhitya.id,
+        doctorId: null, // Pasien mandiri, tidak tertaut ke dokter
+        timestamp: ts,
+        createdAt: ts,
+        tremorResult: JSON.stringify(tremorResult),
+        fingerTappingResult: JSON.stringify(fingerTappingResult),
+        gaitResult: JSON.stringify(gaitResult),
+        armSwingResult: JSON.stringify(armSwingResult),
+        romResult: JSON.stringify(romResult),
+        posturalResult: JSON.stringify(posturalResult),
+        compositeScore: s.score,
+        riskCategory: s.risk,
+        mlPrediction: JSON.stringify({
+          predictedLabel: s.condLabel,
+          predictedCondition: s.cond,
+          probabilities: {
+            [s.cond]: isMedium ? 0.76 : 0.90,
+            HEALTHY: isMedium ? 0.20 : 0.90,
+          },
+          modelType: 'K_NEAREST_NEIGHBORS',
+          confidence: isMedium ? 76 : 90,
+        }),
+        recommendations: JSON.stringify([
+          isMedium
+            ? 'Pertimbangkan konsultasi dengan dokter spesialis saraf untuk evaluasi lanjutan jika gejala memberat.'
+            : 'Pola motorik normal. Pertahankan gaya hidup sehat.',
+          'Lakukan pemantauan berkala setiap bulan.',
+        ]),
+        questionnaire: JSON.stringify(questionnaire),
+        questionnaireScore: s.qScore,
+        aiAnalysis: JSON.stringify(aiAnalysis),
+        doctorNote: null,
+      },
+    });
+  }
+  console.log(`✅ Berhasil menulis ${adhitTimelines.length} sesi skrining mandiri untuk Adhitya`);
 
   console.log('\n========================================');
   console.log('🎉 Seeding database NeuronMotion selesai (Scope: Indonesia)!');
   console.log('========================================');
   console.log('Akun untuk pengujian:');
-  console.log('  Dokter : doctor@neuronmotion.id / password123');
-  console.log('  Pasien : pasien@neuronmotion.id / password123');
-  console.log('  Admin  : admin@neuronmotion.id  / password123');
-  console.log(`  Total pasien demo : ${allPatients.length}`);
-  console.log(`  Total sesi data   : ${sessionsToCreate.length}`);
+  console.log('  Dokter         : doctor@neuronmotion.id  / password123 (Tertaut 51 pasien)');
+  console.log('  Pasien Demo    : pasien@neuronmotion.id  / password123 (Tertaut dokter)');
+  console.log('  Pasien Mandiri : adhitya@neuronmotion.id / password123 (15 Sesi, Bebas/Tanpa Dokter)');
+  console.log('  Admin          : admin@neuronmotion.id   / password123');
+  console.log(`  Total pasien dummy tertaut dokter : ${createdPatients.length}`);
+  console.log(`  Total sesi data dokter/demo       : ${sessionsToCreate.length}`);
+  console.log(`  Total sesi mandiri Adhitya        : ${adhitTimelines.length}`);
   console.log('========================================\n');
 }
 

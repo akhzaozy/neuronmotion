@@ -77,7 +77,13 @@ export default function ProfilPage() {
         setName(p.name || '');
         setGender(p.gender || '');
         setDateOfBirth(p.dateOfBirth ? new Date(p.dateOfBirth).toISOString().split('T')[0] : '');
-        setLocation({ country: p.country, countryName: p.countryName, region: p.region, state: p.state, city: p.city });
+        setLocation({
+          country: p.country || 'ID',
+          countryName: p.countryName || 'Indonesia',
+          region: p.region || 'Asia',
+          state: p.state,
+          city: p.city
+        });
         setSpecialization(p.specialization || '');
         setInstitution(p.institution || '');
       })
@@ -307,6 +313,7 @@ export default function ProfilPage() {
                     value={location}
                     onChange={setLocation}
                     title={isDoctor ? t('loc.practice') : t('loc.residence')}
+                    countryLocked
                   />
 
                   <div className={styles.actionRow}>

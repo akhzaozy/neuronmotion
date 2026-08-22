@@ -81,9 +81,9 @@ export default function DoctorProfilPage() {
           setLicenseNumber(p.licenseNumber || '');
           setSignature(p.signature || null);
           setLocation({
-            country: p.country,
-            countryName: p.countryName,
-            region: p.region,
+            country: p.country || 'ID',
+            countryName: p.countryName || 'Indonesia',
+            region: p.region || 'Asia',
             state: p.state,
             city: p.city,
           });
@@ -327,7 +327,7 @@ export default function DoctorProfilPage() {
                     />
                   </div>
 
-                  <LocationFields value={location} onChange={setLocation} />
+                  <LocationFields value={location} onChange={setLocation} countryLocked />
 
                   <div className={styles.actionRow}>
                     <button
