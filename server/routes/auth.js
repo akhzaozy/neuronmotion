@@ -158,10 +158,15 @@ router.put('/profile', requireAuth, async (req, res) => {
     const data = {};
     if (name !== undefined) data.name = name;
     if (gender !== undefined) data.gender = gender === 'M' || gender === 'F' ? gender : null;
-    if (user.role === 'PATIENT' && dateOfBirth !== undefined) {
-      data.dateOfBirth = dateOfBirth ? new Date(dateOfBirth) : null;
+    if (dateOfBirth !== undefined) {
+      if (!dateOfBirth) {
+        data.dateOfBirth = null;
+      } else {
+        const d = new Date(dateOfBirth);
+        data.dateOfBirth = isNaN(d.getTime()) ? null : d;
+      }
     }
-    if (user.role === 'DOCTOR') {
+    if (user.role === 'DOCTOR' || specialization !== undefined || signature !== undefined) {
       if (specialization !== undefined) data.specialization = specialization || null;
       if (institution !== undefined) data.institution = institution || null;
       if (licenseNumber !== undefined) data.licenseNumber = licenseNumber || null;
@@ -179,7 +184,7 @@ router.put('/profile', requireAuth, async (req, res) => {
     res.json(safeUser);
   } catch (error) {
     console.error('Update Profile Error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: error.message || 'Gagal memperbarui profil di server' });
   }
 });
 

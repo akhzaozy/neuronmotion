@@ -463,10 +463,15 @@
   display: flex;
   flex-direction: column;
   gap: var(--s4);
+  overflow: hidden;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .bars {
   margin: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .barsHead {
@@ -485,28 +490,31 @@
 .barsRow {
   display: flex;
   align-items: flex-end;
-  justify-content: flex-start;
-  gap: var(--s3);
+  justify-content: space-between;
+  gap: clamp(2px, 0.8vw, 6px);
   height: 120px;
   padding: var(--s2) 0;
   border-bottom: 1px dashed var(--rule-hair);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .barSlot {
   flex: 1 1 0;
-  max-width: 34px;
+  min-width: 0;
+  max-width: 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
   height: 100%;
-  min-width: 14px;
   position: relative;
   cursor: pointer;
 }
 
 .bar {
   width: 100%;
+  max-width: 16px;
   border-radius: var(--radius-pill);
   transform-origin: bottom;
   transition: height 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s ease-out, filter 0.18s ease-out;

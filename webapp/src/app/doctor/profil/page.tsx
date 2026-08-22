@@ -109,14 +109,40 @@ export default function DoctorProfilPage() {
   const handleSignatureUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      setError('Ukuran file tanda tangan maksimal 2MB');
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Ukuran file tanda tangan maksimal 5MB');
       return;
     }
     const reader = new FileReader();
     reader.onload = () => {
-      const result = reader.result as string;
-      setSignature(result);
+      const dataUrl = reader.result as string;
+      const img = new Image();
+      img.onload = () => {
+        // Kompres & batasi dimensi maksimal 500x250 px agar ringan dan tidak membebani server
+        const maxW = 500;
+        const maxH = 250;
+        let w = img.width;
+        let h = img.height;
+
+        if (w > maxW || h > maxH) {
+          const ratio = Math.min(maxW / w, maxH / h);
+          w = Math.round(w * ratio);
+          h = Math.round(h * ratio);
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, w, h);
+          const compressed = canvas.toDataURL('image/png', 0.85);
+          setSignature(compressed);
+        } else {
+          setSignature(dataUrl);
+        }
+      };
+      img.src = dataUrl;
     };
     reader.readAsDataURL(file);
   };
