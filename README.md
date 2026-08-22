@@ -306,8 +306,7 @@ Buka peramban (browser) dan akses alamat: **`http://localhost:3000`**
 | Peran | Alamat Email | Kata Sandi | Kegunaan |
 |:---|:---|:---|:---|
 | **Pasien** | `pasien@neuronmotion.id` | `password123` | Mencoba skrining kamera, melihat skor risiko & riwayat sesi |
-| **Dokter** | `dr.dewi@neuronmotion.id` | `doctor123` | Membuka portal dokter, melihat grafik pasien, menulis catatan terapi & cetak PDF |
-| **Admin** | `admin@neuronmotion.id` | `admin123` | Akses API statistik sistem & akurasi model |
+| **Dokter** | `pasien@neuronmotion.id` | `doctor123` | Membuka portal dokter, melihat grafik pasien, menulis catatan terapi & cetak PDF |
 
 ---
 
