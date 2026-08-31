@@ -9,7 +9,7 @@ services:
     container_name: neuronmotion-backend
     restart: unless-stopped
     ports:
-      - "${PORT:-4000}:4000"
+      - "${BACKEND_PORT:-${PORT:-4000}}:4000"
     environment:
       - PORT=4000
       - DATABASE_URL=file:/app/prisma/dev.db
