@@ -9,19 +9,18 @@ WORKDIR /app
 RUN apk add --no-cache libc6-compat
 
 # Salin manifest dependensi root dan webapp (karena webapp merujuk "neuronmotion": "file:..")
-COPY package.json package-lock.json ./
-COPY webapp/package.json ./webapp/
+COPY package.json package-lock.json* ./
+COPY webapp/package.json webapp/package-lock.json* ./webapp/
 
-# Pasang dependensi webapp
-RUN npm ci --prefix webapp
+# Pasang dependensi webapp (dengan fallback ke npm install jika lockfile mismatch)
+RUN cd webapp && (npm ci || npm install)
 
 # ── Stage 2: Builder ──────────────────────────────────────────────────────────
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-COPY --from=deps /app/node_modules ./node_modules
+COPY package.json package-lock.json* ./
 COPY --from=deps /app/webapp/node_modules ./webapp/node_modules
-COPY package.json ./
 COPY webapp ./webapp
 
 # Argumen build untuk variabel publik Next.js

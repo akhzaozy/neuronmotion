@@ -9,11 +9,11 @@ WORKDIR /app
 RUN apk add --no-cache openssl libc6-compat dumb-init
 
 # Salin berkas definisi dependensi dan skema database
-COPY package.json package-lock.json ./
+COPY package.json package-lock.json* ./
 COPY prisma ./prisma
 
 # Pasang dependensi produksi dan bangkitkan Prisma Client untuk arsitektur container
-RUN npm ci --omit=dev && npx prisma generate
+RUN (npm ci --omit=dev || npm install --omit=dev) && npx prisma generate
 
 # Salin kode sumber backend dan skrip operasional
 COPY server ./server
