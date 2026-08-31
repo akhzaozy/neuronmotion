@@ -14,7 +14,11 @@
     "db:seed": "node --env-file=.env prisma/seed.js",
     "db:push": "prisma db push",
     "setup": "node scripts/setup.mjs",
-    "lint:dash": "node scripts/check-em-dash.mjs"
+    "docs:pdf": "node scripts/generate-all-docs-pdf.mjs",
+    "lint:dash": "node scripts/check-em-dash.mjs",
+    "docker:up": "docker compose up --build -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

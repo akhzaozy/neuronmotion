@@ -287,7 +287,7 @@ Akurasi divalidasi secara ilmiah menggunakan metode **Holdout Validation 80/20**
 - Komputer dengan OS Windows, macOS, atau Linux
 - Node.js versi 20.x atau lebih baru ([Unduh Node.js](https://nodejs.org/))
 
-### **Langkah Menjalankan:**
+### **Opsi A: Menjalankan Langsung dengan Node.js**
 ```bash
 # 1. Clone repositori dari GitHub
 git clone https://github.com/akhzaozy/neuronmotion.git
@@ -300,13 +300,31 @@ npm run setup
 npm run dev:all
 ```
 
-Buka peramban (browser) dan akses alamat: **`http://localhost:3000`**
+### **Opsi B: Menjalankan dengan Docker & Docker Compose**
+Pastikan [Docker Desktop](https://www.docker.com/) sudah terpasang dan berjalan:
+```bash
+# 1. Salin berkas konfigurasi environment
+cp .env.example .env
+
+# 2. Bangun dan jalankan kontainer backend & frontend
+docker compose up --build -d
+
+# 3. Memeriksa status dan log kontainer
+docker compose ps
+docker compose logs -f
+```
+> Database SQLite tersimpan di named volume `prisma-data`, sehingga data sesi dan pasien tetap tersimpan aman saat kontainer di-restart. Untuk mematikan kontainer, jalankan `docker compose down`.
+
+Buka peramban (browser) dan akses alamat:
+- **Frontend Web:** **`http://localhost:3000`**
+- **Backend API & Playground:** **`http://localhost:4000`** (Healthcheck: `/api/health`)
 
 ### **Akun Demo Siap Pakai:**
 | Peran | Alamat Email | Kata Sandi | Kegunaan |
 |:---|:---|:---|:---|
 | **Pasien** | `pasien@neuronmotion.id` | `password123` | Mencoba skrining kamera, melihat skor risiko & riwayat sesi |
 | **Dokter** | `pasien@neuronmotion.id` | `doctor123` | Membuka portal dokter, melihat grafik pasien, menulis catatan terapi & cetak PDF |
+
 
 ---
 

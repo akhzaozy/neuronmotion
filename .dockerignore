@@ -1,0 +1,34 @@
+# Dependensi & Build Output
+node_modules
+.next
+out
+build
+dist
+.turbo
+*.tsbuildinfo
+
+# Basis Data Lokal & Cache
+prisma/dev.db
+prisma/dev.db-journal
+*.db
+*.sqlite
+
+# Version Control & IDE
+.git
+.gitignore
+.githooks
+.github
+.vscode
+.claude
+.gemini
+.agents
+.DS_Store
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Berkas Dokumentasi & Pengujian Tambahan yang Tidak Dibutuhkan Image
+tests
+design
+data/raw

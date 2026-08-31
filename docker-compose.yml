@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  # ── Backend REST API & Engine ML (Express + Prisma SQLite) ───────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    container_name: neuronmotion-backend
+    restart: unless-stopped
+    ports:
+      - "${PORT:-4000}:4000"
+    environment:
+      - PORT=4000
+      - DATABASE_URL=file:/app/prisma/dev.db
+      - JWT_SECRET=${JWT_SECRET:-ganti-dengan-string-acak-panjang-untuk-produksi}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.5-flash}
+      - GEMINI_MODEL_FALLBACK=${GEMINI_MODEL_FALLBACK:-gemini-2.5-pro}
+      - DEEPL_API_KEY=${DEEPL_API_KEY:-}
+      - AUTO_SEED=${AUTO_SEED:-true}
+    volumes:
+      # Volume untuk mempertahankan data SQLite dev.db saat kontainer di-restart/upgrade
+      - prisma-data:/app/prisma
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4000/api/health').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - neuronmotion-net
+
+  # ── Frontend Web Application (Next.js 16) ──────────────────────────────────
+  webapp:
+    build:
+      context: .
+      dockerfile: Dockerfile.webapp
+      args:
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:4000}
+        - NEXT_PUBLIC_SHOW_DEMO_ACCOUNTS=${NEXT_PUBLIC_SHOW_DEMO_ACCOUNTS:-true}
+    container_name: neuronmotion-webapp
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:4000}
+      - NEXT_PUBLIC_SHOW_DEMO_ACCOUNTS=${NEXT_PUBLIC_SHOW_DEMO_ACCOUNTS:-true}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.5-flash}
+      - GEMINI_MODEL_FALLBACK=${GEMINI_MODEL_FALLBACK:-gemini-2.5-pro}
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - neuronmotion-net
+
+volumes:
+  prisma-data:
+    driver: local
+
+networks:
+  neuronmotion-net:
+    driver: bridge

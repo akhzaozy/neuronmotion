@@ -1,0 +1,66 @@
+# ==============================================================================
+# NeuronMotion - Next.js 16 Web Application Frontend
+# ==============================================================================
+
+# ── Stage 1: Dependensi ────────────────────────────────────────────────────────
+FROM node:20-alpine AS deps
+WORKDIR /app
+
+RUN apk add --no-cache libc6-compat
+
+# Salin manifest dependensi root dan webapp (karena webapp merujuk "neuronmotion": "file:..")
+COPY package.json package-lock.json ./
+COPY webapp/package.json ./webapp/
+
+# Pasang dependensi webapp
+RUN npm ci --prefix webapp
+
+# ── Stage 2: Builder ──────────────────────────────────────────────────────────
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/webapp/node_modules ./webapp/node_modules
+COPY package.json ./
+COPY webapp ./webapp
+
+# Argumen build untuk variabel publik Next.js
+ARG NEXT_PUBLIC_API_URL=http://localhost:4000
+ARG NEXT_PUBLIC_SHOW_DEMO_ACCOUNTS=true
+
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL \
+    NEXT_PUBLIC_SHOW_DEMO_ACCOUNTS=$NEXT_PUBLIC_SHOW_DEMO_ACCOUNTS \
+    NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1
+
+# Bangkitkan bundle produksi Next.js
+RUN npm run build --prefix webapp
+
+# ── Stage 3: Runner (Production Image) ────────────────────────────────────────
+FROM node:20-alpine AS runner
+WORKDIR /app/webapp
+
+RUN apk add --no-cache dumb-init
+
+ENV NODE_ENV=production \
+    PORT=3000 \
+    HOSTNAME="0.0.0.0" \
+    NEXT_TELEMETRY_DISABLED=1
+
+# Pengguna non-root untuk keamanan kontainer
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
+
+# Salin artifak hasil build dan dependensi runtime
+COPY --from=builder /app/package.json /app/package.json
+COPY --from=builder /app/webapp/package.json ./package.json
+COPY --from=builder /app/webapp/node_modules ./node_modules
+COPY --from=builder /app/webapp/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/webapp/.next ./.next
+
+USER nextjs
+
+EXPOSE 3000
+
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+CMD ["node_modules/.bin/next", "start"]
