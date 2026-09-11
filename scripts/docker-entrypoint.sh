@@ -3,6 +3,19 @@ set -e
 
 echo "🚀 [NeuronMotion] Memulai backend container..."
 
+# Pastikan direktori prisma memiliki berkas skema dan seed jika volume luar ter-mount
+if [ -d "/app/prisma_template" ]; then
+  mkdir -p /app/prisma
+  if [ ! -f "/app/prisma/schema.prisma" ]; then
+    echo "📋 [NeuronMotion] Volume prisma baru terdeteksi. Menyalin berkas skema & seed..."
+    cp -a /app/prisma_template/. /app/prisma/
+  else
+    # Selalu pastikan skema dan seed terbaru sinkron tanpa menghapus berkas dev.db
+    cp -f /app/prisma_template/schema.prisma /app/prisma/schema.prisma 2>/dev/null || true
+    cp -f /app/prisma_template/seed.js /app/prisma/seed.js 2>/dev/null || true
+  fi
+fi
+
 # 1. Generate Prisma client untuk arsitektur container saat ini
 echo "📦 [NeuronMotion] Menghasilkan Prisma Client..."
 npx prisma generate

@@ -23,7 +23,7 @@ import { useEffect, useRef } from 'react';
  * ============================================================
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
 
 /** Elemen yang isinya bukan bahasa manusia atau tidak boleh diubah. */
 const SKIP_TAGS = new Set([

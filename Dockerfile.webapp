@@ -24,7 +24,7 @@ COPY --from=deps /app/webapp/node_modules ./webapp/node_modules
 COPY webapp ./webapp
 
 # Argumen build untuk variabel publik Next.js
-ARG NEXT_PUBLIC_API_URL=http://localhost:4000
+ARG NEXT_PUBLIC_API_URL=
 ARG NEXT_PUBLIC_SHOW_DEMO_ACCOUNTS=true
 
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL \

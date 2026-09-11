@@ -5,7 +5,7 @@ import { STATES_BY_COUNTRY } from '@/lib/states';
 import { useI18n } from '@/lib/i18n';
 import styles from './LocationFields.module.css';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
 
 export interface LocationValue {
   country?: string;      // kode ISO 3166-1 alpha-2
